@@ -2,6 +2,9 @@ name: Generate Frontend Lockfile
 
 on:
   workflow_dispatch: {}
+  push:
+    branches:
+      - main
 
 jobs:
   generate-lockfile:
