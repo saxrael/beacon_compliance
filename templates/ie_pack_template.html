@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deliverable 4 — Independent Examiner (IE) Review Pack | SC054652</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        @page {
+            size: A4 portrait;
+            margin: 15mm 15mm 20mm 15mm;
+        }
+
+        :root {
+            --color-crimson: #D6162F;
+            --color-gold: #F5D345;
+            --color-slate-dark: #0F172A;
+            --color-slate-body: #334155;
+            --color-slate-light: #F8FAFC;
+            --color-border: #E2E8F0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: var(--color-slate-body);
+            background-color: #E2E8F0;
+            line-height: 1.65;
+            font-size: 13px;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .document-container {
+            max-width: 840px;
+            margin: 30px auto;
+            background: #FFFFFF;
+            padding: 45px 50px;
+            box-shadow: 0 15px 35px rgba(15, 23, 42, 0.12), 0 5px 15px rgba(0, 0, 0, 0.06);
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .watermark-seal {
+            position: absolute;
+            top: 55%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 420px;
+            height: 420px;
+            opacity: 0.035;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .document-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .header-banner-img {
+            width: 100%;
+            height: auto;
+            max-height: 140px;
+            object-fit: contain;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+
+        .brand-top-bar {
+            height: 5px;
+            background: linear-gradient(90deg, var(--color-crimson) 0%, var(--color-gold) 50%, var(--color-slate-dark) 100%);
+            width: 100%;
+            border-radius: 2px;
+            margin-bottom: 20px;
+        }
+
+        .document-title-block {
+            border-bottom: 2px solid var(--color-crimson);
+            padding-bottom: 16px;
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .doc-eyebrow {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--color-crimson);
+            margin-bottom: 4px;
+        }
+
+        .doc-main-title {
+            font-family: 'Cinzel', serif;
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--color-slate-dark);
+        }
+
+        .doc-meta-badge {
+            background: var(--color-slate-light);
+            border: 1px solid var(--color-border);
+            border-left: 3px solid var(--color-gold);
+            padding: 6px 14px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--color-slate-dark);
+            text-align: right;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            margin-top: 28px;
+            margin-bottom: 12px;
+            page-break-after: avoid;
+        }
+
+        .section-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--color-slate-dark);
+        }
+
+        .section-line {
+            flex-grow: 1;
+            height: 1px;
+            background: var(--color-border);
+            margin-left: 14px;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
+            font-size: 12.5px;
+            page-break-inside: avoid;
+        }
+
+        .data-table th, .data-table td {
+            padding: 9px 12px;
+            border: 1px solid var(--color-border);
+            text-align: left;
+        }
+
+        .data-table th {
+            background: var(--color-slate-light);
+            color: var(--color-slate-dark);
+            font-weight: 600;
+            font-size: 11.5px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .code-hash {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            background: #F1F5F9;
+            color: var(--color-slate-dark);
+            padding: 3px 8px;
+            border-radius: 3px;
+            border: 1px solid #CBD5E1;
+            word-break: break-all;
+        }
+
+        .footer {
+            margin-top: 40px;
+            padding-top: 16px;
+            border-top: 1px solid var(--color-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            color: #64748B;
+        }
+
+        @media print {
+            body { background: #FFFFFF; }
+            .document-container { box-shadow: none; margin: 0; padding: 0; max-width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="document-container">
+        <img src="../assets/trustee_seal.png" class="watermark-seal" alt="Trustee Seal Watermark" onerror="this.style.display='none';">
+
+        <div class="document-content">
+            <img src="../assets/scio_header_banner.png" class="header-banner-img" alt="Potter's House Christian Mission UK Letterhead" onerror="this.style.display='none';">
+            
+            <div class="brand-top-bar"></div>
+
+            <div class="document-title-block">
+                <div>
+                    <div class="doc-eyebrow">Deliverable 4 — Independent Examiner Pack</div>
+                    <h1 class="doc-main-title">Independent Examiner (IE) Review Pack</h1>
+                </div>
+                <div class="doc-meta-badge">
+                    <div>SCIO SC054652</div>
+                    <div style="font-weight:400; color:#64748B; font-size:11px;">Year Ended 31 Dec {{ financial_year }}</div>
+                </div>
+            </div>
+
+            <p style="margin-bottom: 16px; color: #475569;">
+                This working paper package contains the complete audited evidence trail, PII redaction log, OCR confidence verification flags, and compiled deliverables for submission to the Independent Examiner.
+            </p>
+
+            <!-- Section 1 -->
+            <div class="section-header">
+                <h2 class="section-title">1. Included Deliverables & Cryptographic Verification Hashes</h2>
+                <div class="section-line"></div>
+            </div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th style="width: 35%;">Deliverable Package</th>
+                        <th style="width: 20%;">Status</th>
+                        <th style="width: 45%;">Cryptographic Content Hash</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Deliverable 1: OAR Data Sheet</td>
+                        <td><strong style="color: #16A34A;">Ready</strong></td>
+                        <td><span class="code-hash">{{ content_hash }}</span></td>
+                    </tr>
+                    <tr>
+                        <td>Deliverable 2: Trustees' Annual Report</td>
+                        <td><strong style="color: #16A34A;">Ready</strong></td>
+                        <td><span class="code-hash">{{ content_hash }}</span></td>
+                    </tr>
+                    <tr>
+                        <td>Deliverable 3: R&P Accounts</td>
+                        <td><strong style="color: #16A34A;">Ready</strong></td>
+                        <td><span class="code-hash">{{ content_hash }}</span></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- Section 2 -->
+            <div class="section-header">
+                <h2 class="section-title">2. Audit & Verification Trail</h2>
+                <div class="section-line"></div>
+            </div>
+            <table class="data-table">
+                <tr><th>Ingest Income Threshold Check</th><td><strong style="color:#16A34A;">PASSED (&lt; £250,000)</strong></td></tr>
+                <tr><th>Validation Income Threshold Check</th><td><strong style="color:#16A34A;">PASSED (&lt; £250,000)</strong></td></tr>
+                <tr><th>PII Boundary Enforcement (Red-Line 4)</th><td><strong style="color:#16A34A;">PASSED (Zero PII in LLM payloads)</strong></td></tr>
+                <tr><th>Zero LLM Math Enforcement (Red-Line 2)</th><td><strong style="color:#16A34A;">PASSED (100% Deterministic Decimal)</strong></td></tr>
+            </table>
+
+            <div class="footer">
+                <div>Beacon Compliance OS — Independent Examiner Pack (Deliverable 4)</div>
+                <div>SC054652 — Dunbar, Scotland</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

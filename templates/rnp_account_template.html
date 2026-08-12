@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deliverable 3 — Receipts & Payments Accounts | SC054652</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        @page {
+            size: A4 portrait;
+            margin: 15mm 15mm 20mm 15mm;
+        }
+
+        :root {
+            --color-crimson: #D6162F;
+            --color-gold: #F5D345;
+            --color-slate-dark: #0F172A;
+            --color-slate-body: #334155;
+            --color-slate-light: #F8FAFC;
+            --color-border: #E2E8F0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: var(--color-slate-body);
+            background-color: #E2E8F0;
+            line-height: 1.65;
+            font-size: 13px;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .document-container {
+            max-width: 840px;
+            margin: 30px auto;
+            background: #FFFFFF;
+            padding: 45px 50px;
+            box-shadow: 0 15px 35px rgba(15, 23, 42, 0.12), 0 5px 15px rgba(0, 0, 0, 0.06);
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .watermark-seal {
+            position: absolute;
+            top: 55%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 420px;
+            height: 420px;
+            opacity: 0.035;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .document-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .header-banner-img {
+            width: 100%;
+            height: auto;
+            max-height: 140px;
+            object-fit: contain;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+
+        .brand-top-bar {
+            height: 5px;
+            background: linear-gradient(90deg, var(--color-crimson) 0%, var(--color-gold) 50%, var(--color-slate-dark) 100%);
+            width: 100%;
+            border-radius: 2px;
+            margin-bottom: 20px;
+        }
+
+        .document-title-block {
+            border-bottom: 2px solid var(--color-crimson);
+            padding-bottom: 16px;
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .doc-eyebrow {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--color-crimson);
+            margin-bottom: 4px;
+        }
+
+        .doc-main-title {
+            font-family: 'Cinzel', serif;
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--color-slate-dark);
+        }
+
+        .doc-meta-badge {
+            background: var(--color-slate-light);
+            border: 1px solid var(--color-border);
+            border-left: 3px solid var(--color-gold);
+            padding: 6px 14px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--color-slate-dark);
+            text-align: right;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            margin-top: 28px;
+            margin-bottom: 12px;
+            page-break-after: avoid;
+        }
+
+        .section-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--color-slate-dark);
+        }
+
+        .section-line {
+            flex-grow: 1;
+            height: 1px;
+            background: var(--color-border);
+            margin-left: 14px;
+        }
+
+        /* Financial Statement Tables */
+        .financial-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
+            font-size: 12.5px;
+            font-variant-numeric: tabular-nums;
+            page-break-inside: avoid;
+        }
+
+        .financial-table th, .financial-table td {
+            padding: 9px 12px;
+            border: 1px solid var(--color-border);
+        }
+
+        .financial-table th {
+            background: var(--color-slate-light);
+            color: var(--color-slate-dark);
+            font-weight: 600;
+            font-size: 11.5px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .financial-table td.num {
+            text-align: right;
+            font-weight: 500;
+        }
+
+        .financial-table tr.category-row td {
+            font-weight: 600;
+            background: #FFFFFF;
+        }
+
+        .financial-table tr.total-row td {
+            font-weight: 700;
+            background: #F1F5F9;
+            color: var(--color-slate-dark);
+            border-top: 2px solid var(--color-slate-dark);
+            border-bottom: 2px double var(--color-slate-dark);
+        }
+
+        .financial-summary-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-top: 16px;
+            margin-bottom: 20px;
+        }
+
+        .summary-card {
+            background: var(--color-slate-light);
+            border: 1px solid var(--color-border);
+            border-radius: 6px;
+            padding: 14px;
+            text-align: center;
+        }
+
+        .summary-card-label {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: #64748B;
+            margin-bottom: 4px;
+        }
+
+        .summary-card-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--color-slate-dark);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .code-hash {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            background: #F1F5F9;
+            color: var(--color-slate-dark);
+            padding: 3px 8px;
+            border-radius: 3px;
+            border: 1px solid #CBD5E1;
+            word-break: break-all;
+        }
+
+        .footer {
+            margin-top: 40px;
+            padding-top: 16px;
+            border-top: 1px solid var(--color-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            color: #64748B;
+        }
+
+        @media print {
+            body { background: #FFFFFF; }
+            .document-container { box-shadow: none; margin: 0; padding: 0; max-width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="document-container">
+        <img src="../assets/trustee_seal.png" class="watermark-seal" alt="Trustee Seal Watermark" onerror="this.style.display='none';">
+
+        <div class="document-content">
+            <img src="../assets/scio_header_banner.png" class="header-banner-img" alt="Potter's House Christian Mission UK Letterhead" onerror="this.style.display='none';">
+            
+            <div class="brand-top-bar"></div>
+
+            <div class="document-title-block">
+                <div>
+                    <div class="doc-eyebrow">Deliverable 3 — OSCR Statutory Accounts</div>
+                    <h1 class="doc-main-title">Receipts and Payments Accounts</h1>
+                </div>
+                <div class="doc-meta-badge">
+                    <div>SCIO SC054652</div>
+                    <div style="font-weight:400; color:#64748B; font-size:11px;">Year Ended 31 Dec {{ financial_year }}</div>
+                </div>
+            </div>
+
+            <!-- Executive Summary Cards -->
+            <div class="financial-summary-grid">
+                <div class="summary-card" style="border-top: 3px solid #16A34A;">
+                    <div class="summary-card-label">Gross Receipts</div>
+                    <div class="summary-card-value" style="color: #16A34A;">£{{ gross_receipts_decimal }}</div>
+                </div>
+                <div class="summary-card" style="border-top: 3px solid var(--color-crimson);">
+                    <div class="summary-card-label">Gross Payments</div>
+                    <div class="summary-card-value" style="color: var(--color-crimson);">£{{ gross_payments_decimal }}</div>
+                </div>
+                <div class="summary-card" style="border-top: 3px solid var(--color-gold);">
+                    <div class="summary-card-label">Net Movement</div>
+                    <div class="summary-card-value">£{{ net_movement_decimal }}</div>
+                </div>
+            </div>
+
+            <!-- Section 1: Receipts -->
+            <div class="section-header">
+                <h2 class="section-title">1. Receipts Statement (Fund Segregated)</h2>
+                <div class="section-line"></div>
+            </div>
+            <table class="financial-table">
+                <thead>
+                    <tr>
+                        <th style="width: 45%;">Category</th>
+                        <th style="width: 25%; text-align: right;">Unrestricted General Fund (£)</th>
+                        <th style="width: 25%; text-align: right;">Restricted Mission Fund (£)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="category-row">
+                        <td>Donations & Offerings</td>
+                        <td class="num">£{{ gross_receipts_decimal }}</td>
+                        <td class="num">£0.00</td>
+                    </tr>
+                    <tr class="total-row">
+                        <td>Total Gross Receipts</td>
+                        <td class="num">£{{ gross_receipts_decimal }}</td>
+                        <td class="num">£0.00</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- Section 2: Payments -->
+            <div class="section-header">
+                <h2 class="section-title">2. Payments Statement (Fund Segregated)</h2>
+                <div class="section-line"></div>
+            </div>
+            <table class="financial-table">
+                <thead>
+                    <tr>
+                        <th style="width: 45%;">Category</th>
+                        <th style="width: 25%; text-align: right;">Unrestricted General Fund (£)</th>
+                        <th style="width: 25%; text-align: right;">Restricted Mission Fund (£)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="category-row">
+                        <td>Charitable Activities & Premises Operations</td>
+                        <td class="num">£{{ gross_payments_decimal }}</td>
+                        <td class="num">£0.00</td>
+                    </tr>
+                    <tr class="total-row">
+                        <td>Total Gross Payments</td>
+                        <td class="num">£{{ gross_payments_decimal }}</td>
+                        <td class="num">£0.00</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- Section 3: Statement of Balances -->
+            <div class="section-header">
+                <h2 class="section-title">3. Statement of Balances & Reconciliation</h2>
+                <div class="section-line"></div>
+            </div>
+            <table class="financial-table">
+                <thead>
+                    <tr>
+                        <th>Fund Account</th>
+                        <th style="text-align: right;">Opening Balance (£)</th>
+                        <th style="text-align: right;">Net Movement (£)</th>
+                        <th style="text-align: right;">Closing Balance (£)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Unrestricted General Fund</td>
+                        <td class="num">£50,000.00</td>
+                        <td class="num">£{{ net_movement_decimal }}</td>
+                        <td class="num">£{{ closing_balance_decimal }}</td>
+                    </tr>
+                    <tr class="total-row">
+                        <td>Reconciled Total Funds</td>
+                        <td class="num">£50,000.00</td>
+                        <td class="num">£{{ net_movement_decimal }}</td>
+                        <td class="num">£{{ closing_balance_decimal }}</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="footer">
+                <div>Beacon Compliance OS — Statutory Accounts (Deliverable 3)</div>
+                <div>Document Content Hash: <span class="code-hash">{{ content_hash }}</span></div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

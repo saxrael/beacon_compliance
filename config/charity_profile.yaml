@@ -1,0 +1,34 @@
+charity:
+  registered_name: "Potter's House Christian Mission UK"
+  charity_number: "SC054652"
+  legal_form: "Scottish Charitable Incorporated Organisation (SCIO)"
+  governing_act: "Charities and Trustee Investment (Scotland) Act 2005"
+  regulations: "SCIO Regulations 2011"
+  registered_address: "5B Beachmont Court, Dunbar, Scotland, UK"
+  regulatory_jurisdiction: "OSCR"
+  estimated_income_band: "£50,000-£200,000"
+
+accounting:
+  accounting_basis: "Receipts & Payments"
+  max_income_threshold: 250000  # Red-Line 5 trigger (£250k gross income limit for R&P)
+  financial_year_end_month: 12
+  financial_year_end_day: 31
+
+trustee_roles:
+  - Chair
+  - Secretary
+  - Treasurer
+
+funds:
+  - id: "unrestricted_general"
+    name: "Unrestricted General Fund"
+    type: "Unrestricted"
+    description: "General operational expenses, tithes, offerings, and unrestricted donations."
+  - id: "restricted_mission"
+    name: "Restricted Mission Fund"
+    type: "Restricted"
+    description: "Funds earmarked specifically for foreign and domestic mission activities."
+  - id: "designated_events"
+    name: "Designated Events Fund"
+    type: "Designated"
+    description: "Trustee-designated funds for conferences, youth rallies, and special church events."

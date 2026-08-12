@@ -1,0 +1,53 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #F0F5FA;
+  --foreground: #1E293B;
+  --surface-card: #FFFFFF;
+  --surface-glass: rgba(255, 255, 255, 0.85);
+  --border-subtle: #CBD5E1;
+  --brand-crimson: #D6162F;
+  --brand-gold: #F5D345;
+}
+
+.dark {
+  --background: #0F172A;
+  --foreground: #F8FAFC;
+  --surface-card: #1E293B;
+  --surface-glass: rgba(30, 41, 59, 0.75);
+  --border-subtle: #334155;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: Inter, sans-serif;
+  min-height: 100vh;
+  transition: background-color 300ms ease, color 300ms ease;
+}
+
+.glass-card {
+  background: var(--surface-glass);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border-subtle);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15);
+  transition: background-color 300ms ease, border-color 300ms ease, box-shadow 300ms ease;
+}
+
+.brand-gradient {
+  background: linear-gradient(135deg, #D6162F 0%, #F5D345 100%);
+}
+
+.amber-gradient {
+  background: linear-gradient(135deg, #D6162F 0%, #F5D345 100%);
+}
+
+.brand-badge {
+  background: rgba(214, 22, 47, 0.15);
+  border-left: 3px solid #F5D345;
+  color: var(--foreground);
+}
+
+
