@@ -71,24 +71,25 @@ class PIIRedactor:
         entities_found: list[str] = []
         redacted = text
 
+        for entity_type, pattern in self.PATTERNS.items():
+            if pattern.search(redacted):
+                if entity_type not in entities_found:
+                    entities_found.append(entity_type)
+                redacted = pattern.sub(f"[{entity_type}_REDACTED]", redacted)
+
         if self._presidio_available and self._analyzer and self._anonymizer:
             try:
                 analyzer_results = self._analyzer.analyze(text=redacted, language="en")
                 if analyzer_results:
                     for res in analyzer_results:
-                        entities_found.append(res.entity_type)
+                        if res.entity_type not in entities_found:
+                            entities_found.append(res.entity_type)
                     anonymized_res = self._anonymizer.anonymize(
                         text=redacted, analyzer_results=analyzer_results
                     )
                     redacted = anonymized_res.text
             except Exception:
                 pass
-
-        for entity_type, pattern in self.PATTERNS.items():
-            if pattern.search(redacted):
-                if entity_type not in entities_found:
-                    entities_found.append(entity_type)
-                redacted = pattern.sub(f"[{entity_type}_REDACTED]", redacted)
 
         audit_record = RedactionAuditRecord(
             field_name=field_name,
