@@ -1,5 +1,6 @@
 "use client";
 
+import React, { useState } from "react";
 import { API_BASE_URL } from "@/config";
 import { Download, FileCheck, Copy, Check } from "lucide-react";
 
@@ -22,7 +23,7 @@ export const DeliverableDownloadGrid: React.FC<DeliverableGridProps> = ({
   onOpenSignoff,
   signatures,
 }) => {
-  const [copiedId, setCopiedId] = React.useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const copyHash = (hash?: string) => {
     if (!hash) return;
