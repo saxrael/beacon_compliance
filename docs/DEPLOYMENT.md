@@ -30,7 +30,7 @@ Wrangler tracks applied migration SQL files in the `d1_migrations` table in Clou
 
 ```bash
 # Manual CLI migration execution (if needed)
-npx wrangler d1 migrations apply beacon-compliance-d1 --remote --account-id=<ACCOUNT_ID>
+npx wrangler d1 migrations apply beacon-compliance-d1 --remote
 ```
 
 #### Cloudflare API Token & Account ID Configuration (Required for CI/CD)
