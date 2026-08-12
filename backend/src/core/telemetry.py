@@ -51,18 +51,20 @@ class BeaconLangfuseTracer:
         self.langfuse_client: Any | None = None
 
         if self.enabled and self.public_key and self.secret_key:
-            try:
-                from langfuse import Langfuse
-
-                self.langfuse_client = Langfuse(
-                    public_key=self.public_key,
-                    secret_key=self.secret_key,
-                    host=self.host,
-                )
-                logger.info("Langfuse telemetry initialized successfully (Host: %s)", self.host)
-            except Exception as exc:
-                logger.warning("Failed to initialize Langfuse client: %s. Telemetry disabled.", exc)
+            if Langfuse is None:
+                logger.warning("Langfuse module unavailable; telemetry disabled.")
                 self.enabled = False
+            else:
+                try:
+                    self.langfuse_client = Langfuse(
+                        public_key=self.public_key,
+                        secret_key=self.secret_key,
+                        host=self.host,
+                    )
+                    logger.info("Langfuse telemetry initialized successfully (Host: %s)", self.host)
+                except Exception as exc:
+                    logger.warning("Failed to initialize Langfuse client: %s. Telemetry disabled.", exc)
+                    self.enabled = False
 
     def is_enabled(self) -> bool:
         """Return True if Langfuse telemetry is active and configured."""
@@ -88,6 +90,7 @@ class BeaconLangfuseTracer:
     def trace_llm_generation(
         self,
         name: str,
+        *,
         system_prompt: str,
         user_message: str,
         model: str,

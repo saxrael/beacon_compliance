@@ -44,5 +44,5 @@ ignore = ["PLR2004", "E501", "RUF002", "PLR0913", "B008", "PLW0603"]
 [tool.pytest.ini_options]
 minversion = "8.0"
 testpaths = ["tests"]
-pythonpath = ["src"]
+pythonpath = ["src", ".."]
 addopts = "-v --tb=short"

@@ -28,6 +28,7 @@ class ComplianceRepository:
     def save_financial_state(
         self,
         run_id: str,
+        *,
         fund: str,
         receipts: dict[str, Any],
         payments: dict[str, Any],
@@ -93,6 +94,7 @@ class ComplianceRepository:
     def save_classification_rule(
         self,
         rule_id: str,
+        *,
         pattern: str,
         fund: str,
         category: str,

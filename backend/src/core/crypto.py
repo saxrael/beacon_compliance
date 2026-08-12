@@ -26,6 +26,7 @@ class TrusteeApprovalSignature(NamedTuple):
 
 def generate_trustee_hmac(
     trustee_secret: bytes,
+    *,
     trustee_id: str,
     role: str,
     deliverable_id: str,
@@ -43,6 +44,7 @@ def generate_trustee_hmac(
 
 def verify_trustee_hmac(
     trustee_secret: bytes,
+    *,
     trustee_id: str,
     role: str,
     deliverable_id: str,
