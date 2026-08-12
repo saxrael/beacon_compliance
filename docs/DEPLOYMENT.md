@@ -30,8 +30,19 @@ Wrangler tracks applied migration SQL files in the `d1_migrations` table in Clou
 
 ```bash
 # Manual CLI migration execution (if needed)
-npx wrangler d1 migrations apply beacon-compliance-d1 --remote
+npx wrangler d1 migrations apply beacon-compliance-d1 --remote --account-id=<ACCOUNT_ID>
 ```
+
+#### Cloudflare API Token & Account ID Configuration (Required for CI/CD)
+To prevent Cloudflare API Code 7403 (`The given account is not valid or is not authorized to access this service`), verify the following in GitHub Repository Secrets:
+
+1. **`CLOUDFLARE_ACCOUNT_ID`**: Found in Cloudflare Dashboard URL (`dash.cloudflare.com/<ACCOUNT_ID>`) or under Account Overview on the right sidebar.
+2. **`CLOUDFLARE_API_TOKEN`**: Create under **Cloudflare Dashboard** -> **My Profile** -> **API Tokens** with these permissions:
+   - **Account** -> **D1** -> **Edit**
+   - **Account** -> **Workers R2 Storage** -> **Edit**
+   - **Account** -> **Workers Scripts** -> **Edit**
+   - **Account** -> **Account Details** -> **Read**
+   - **Account Resources**: Include -> *All accounts* (or select your specific account).
 
 ### Step 3: Create Cloudflare R2 Object Storage Bucket
 ```bash
