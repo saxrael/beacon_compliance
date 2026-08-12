@@ -127,7 +127,7 @@ DO NOT output any monetary amount, numerical value, or currency field.
                         data = resp.json()
                         content = data["choices"][0]["message"]["content"]
                         parsed = json.loads(content)
-                        
+
                         cleaned = {
                             "category": str(parsed.get("category", "General Offerings")),
                             "confidence": float(parsed.get("confidence", 0.85)),

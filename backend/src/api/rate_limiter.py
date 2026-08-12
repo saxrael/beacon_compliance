@@ -45,7 +45,6 @@ class RateLimiter:
         return True, remaining, self.window_seconds
 
 
- 
 standard_limiter = RateLimiter(requests_per_minute=100)
 strict_signoff_limiter = RateLimiter(requests_per_minute=10)
 

@@ -25,8 +25,6 @@ class ComplianceRepository:
         self.db = db_client or D1DatabaseClient(db_path=":memory:")
         self.r2 = r2_client or R2StorageClient()
 
-    
-
     def save_financial_state(
         self,
         run_id: str,
@@ -69,8 +67,6 @@ class ComplianceRepository:
             "opening_balance_pence": row["opening_balance_pence"],
             "closing_balance_pence": row["closing_balance_pence"],
         }
-
-    
 
     def get_transactions_for_run(self, run_id: str) -> list[dict[str, Any]]:
         """Query transactions belonging to run_id from D1 database."""
@@ -118,8 +114,6 @@ class ComplianceRepository:
             "created_from_txn_id": created_from_txn_id,
             "confirmed_by_tier": confirmed_by_tier,
         }
-
-    
 
     def store_document_blob(
         self,

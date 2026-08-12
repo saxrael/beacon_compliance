@@ -41,7 +41,6 @@ def test_trustee_hmac_signoff_verification():
     )
     assert is_valid is True
 
-    
     tampered_valid = verify_trustee_hmac(
         trustee_secret=secret,
         trustee_id=trustee_id,

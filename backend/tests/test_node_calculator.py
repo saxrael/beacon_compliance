@@ -13,9 +13,9 @@ def test_node_calculator_normal_run():
         "run_id": "run_2026_test",
         "charity_number": "SC054652",
         "anonymised_payload": {
-                "opening_balance_pence": 1000000,
-                "closing_balance_pence": 1500000,
-            },
+            "opening_balance_pence": 1000000,
+            "closing_balance_pence": 1500000,
+        },
         "classified_transactions": [
             {
                 "txn_id": "T1",
@@ -55,9 +55,9 @@ def test_node_calculator_red_line_5_income_threshold_breach():
         "run_id": "run_2026_breach_test",
         "charity_number": "SC054652",
         "anonymised_payload": {
-                "opening_balance_pence": 100000,
-                "closing_balance_pence": 25100000,
-            },
+            "opening_balance_pence": 100000,
+            "closing_balance_pence": 25100000,
+        },
         "classified_transactions": [
             {
                 "txn_id": "T_LARGE",

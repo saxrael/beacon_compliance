@@ -6,7 +6,6 @@ from backend.src.core.knowledge_context import ComplianceKnowledgeContext
 def test_compliance_knowledge_context_non_financial_memory():
     ctx = ComplianceKnowledgeContext()
 
-    
     accepted = ctx.add_non_financial_fact(
         fact_id="fact_01",
         user_id="trustee_chair",
@@ -15,7 +14,6 @@ def test_compliance_knowledge_context_non_financial_memory():
     )
     assert accepted is True
 
-    
     rejected = ctx.add_non_financial_fact(
         fact_id="fact_02",
         user_id="trustee_chair",

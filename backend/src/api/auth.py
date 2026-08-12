@@ -40,7 +40,7 @@ def get_current_trustee(
                 detail="Authentication required. Missing Bearer token.",
                 headers={"WWW-Authenticate": "Bearer"},
             )
-        
+
         return TrusteeUser(
             user_id="dev_trustee_001",
             name="Default Trustee",
