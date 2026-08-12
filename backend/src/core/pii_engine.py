@@ -10,6 +10,13 @@ from typing import ClassVar, NamedTuple
 
 from pydantic import BaseModel
 
+try:
+    from presidio_analyzer import AnalyzerEngine
+    from presidio_anonymizer import AnonymizerEngine
+except Exception:  # pragma: no cover - optional dependency
+    AnalyzerEngine = None
+    AnonymizerEngine = None
+
 
 class PIIRedactionResult(NamedTuple):
     """Container for redacted text and redaction metadata log."""
@@ -45,13 +52,12 @@ class PIIRedactor:
     def __init__(self) -> None:
         self._presidio_available = False
         try:
-            from presidio_analyzer import AnalyzerEngine
-            from presidio_anonymizer import AnonymizerEngine
-
+            if AnalyzerEngine is None or AnonymizerEngine is None:
+                raise ImportError("Presidio not available")
             self._analyzer = AnalyzerEngine()
             self._anonymizer = AnonymizerEngine()
             self._presidio_available = True
-        except ImportError:
+        except Exception:
             self._analyzer = None
             self._anonymizer = None
 

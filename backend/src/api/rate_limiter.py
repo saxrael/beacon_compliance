@@ -32,7 +32,6 @@ class RateLimiter:
         limit = limit_override or self.requests_per_minute
         cutoff = now - self.window_seconds
 
-        # Prune timestamps older than window
         timestamps = [t for t in self._history[client_ip] if t > cutoff]
         self._history[client_ip] = timestamps
 
@@ -46,7 +45,7 @@ class RateLimiter:
         return True, remaining, self.window_seconds
 
 
-# Global rate limiter instances
+ 
 standard_limiter = RateLimiter(requests_per_minute=100)
 strict_signoff_limiter = RateLimiter(requests_per_minute=10)
 
@@ -58,7 +57,6 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         client_ip = request.client.host if request.client else "127.0.0.1"
         path = request.url.path
 
-        # Apply strict limit on sign-off approval endpoint
         if path.startswith("/api/signoff"):
             allowed, remaining, reset_in = strict_signoff_limiter.is_allowed(
                 client_ip, limit_override=10

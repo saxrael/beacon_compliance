@@ -50,7 +50,6 @@ async def get_pending_classifications(
     run_id: str = "run_001",
     repo: ComplianceRepository = Depends(get_repository),
 ) -> PendingClassificationResponse:
-    # Query domain repository for transactions belonging to this run
     db_txns = repo.get_transactions_for_run(run_id)
 
     if db_txns:
@@ -86,7 +85,6 @@ async def get_pending_classifications(
         },
     }
 
-    # Execute Node 1.5 classify non-blockingly via asyncio.to_thread
     result = await asyncio.to_thread(run_node_classify, state)
     classified_list = result.get("classified_transactions", [])
 

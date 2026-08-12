@@ -58,7 +58,6 @@ def test_tier25_schema_isolation_rule_3():
     assert isinstance(suggestion.confidence, float)
     assert isinstance(suggestion.reasoning, str)
 
-    # Ensure model dict contains ONLY allowed fields
     dump = suggestion.model_dump()
     assert set(dump.keys()) == {"txn_id", "category", "confidence", "reasoning"}
     for monetary_key in ("amount", "amount_pence", "total", "value"):

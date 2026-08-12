@@ -22,7 +22,7 @@ def test_crypto_secret_strength(monkeypatch):
 
 
 def test_document_templates_exist():
-    passed, msg = check_document_templates()
+    passed, _ = check_document_templates()
     assert passed is True
 
 

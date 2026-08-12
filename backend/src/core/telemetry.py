@@ -16,6 +16,13 @@ from backend.src.core.pii_engine import default_redactor
 
 logger = logging.getLogger(__name__)
 
+try:
+    from langfuse import Langfuse  # type: ignore
+    from langfuse.langchain import CallbackHandler  # type: ignore
+except Exception:  # pragma: no cover - optional dependency
+    Langfuse = None
+    CallbackHandler = None
+
 
 def sanitize_telemetry_payload(data: Any) -> Any:
     """Recursively scrub PII from telemetry dictionary payloads, lists, and strings.
@@ -65,9 +72,10 @@ class BeaconLangfuseTracer:
         """Get PII-guarded CallbackHandler for LangGraph / LangChain execution."""
         if not self.is_enabled():
             return None
+        if CallbackHandler is None:
+            logger.warning("Langfuse CallbackHandler unavailable; ensure langfuse is installed.")
+            return None
         try:
-            from langfuse.langchain import CallbackHandler
-
             return CallbackHandler(
                 public_key=self.public_key,
                 secret_key=self.secret_key,

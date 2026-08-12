@@ -45,7 +45,7 @@ def test_calculate_fund_totals():
             run_id="RUN1",
             date="2026-01-10",
             description="Sunday Offering",
-            amount_pence=50000,  # £500.00
+            amount_pence=50000,
             fund="unrestricted_general",
             category="Donations",
             transaction_type="receipt",
@@ -55,7 +55,7 @@ def test_calculate_fund_totals():
             run_id="RUN1",
             date="2026-01-12",
             description="Rent Payment",
-            amount_pence=20000,  # £200.00
+            amount_pence=20000,
             fund="unrestricted_general",
             category="Premises",
             transaction_type="payment",
@@ -65,7 +65,7 @@ def test_calculate_fund_totals():
             run_id="RUN1",
             date="2026-01-15",
             description="Mission Support",
-            amount_pence=30000,  # £300.00
+            amount_pence=30000,
             fund="restricted_mission",
             category="Missions",
             transaction_type="receipt",
@@ -88,6 +88,6 @@ def test_calculate_fund_totals():
 
 def test_income_threshold_check():
     """Verify gross income threshold boundary checks (£250,000 limit)."""
-    assert not check_income_threshold(24999999, threshold_pounds=250000)  # £249,999.99
-    assert check_income_threshold(25000000, threshold_pounds=250000)  # £250,000.00
-    assert check_income_threshold(25000001, threshold_pounds=250000)  # £250,000.01
+    assert not check_income_threshold(24999999, threshold_pounds=250000)
+    assert check_income_threshold(25000000, threshold_pounds=250000)
+    assert check_income_threshold(25000001, threshold_pounds=250000)

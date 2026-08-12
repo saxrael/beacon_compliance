@@ -67,13 +67,11 @@ async def run_pipeline(
         },
     }
 
-    # Execute state machine non-blockingly via asyncio.to_thread
     final_state = await asyncio.to_thread(graph.run, initial_state)
 
     rnp = final_state.get("receipts_payments", {})
     balances = final_state.get("statement_of_balances", {})
 
-    # Persist financial state through repository facade
     repo.save_financial_state(
         run_id=req.run_id,
         fund="unrestricted_general",

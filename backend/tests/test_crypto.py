@@ -29,9 +29,7 @@ def test_trustee_hmac_signoff_verification():
     )
 
     assert isinstance(signature, str)
-    assert len(signature) == 64  # SHA-256 hex digest length
-
-    # Verify signature passes with exact credentials
+    assert len(signature) == 64
     is_valid = verify_trustee_hmac(
         trustee_secret=secret,
         trustee_id=trustee_id,
@@ -43,7 +41,7 @@ def test_trustee_hmac_signoff_verification():
     )
     assert is_valid is True
 
-    # Verify signature fails with tampered content hash
+    
     tampered_valid = verify_trustee_hmac(
         trustee_secret=secret,
         trustee_id=trustee_id,
@@ -62,7 +60,7 @@ def test_invalid_trustee_role_rejection():
         generate_trustee_hmac(
             trustee_secret=b"secret",
             trustee_id="u1",
-            role="Auditor",  # Only Chair, Secretary, Treasurer allowed
+            role="Auditor",
             deliverable_id="d1",
             run_id="r1",
             deliverable_content_hash="hash",

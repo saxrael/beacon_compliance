@@ -5,6 +5,8 @@ encrypted R2 blob storage, JSON serialization/deserialization, and schema detail
 behind clean domain methods.
 """
 
+import hashlib
+import hmac
 import json
 from typing import Any
 
@@ -23,7 +25,7 @@ class ComplianceRepository:
         self.db = db_client or D1DatabaseClient(db_path=":memory:")
         self.r2 = r2_client or R2StorageClient()
 
-    # --- Run & Financial State Operations ---
+    
 
     def save_financial_state(
         self,
@@ -68,7 +70,7 @@ class ComplianceRepository:
             "closing_balance_pence": row["closing_balance_pence"],
         }
 
-    # --- Transaction & Classification Operations ---
+    
 
     def get_transactions_for_run(self, run_id: str) -> list[dict[str, Any]]:
         """Query transactions belonging to run_id from D1 database."""
@@ -117,7 +119,7 @@ class ComplianceRepository:
             "confirmed_by_tier": confirmed_by_tier,
         }
 
-    # --- Document & Encrypted Storage Operations ---
+    
 
     def store_document_blob(
         self,
@@ -130,9 +132,6 @@ class ComplianceRepository:
         """Encrypt content and store in R2 object storage, saving metadata to D1."""
         object_key = f"documents/{run_id}/{doc_id}/{filename}"
         self.r2.put_object(object_key, content_bytes)
-
-        import hashlib
-        import hmac
 
         doc_hash = hmac.new(b"beacon_doc_hash", content_bytes, hashlib.sha256).hexdigest()
 

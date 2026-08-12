@@ -38,15 +38,12 @@ def build_compliance_graph() -> StateGraph:
     """Build and compile genuine LangGraph StateGraph workflow DAG."""
     workflow = StateGraph(BeaconComplianceState)
 
-    # Add Nodes
     workflow.add_node("node_ingest", run_node_ingest)
     workflow.add_node("node_classify", run_node_classify)
     workflow.add_node("node_calculator", run_node_calculator)
     workflow.add_node("node_writer", run_node_writer)
     workflow.add_node("node_auditor", run_node_auditor)
     workflow.add_node("node_assembler", run_node_assembler)
-
-    # Add Edges
     workflow.add_edge(START, "node_ingest")
     workflow.add_conditional_edges(
         "node_ingest",

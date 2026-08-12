@@ -11,7 +11,7 @@ router = APIRouter(prefix="/api/signoff", tags=["Sign-off"])
 
 
 class TrusteeSignoffRequest(BaseModel):
-    trustee_role: str  # 'Chair', 'Secretary', 'Treasurer'
+    trustee_role: str
     trustee_secret: str
     deliverable_hash: str
     run_id: str = "run_001"

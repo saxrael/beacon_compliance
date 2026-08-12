@@ -20,7 +20,6 @@ def test_txt_document_extraction():
 
 def test_low_confidence_ocr_flagging():
     extractor = MultiFormatDocumentExtractor(confidence_threshold=0.90)
-    # Simulate low confidence extraction
     raw_bytes = b"%PDF-1.4 Scanned blurred image payload"
 
     res, flag = extractor.extract_document(

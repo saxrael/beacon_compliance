@@ -16,7 +16,7 @@ def test_node_ingest_normal():
                 "doc_id": "doc_1",
                 "filename": "bank_statement.txt",
                 "content_bytes": b"Bank statement for john.doe@example.com account 12345678",
-                "declared_receipts_pence": 5000000,  # £50,000.00
+                "declared_receipts_pence": 5000000,
             }
         ],
         "anonymised_payload": {
@@ -45,7 +45,7 @@ def test_node_ingest_income_threshold_breach():
                 "doc_id": "doc_large",
                 "filename": "large_legacy_statement.txt",
                 "content_bytes": b"Legacy donation receipt",
-                "declared_receipts_pence": 25000000,  # £250,000.00 exactly
+                "declared_receipts_pence": 25000000,
             }
         ],
     }

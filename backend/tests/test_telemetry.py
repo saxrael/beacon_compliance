@@ -56,7 +56,6 @@ def test_beacon_langfuse_tracer_disabled_default(monkeypatch):
     assert not tracer.is_enabled()
     assert tracer.get_langchain_callback() is None
 
-    # Should execute without throwing any exception
     tracer.trace_llm_generation(
         name="test_gen",
         system_prompt="System",
@@ -73,7 +72,6 @@ def test_beacon_langfuse_tracer_mock_enabled(monkeypatch):
     monkeypatch.setenv("LANGFUSE_SECRET_KEY", "sk-lf-test")
 
     tracer = BeaconLangfuseTracer()
-    # Check object initialization without breaking
     assert isinstance(tracer.enabled, bool)
 
 

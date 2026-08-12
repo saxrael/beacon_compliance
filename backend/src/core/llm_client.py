@@ -42,7 +42,6 @@ class LLMClient:
         payload_str = json.dumps(anonymised_payload, indent=2)
         user_prompt = f"Synthesize TAR narrative prose for the 4 whitelisted fields based on this PII-scrubbed payload:\n{payload_str}"
 
-        # Attempt API call via OpenRouter or Groq
         if self.openrouter_key or self.groq_key:
             try:
                 headers = {
@@ -128,7 +127,7 @@ DO NOT output any monetary amount, numerical value, or currency field.
                         data = resp.json()
                         content = data["choices"][0]["message"]["content"]
                         parsed = json.loads(content)
-                        # Enforce Rule 3: strip any unauthorized monetary keys
+                        
                         cleaned = {
                             "category": str(parsed.get("category", "General Offerings")),
                             "confidence": float(parsed.get("confidence", 0.85)),

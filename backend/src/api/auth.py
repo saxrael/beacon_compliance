@@ -20,7 +20,7 @@ class TrusteeUser(BaseModel):
     user_id: str
     name: str
     email: str
-    role: str  # 'Chair', 'Secretary', 'Treasurer', 'Trustee'
+    role: str
 
 
 def get_current_trustee(
@@ -40,7 +40,7 @@ def get_current_trustee(
                 detail="Authentication required. Missing Bearer token.",
                 headers={"WWW-Authenticate": "Bearer"},
             )
-        # Development fallback principal
+        
         return TrusteeUser(
             user_id="dev_trustee_001",
             name="Default Trustee",
@@ -49,7 +49,6 @@ def get_current_trustee(
         )
 
     token = credentials.credentials
-    # Simple token validation logic (extendable to JWT decode)
     if token.startswith("secret_trustee_token_") or token.startswith("ey"):
         return TrusteeUser(
             user_id="trustee_authenticated",

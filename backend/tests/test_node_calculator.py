@@ -13,16 +13,16 @@ def test_node_calculator_normal_run():
         "run_id": "run_2026_test",
         "charity_number": "SC054652",
         "anonymised_payload": {
-            "opening_balance_pence": 1000000,  # £10,000.00
-            "closing_balance_pence": 1500000,  # £15,000.00
-        },
+                "opening_balance_pence": 1000000,
+                "closing_balance_pence": 1500000,
+            },
         "classified_transactions": [
             {
                 "txn_id": "T1",
                 "run_id": "run_2026_test",
                 "date": "2026-01-05",
                 "description": "General Tithes",
-                "amount_pence": 1000000,  # £10,000.00
+                "amount_pence": 1000000,
                 "fund": "unrestricted_general",
                 "category": "Donations",
                 "transaction_type": "receipt",
@@ -32,7 +32,7 @@ def test_node_calculator_normal_run():
                 "run_id": "run_2026_test",
                 "date": "2026-01-10",
                 "description": "Hall Rent",
-                "amount_pence": 500000,  # £5,000.00
+                "amount_pence": 500000,
                 "fund": "unrestricted_general",
                 "category": "Premises",
                 "transaction_type": "payment",
@@ -55,16 +55,16 @@ def test_node_calculator_red_line_5_income_threshold_breach():
         "run_id": "run_2026_breach_test",
         "charity_number": "SC054652",
         "anonymised_payload": {
-            "opening_balance_pence": 100000,
-            "closing_balance_pence": 25100000,
-        },
+                "opening_balance_pence": 100000,
+                "closing_balance_pence": 25100000,
+            },
         "classified_transactions": [
             {
                 "txn_id": "T_LARGE",
                 "run_id": "run_2026_breach_test",
                 "date": "2026-06-01",
                 "description": "Large Capital Legacy",
-                "amount_pence": 25000000,  # £250,000.00 exactly
+                "amount_pence": 25000000,
                 "fund": "unrestricted_general",
                 "category": "Legacy",
                 "transaction_type": "receipt",
@@ -74,6 +74,5 @@ def test_node_calculator_red_line_5_income_threshold_breach():
 
     result = run_node_calculator(state)
 
-    # Must flag threshold breach per Red-Line 5
     assert result["income_threshold_breach"] is True
     assert result["receipts_payments"]["gross_receipts_pence"] == 25000000

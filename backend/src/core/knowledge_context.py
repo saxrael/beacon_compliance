@@ -42,17 +42,17 @@ class ComplianceKnowledgeContext:
         top_k: int = 3,
     ) -> dict[str, Any]:
         """Query knowledge base and cognitive memory in a single unified seam."""
-        # 1. Search Knowledge Base via Hybrid RRF
+        
         kb_matches: list[SearchResultChunk] = []
         if corpus:
             kb_matches = self.retriever.hybrid_rrf_search(
                 query=query, query_vec=None, corpus=corpus, top_n=top_k
             )
 
-        # 2. Filter User Cognitive Memory Facts
+        
         user_facts = [f.fact_text for f in self.stored_facts if f.user_id == user_id]
 
-        # 3. Format unified context text
+        
         kb_texts = [m.text for m in kb_matches]
         sources = [m.chunk_id for m in kb_matches]
 

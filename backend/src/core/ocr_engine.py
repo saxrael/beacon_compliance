@@ -9,6 +9,28 @@ from typing import NamedTuple
 
 from pydantic import BaseModel
 
+try:
+    import pdfplumber
+except Exception:  # pragma: no cover - optional dependency
+    pdfplumber = None
+
+try:
+    import pandas as pd
+except Exception:  # pragma: no cover - optional dependency
+    pd = None
+
+try:
+    import docx
+except Exception:  # pragma: no cover - optional dependency
+    docx = None
+
+try:
+    import pytesseract
+    from PIL import Image
+except Exception:  # pragma: no cover - optional dependency
+    pytesseract = None
+    Image = None
+
 
 class DocumentExtractionResult(NamedTuple):
     """Container for extracted document text, tables, and confidence metrics."""
@@ -38,7 +60,8 @@ class MultiFormatDocumentExtractor:
     def _extract_pdf(self, content_bytes: bytes) -> tuple[str, list[list[list[str]]], float]:
         """Extract text and tables from PDF files."""
         try:
-            import pdfplumber
+            if not pdfplumber:
+                raise RuntimeError("pdfplumber not installed")
 
             with pdfplumber.open(io.BytesIO(content_bytes)) as pdf:
                 pages_text: list[str] = []
@@ -57,7 +80,8 @@ class MultiFormatDocumentExtractor:
     def _extract_excel(self, ext: str, content_bytes: bytes) -> tuple[str, list[list[list[str]]]]:
         """Extract text and tables from Excel / CSV files."""
         try:
-            import pandas as pd
+            if pd is None:
+                raise RuntimeError("pandas not installed")
 
             df = (
                 pd.read_csv(io.BytesIO(content_bytes))
@@ -71,7 +95,8 @@ class MultiFormatDocumentExtractor:
     def _extract_docx(self, content_bytes: bytes) -> str:
         """Extract text from docx files."""
         try:
-            import docx
+            if docx is None:
+                raise RuntimeError("python-docx not installed")
 
             doc = docx.Document(io.BytesIO(content_bytes))
             return "\n".join([p.text for p in doc.paragraphs])
@@ -81,8 +106,8 @@ class MultiFormatDocumentExtractor:
     def _extract_image(self, content_bytes: bytes) -> tuple[str, float]:
         """Extract text from image files via OCR."""
         try:
-            import pytesseract
-            from PIL import Image
+            if pytesseract is None or Image is None:
+                raise RuntimeError("pytesseract or PIL not installed")
 
             img = Image.open(io.BytesIO(content_bytes))
             ocr_data = pytesseract.image_to_data(img, output_type=pytesseract.Output.DICT)
@@ -101,7 +126,7 @@ class MultiFormatDocumentExtractor:
         self, doc_id: str, filename: str, content_bytes: bytes
     ) -> tuple[DocumentExtractionResult, OCRConfidenceFlag | None]:
         """Extract text and tables from document binary content."""
-        ext = filename.split(".")[-1].lower() if "." in filename else ""
+        ext = filename.rsplit(".", maxsplit=1)[-1].lower() if "." in filename else ""
         extracted_text = ""
         extracted_tables: list[list[list[str]]] = []
         confidence = 1.0

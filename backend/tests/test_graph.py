@@ -49,7 +49,7 @@ def test_graph_end_to_end_threshold_halt():
                 "doc_id": "doc_large",
                 "filename": "large_legacy.txt",
                 "content_bytes": b"Large legacy donation",
-                "declared_receipts_pence": 25000000,  # £250,000.00
+                "declared_receipts_pence": 25000000,
             }
         ],
     }

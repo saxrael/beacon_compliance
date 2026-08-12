@@ -106,7 +106,7 @@ class RnPAccount(BaseModel):
     gross_receipts_pence: int = 0
     gross_payments_pence: int = 0
     net_receipts_payments_pence: int = 0
-    is_threshold_breached: bool = False  # True if gross receipts >= £250,000
+    is_threshold_breached: bool = False
 
 
 class StatementOfBalances(BaseModel):

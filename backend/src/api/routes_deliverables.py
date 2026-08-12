@@ -39,7 +39,6 @@ async def get_deliverables(
     run_id: str,
     repo: ComplianceRepository = Depends(get_repository),
 ) -> DeliverablesResponse:
-    # Fetch domain financial state from repository facade
     fin_state = repo.get_financial_state(run_id)
 
     if fin_state:

@@ -10,6 +10,7 @@ Enforces:
 from typing import Any
 
 from backend.src.core.knowledge_context import ComplianceKnowledgeContext
+from backend.src.core.llm_client import LLMClient
 from pydantic import BaseModel, Field
 
 CHAT_AGENT_SYSTEM_PROMPT = """
@@ -166,8 +167,6 @@ class ComplianceChatAgent:
         tool_calls = []
         sources = []
         lower_msg = user_message.lower()
-
-        from backend.src.core.llm_client import LLMClient
 
         llm_client = LLMClient()
         tool_context = ""
