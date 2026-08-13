@@ -80,14 +80,17 @@ class MultiFormatDocumentExtractor:
     def _extract_excel(self, ext: str, content_bytes: bytes) -> tuple[str, list[list[list[str]]]]:
         """Extract text and tables from Excel / CSV files."""
         try:
+            if ext == "csv":
+                import csv
+                text_str = content_bytes.decode("utf-8", errors="ignore")
+                lines = [line for line in text_str.splitlines() if line.strip()]
+                reader = list(csv.reader(lines))
+                return text_str, [reader] if reader else []
+
             if pd is None:
                 raise RuntimeError("pandas not installed")
 
-            df = (
-                pd.read_csv(io.BytesIO(content_bytes))
-                if ext == "csv"
-                else pd.read_excel(io.BytesIO(content_bytes))
-            )
+            df = pd.read_excel(io.BytesIO(content_bytes))
             return df.to_string(), [df.astype(str).values.tolist()]
         except Exception:
             return content_bytes.decode("utf-8", errors="ignore"), []
