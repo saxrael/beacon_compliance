@@ -30,6 +30,7 @@ htmlcov/
 venv/
 ENV/
 .agent/
+.ruff_cache/
 
 # Node / Next.js
 node_modules/
