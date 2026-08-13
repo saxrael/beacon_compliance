@@ -2,52 +2,71 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #F0F5FA;
-  --foreground: #1E293B;
-  --surface-card: #FFFFFF;
-  --surface-glass: rgba(255, 255, 255, 0.85);
-  --border-subtle: #CBD5E1;
-  --brand-crimson: #D6162F;
-  --brand-gold: #F5D345;
-}
+@layer base {
+  :root {
+    --background: #F8FAFC;
+    --foreground: #0F172A;
+    --card: #FFFFFF;
+    --card-foreground: #0F172A;
+    --card-border: #E2E8F0;
+    --accent-crimson: #D6162F;
+    --accent-gold: #EAB308;
+    --muted: #64748B;
+  }
 
-.dark {
-  --background: #0F172A;
-  --foreground: #F8FAFC;
-  --surface-card: #1E293B;
-  --surface-glass: rgba(30, 41, 59, 0.75);
-  --border-subtle: #334155;
+  .dark {
+    --background: #090D16;
+    --foreground: #F8FAFC;
+    --card: #111827;
+    --card-foreground: #F8FAFC;
+    --card-border: rgba(255, 255, 255, 0.08);
+    --accent-crimson: #EF4444;
+    --accent-gold: #FACC15;
+    --muted: #94A3B8;
+  }
 }
 
 body {
   color: var(--foreground);
-  background: var(--background);
-  font-family: Inter, sans-serif;
+  background-color: var(--background);
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   min-height: 100vh;
-  transition: background-color 300ms ease, color 300ms ease;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 .glass-card {
-  background: var(--surface-glass);
-  backdrop-filter: blur(12px);
-  border: 1px solid var(--border-subtle);
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15);
-  transition: background-color 300ms ease, border-color 300ms ease, box-shadow 300ms ease;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 2px 6px -1px rgba(0, 0, 0, 0.03);
+}
+
+.dark .glass-card {
+  background: rgba(17, 24, 39, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
 }
 
 .brand-gradient {
-  background: linear-gradient(135deg, #D6162F 0%, #F5D345 100%);
+  background: linear-gradient(135deg, #DC2626 0%, #E11D48 50%, #D97706 100%);
 }
 
-.amber-gradient {
-  background: linear-gradient(135deg, #D6162F 0%, #F5D345 100%);
+.gold-gradient {
+  background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
 }
 
 .brand-badge {
-  background: rgba(214, 22, 47, 0.15);
-  border-left: 3px solid #F5D345;
+  background: rgba(220, 38, 38, 0.1);
+  border-left: 3px solid #EAB308;
   color: var(--foreground);
 }
 
-
+.dark .brand-badge {
+  background: rgba(239, 68, 68, 0.15);
+  border-left: 3px solid #FACC15;
+  color: var(--foreground);
+}
