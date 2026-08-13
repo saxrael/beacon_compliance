@@ -138,6 +138,7 @@ jobs:
             CHARITY_NAME=Potter's House Christian Mission UK
             AES_256_GCM_SECRET=${{ secrets.AES_256_GCM_SECRET }}
             TRUSTEE_SIGNATURE_SALT=${{ secrets.TRUSTEE_SIGNATURE_SALT }}
+            ADMIN_PROVISION_SECRET=${{ secrets.ADMIN_PROVISION_SECRET }}
             CLOUDFLARE_ACCOUNT_ID=${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
             CLOUDFLARE_D1_DATABASE_ID=${{ secrets.CLOUDFLARE_D1_DATABASE_ID }}
             CLOUDFLARE_R2_BUCKET_NAME=${{ secrets.CLOUDFLARE_R2_BUCKET_NAME }}
