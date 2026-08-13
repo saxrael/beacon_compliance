@@ -23,7 +23,7 @@ RUN pip install --no-cache-dir --upgrade pip && \
 RUN python -m spacy download en_core_web_sm || true
 
 # Verify critical dependencies installed
-RUN python -c "import langfuse; print(f'langfuse {langfuse.version} OK')"
+RUN python -c "from langfuse import Langfuse; print('langfuse OK')"
 
 # Stage 2: Final Production Runtime Image
 FROM python:3.11-slim AS production
@@ -44,7 +44,7 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 COPY --from=builder --chown=appuser:appgroup /app /app
 
 # Verify langfuse is importable in production stage
-RUN python -c "from langfuse import Langfuse; print('langfuse import OK in production')"
+RUN python -c "from langfuse import Langfuse; print('langfuse production OK')"
 
 USER appuser
 
