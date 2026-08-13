@@ -4,6 +4,7 @@ Extracts structured text and table data from uploaded PDF, Word, Excel, and imag
 Flags low-confidence extractions (<90%) for mandatory trustee review.
 """
 
+import csv
 import io
 from typing import NamedTuple
 
@@ -81,7 +82,6 @@ class MultiFormatDocumentExtractor:
         """Extract text and tables from Excel / CSV files."""
         try:
             if ext == "csv":
-                import csv
                 text_str = content_bytes.decode("utf-8", errors="ignore")
                 lines = [line for line in text_str.splitlines() if line.strip()]
                 reader = list(csv.reader(lines))
