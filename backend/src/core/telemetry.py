@@ -18,9 +18,12 @@ logger = logging.getLogger(__name__)
 
 try:
     from langfuse import Langfuse
-    from langfuse.langchain import CallbackHandler
 except Exception:
     Langfuse = None
+
+try:
+    from langfuse.langchain import CallbackHandler
+except Exception:
     CallbackHandler = None
 
 
