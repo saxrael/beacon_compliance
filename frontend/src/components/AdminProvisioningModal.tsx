@@ -27,7 +27,7 @@ export const AdminProvisioningModal: React.FC<AdminProvisioningModalProps> = ({ 
     setResult(null);
 
     try {
-      const res = await fetch("http://localhost:8000/api/admin/provision-trustee", {
+      const res = await fetch("http:
         method: "POST",
         headers: {
           "Content-Type": "application/json",

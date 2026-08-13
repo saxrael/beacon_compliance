@@ -1,9 +1,6 @@
-# Tier 1 Classification Ruleset (Deterministic Keyword & Regex Matching)
-# Any transaction matching these rules bypasses LLM suggestions entirely.
 
 version: "1.0"
 rules:
-  # Unrestricted General Fund — Receipts
   - rule_id: "RULE-REC-001"
     fund: "unrestricted_general"
     category: "Donations & Offerings"
@@ -25,7 +22,6 @@ rules:
     pattern: "HMRC GIFT AID"
     transaction_type: "receipt"
 
-  # Unrestricted General Fund — Payments
   - rule_id: "RULE-PAY-001"
     fund: "unrestricted_general"
     category: "Premises & Rent"
@@ -47,7 +43,6 @@ rules:
     pattern: "INDEPENDENT EXAMINER"
     transaction_type: "payment"
 
-  # Restricted Mission Fund — Receipts & Payments
   - rule_id: "RULE-MIS-001"
     fund: "restricted_mission"
     category: "Mission Offerings"
@@ -62,7 +57,6 @@ rules:
     pattern: "OVERSEAS MISSION SUPPORT"
     transaction_type: "payment"
 
-  # Designated Events Fund — Receipts & Payments
   - rule_id: "RULE-EVT-001"
     fund: "designated_events"
     category: "Event Registration"

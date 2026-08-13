@@ -7,13 +7,13 @@ Enforces:
 - Red-Line 4: Anonymized state and PII-scrubbed context only
 """
 
-from typing import Any
+from typing import Any 
 
-from backend.src.core.knowledge_context import ComplianceKnowledgeContext
-from backend.src.core.llm_client import LLMClient
-from pydantic import BaseModel, Field
+from backend .src .core .knowledge_context import ComplianceKnowledgeContext 
+from backend .src .core .llm_client import LLMClient 
+from pydantic import BaseModel ,Field 
 
-CHAT_AGENT_SYSTEM_PROMPT = """
+CHAT_AGENT_SYSTEM_PROMPT ="""
 <identity>
 You are the Beacon Compliance Interactive Assistant for Potter's House Christian Mission UK (SCIO, SC054652).
 Your mandate is to assist charity trustees (Chair, Secretary, Treasurer) in navigating OSCR regulatory obligations and financial statement reviews.
@@ -118,100 +118,100 @@ Respond in clean Markdown. Cite exact tool outputs verbatim.
 """
 
 
-class ChatMessage(BaseModel):
+class ChatMessage (BaseModel ):
     """Chat message schema."""
 
-    role: str = Field(..., description="'user', 'assistant', or 'system'")
-    content: str
+    role :str =Field (...,description ="'user', 'assistant', or 'system'")
+    content :str 
 
 
-class ChatAgentResponse(BaseModel):
+class ChatAgentResponse (BaseModel ):
     """Chat agent output schema."""
 
-    message: str
-    tool_calls: list[dict[str, Any]] = Field(default_factory=list)
-    sources: list[str] = Field(default_factory=list)
+    message :str 
+    tool_calls :list [dict [str ,Any ]]=Field (default_factory =list )
+    sources :list [str ]=Field (default_factory =list )
 
 
-class ComplianceChatAgent:
+class ComplianceChatAgent :
     """Gemma 4 26B A4B Compliance Assistant with deterministic tool boundaries."""
 
-    def __init__(self, knowledge_context: ComplianceKnowledgeContext | None = None) -> None:
-        self.knowledge = knowledge_context or ComplianceKnowledgeContext()
+    def __init__ (self ,knowledge_context :ComplianceKnowledgeContext |None =None )->None :
+        self .knowledge =knowledge_context or ComplianceKnowledgeContext ()
 
-    def get_financial_summary_tool(self, state: dict[str, Any]) -> dict[str, Any]:
+    def get_financial_summary_tool (self ,state :dict [str ,Any ])->dict [str ,Any ]:
         """Deterministic tool returning Node 3 receipts and payments financial summary."""
-        rnp = state.get("receipts_payments", {})
-        balances = state.get("statement_of_balances", {})
+        rnp =state .get ("receipts_payments",{})
+        balances =state .get ("statement_of_balances",{})
         return {
-            "gross_receipts": rnp.get("gross_receipts_decimal", "0.00"),
-            "gross_payments": rnp.get("gross_payments_decimal", "0.00"),
-            "net_movement": rnp.get("net_movement_decimal", "0.00"),
-            "reconciled": balances.get("reconciled", False),
-            "threshold_breached": rnp.get("is_threshold_breached", False),
+        "gross_receipts":rnp .get ("gross_receipts_decimal","0.00"),
+        "gross_payments":rnp .get ("gross_payments_decimal","0.00"),
+        "net_movement":rnp .get ("net_movement_decimal","0.00"),
+        "reconciled":balances .get ("reconciled",False ),
+        "threshold_breached":rnp .get ("is_threshold_breached",False ),
         }
 
-    def search_knowledge_base_tool(
-        self, query: str, corpus: list[dict[str, Any]], user_id: str = "trustee_01"
-    ) -> dict[str, Any]:
+    def search_knowledge_base_tool (
+    self ,query :str ,corpus :list [dict [str ,Any ]],user_id :str ="trustee_01"
+    )->dict [str ,Any ]:
         """Unified context tool retrieving OSCR regulatory guidance and cognitive memory facts."""
-        return self.knowledge.query_context(user_id=user_id, query=query, corpus=corpus, top_k=3)
+        return self .knowledge .query_context (user_id =user_id ,query =query ,corpus =corpus ,top_k =3 )
 
-    def process_message(
-        self,
-        user_message: str,
-        state: dict[str, Any],
-        kb_corpus: list[dict[str, Any]] | None = None,
-    ) -> ChatAgentResponse:
+    def process_message (
+    self ,
+    user_message :str ,
+    state :dict [str ,Any ],
+    kb_corpus :list [dict [str ,Any ]]|None =None ,
+    )->ChatAgentResponse :
         """Process user compliance query with tool execution and strict boundary enforcement."""
-        tool_calls = []
-        sources = []
-        lower_msg = user_message.lower()
+        tool_calls =[]
+        sources =[]
+        lower_msg =user_message .lower ()
 
-        llm_client = LLMClient()
-        tool_context = ""
+        llm_client =LLMClient ()
+        tool_context =""
 
-        if any(
-            kw in lower_msg
-            for kw in ("financial", "total", "income", "receipt", "payment", "balance")
+        if any (
+        kw in lower_msg 
+        for kw in ("financial","total","income","receipt","payment","balance")
         ):
-            fin_summary = self.get_financial_summary_tool(state)
-            tool_calls.append({"tool": "get_financial_summary", "output": fin_summary})
-            tool_context = (
-                f"Deterministic Node 3 Financial Statement:\n"
-                f"- Gross Receipts: £{fin_summary['gross_receipts']}\n"
-                f"- Gross Payments: £{fin_summary['gross_payments']}\n"
-                f"- Net Movement: £{fin_summary['net_movement']}\n"
-                f"- Reconciled: {fin_summary['reconciled']}"
+            fin_summary =self .get_financial_summary_tool (state )
+            tool_calls .append ({"tool":"get_financial_summary","output":fin_summary })
+            tool_context =(
+            f"Deterministic Node 3 Financial Statement:\n"
+            f"- Gross Receipts: £{fin_summary ['gross_receipts']}\n"
+            f"- Gross Payments: £{fin_summary ['gross_payments']}\n"
+            f"- Net Movement: £{fin_summary ['net_movement']}\n"
+            f"- Reconciled: {fin_summary ['reconciled']}"
             )
-        elif any(
-            kw in lower_msg
-            for kw in ("oscr", "rule", "guidance", "reporting", "threshold", "constitution")
+        elif any (
+        kw in lower_msg 
+        for kw in ("oscr","rule","guidance","reporting","threshold","constitution")
         ):
-            search_results = self.search_knowledge_base_tool(user_message, kb_corpus or [])
-            tool_calls.append(
-                {
-                    "tool": "search_knowledge_base",
-                    "matches": len(search_results.get("kb_matches", [])),
-                }
+            search_results =self .search_knowledge_base_tool (user_message ,kb_corpus or [])
+            tool_calls .append (
+            {
+            "tool":"search_knowledge_base",
+            "matches":len (search_results .get ("kb_matches",[])),
+            }
             )
-            sources = search_results.get("sources", [])
-            tool_context = search_results.get("formatted_context", "")
+            sources =search_results .get ("sources",[])
+            tool_context =search_results .get ("formatted_context","")
 
-        llm_response = llm_client.call_gemma_chat(
-            system_prompt=CHAT_AGENT_SYSTEM_PROMPT,
-            user_message=user_message,
-            tool_context=tool_context,
+        llm_response =llm_client .call_gemma_chat (
+        system_prompt =CHAT_AGENT_SYSTEM_PROMPT ,
+        user_message =user_message ,
+        tool_context =tool_context ,
         )
 
-        if llm_response:
-            response_text = llm_response
-        elif tool_context:
-            response_text = f"According to the verified compliance records:\n{tool_context}"
-        else:
-            response_text = (
-                "I am your Beacon Compliance assistant for Potter's House Christian Mission UK (SC054652). "
-                "How can I assist you with OSCR regulatory guidance or financial statement review?"
+        if llm_response :
+            response_text =llm_response 
+        elif tool_context :
+            response_text =f"According to the verified compliance records:\n{tool_context }"
+        else :
+            response_text =(
+            "I am your Beacon Compliance assistant for Potter's House Christian Mission UK (SC054652). "
+            "How can I assist you with OSCR regulatory guidance or financial statement review?"
             )
 
-        return ChatAgentResponse(message=response_text, tool_calls=tool_calls, sources=sources)
+        return ChatAgentResponse (message =response_text ,tool_calls =tool_calls ,sources =sources )

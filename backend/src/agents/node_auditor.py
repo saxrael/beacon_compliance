@@ -5,12 +5,12 @@ Enforces Node 4 audit checks:
 - Scans narrative text for unauthorized financial figures or contradictions against Node 3 receipts_payments state
 """
 
-import re
-from typing import Any
+import re 
+from typing import Any 
 
-from backend.src.agents.state import BeaconComplianceState
+from backend .src .agents .state import BeaconComplianceState 
 
-NODE_4_AUDITOR_SYSTEM_PROMPT = """
+NODE_4_AUDITOR_SYSTEM_PROMPT ="""
 <identity>
 You are the Node 4 Hallucination & Consistency Auditor Agent for Potter's House Christian Mission UK (SC054652).
 Your mandate is to intercept Node 2 TAR narrative drafts and perform deterministic hallucination checks.
@@ -69,40 +69,40 @@ Return strictly JSON matching hallucination_audit_results schema.
 """
 
 
-def run_node_auditor(state: BeaconComplianceState) -> dict[str, Any]:
+def run_node_auditor (state :BeaconComplianceState )->dict [str ,Any ]:
     """LangGraph Node 4: Audits Node 2 narrative drafts for hallucinated figures or contradicted facts."""
-    tar_fields = state.get("tar_draft_fields", {})
-    if not tar_fields:
+    tar_fields =state .get ("tar_draft_fields",{})
+    if not tar_fields :
         return {
-            "hallucination_audit_results": {
-                "passed": False,
-                "error": "No tar_draft_fields found in state.",
-            }
+        "hallucination_audit_results":{
+        "passed":False ,
+        "error":"No tar_draft_fields found in state.",
+        }
         }
 
-    detected_figures: list[str] = []
-    currency_regex = re.compile(r"£\d+(?:,\d{3})*(?:\.\d{2})?")
+    detected_figures :list [str ]=[]
+    currency_regex =re .compile (r"£\d+(?:,\d{3})*(?:\.\d{2})?")
 
-    for field_name, prose in tar_fields.items():
-        if field_name == "achievements_connective_narrative":
-            continue
+    for field_name ,prose in tar_fields .items ():
+        if field_name =="achievements_connective_narrative":
+            continue 
 
-        matches = currency_regex.findall(prose)
-        if matches:
-            detected_figures.extend([f"{field_name}:{m}" for m in matches])
+        matches =currency_regex .findall (prose )
+        if matches :
+            detected_figures .extend ([f"{field_name }:{m }"for m in matches ])
 
-    if detected_figures:
+    if detected_figures :
         return {
-            "hallucination_audit_results": {
-                "passed": False,
-                "hallucinations_detected": detected_figures,
-                "error": "Hallucinated monetary figure detected in LLM narrative field.",
-            }
+        "hallucination_audit_results":{
+        "passed":False ,
+        "hallucinations_detected":detected_figures ,
+        "error":"Hallucinated monetary figure detected in LLM narrative field.",
+        }
         }
 
     return {
-        "hallucination_audit_results": {
-            "passed": True,
-            "audited_fields_count": len(tar_fields),
-        }
+    "hallucination_audit_results":{
+    "passed":True ,
+    "audited_fields_count":len (tar_fields ),
+    }
     }

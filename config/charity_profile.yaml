@@ -10,7 +10,7 @@ charity:
 
 accounting:
   accounting_basis: "Receipts & Payments"
-  max_income_threshold: 250000  # Red-Line 5 trigger (£250k gross income limit for R&P)
+  max_income_threshold: 250000
   financial_year_end_month: 12
   financial_year_end_day: 31
 

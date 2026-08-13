@@ -32,7 +32,7 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ onCl
     setLoading(true);
     setErrorMsg(null);
     try {
-      const res = await fetch("http://localhost:8000/api/settings/2fa/generate", {
+      const res = await fetch("http:
         method: "POST",
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -51,7 +51,7 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ onCl
     setLoading(true);
     setErrorMsg(null);
     try {
-      const res = await fetch("http://localhost:8000/api/settings/2fa/enable", {
+      const res = await fetch("http:
         method: "POST",
         headers: { 
           Authorization: `Bearer ${token}`,
@@ -87,7 +87,7 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ onCl
     setLoading(true);
     setErrorMsg(null);
     try {
-      const res = await fetch("http://localhost:8000/api/settings/password/change", {
+      const res = await fetch("http:
         method: "POST",
         headers: { 
           Authorization: `Bearer ${token}`,
@@ -130,7 +130,7 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ onCl
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-sm p-4">
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl rounded-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
         
-        {/* Header */}
+        {}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-lg text-slate-700 dark:text-slate-300">
@@ -146,7 +146,7 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ onCl
           </button>
         </div>
 
-        {/* Tabs */}
+        {}
         <div className="flex border-b border-slate-100 dark:border-slate-800 px-6">
           <button 
             onClick={() => {setActiveTab("profile"); setErrorMsg(null); setSuccessMsg(null);}}
@@ -162,7 +162,7 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ onCl
           </button>
         </div>
 
-        {/* Content */}
+        {}
         <div className="p-6 overflow-y-auto flex-1">
           {errorMsg && (
             <div className="mb-4 p-3 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 text-red-600 dark:text-red-400 text-xs rounded-lg flex items-start gap-2">
@@ -212,7 +212,7 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ onCl
 
           {activeTab === "security" && (
             <div className="space-y-8">
-              {/* 2FA Section */}
+              {}
               <div className="space-y-4">
                 <div>
                   <h3 className="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
@@ -310,7 +310,7 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ onCl
 
               <div className="h-px bg-slate-100 dark:bg-slate-800 w-full" />
 
-              {/* Password Section */}
+              {}
               <div className="space-y-4">
                 <div>
                   <h3 className="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
