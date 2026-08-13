@@ -31,6 +31,7 @@ class ProvisionTrusteeResponse(BaseModel):
     temp_password: str
 
 
+@router.post("/provision", response_model=ProvisionTrusteeResponse)
 @router.post("/provision-trustee", response_model=ProvisionTrusteeResponse)
 async def provision_trustee_endpoint(
     req: ProvisionTrusteeRequest,
