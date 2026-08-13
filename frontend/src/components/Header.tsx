@@ -52,10 +52,10 @@ export const Header: React.FC<HeaderProps> = ({ onOpenAdminModal }) => {
               </span>
             </div>
             <p className="text-xs text-slate-600 dark:text-slate-400">
-              Potter's House Christian Mission UK (SCIO, Dunbar, Scotland)
+              Potter&apos;s House Christian Mission UK (SCIO, Dunbar, Scotland)
             </p>
             <p className="text-[11px] italic text-slate-500 dark:text-slate-400/90 mt-0.5">
-              "Building Lives, Strengthening Homes, Shaping Nations for Christ"
+              &quot;Building Lives, Strengthening Homes, Shaping Nations for Christ&quot;
             </p>
           </div>
         </div>

@@ -87,7 +87,7 @@ function DashboardContent() {
           <div className="glass-card rounded-xl p-5 space-y-3 md:col-span-2">
             <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
               <FileText className="h-5 w-5 text-red-500" />
-              Trustees' Annual Report (TAR) Narrative Preview
+              Trustees&apos; Annual Report (TAR) Narrative Preview
             </h3>
             <p className="text-xs text-slate-600 dark:text-slate-400">
               Synthesized by Gemma 4 26B A4B across 4 whitelisted <code className="text-red-600 dark:text-yellow-400 font-mono">LLM_DRAFTED</code> fields using token placeholders.
@@ -157,7 +157,7 @@ function DashboardContent() {
       </main>
 
       <footer className="border-t border-slate-200 dark:border-slate-900 bg-white dark:bg-slate-950 py-6 text-center text-xs text-slate-600 dark:text-slate-500 transition-colors duration-300">
-        Potter's House Christian Mission UK (SCIO, SC054652) • 5B Beachmont Court, Dunbar, Scotland, EH42 1YF
+        Potter&apos;s House Christian Mission UK (SCIO, SC054652) • 5B Beachmont Court, Dunbar, Scotland, EH42 1YF
       </footer>
     </div>
   );

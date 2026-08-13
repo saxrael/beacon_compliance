@@ -23,17 +23,14 @@ export const SidebarMenu: React.FC<SidebarMenuProps> = ({
 
   return (
     <>
-      {}
       <div 
         className="fixed inset-0 bg-slate-950/40 backdrop-blur-sm z-50 transition-opacity"
         onClick={onClose}
       />
       
-      {}
       <div className="fixed inset-y-0 left-0 w-72 bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 z-50 shadow-2xl flex flex-col transform transition-transform duration-300">
         <div className="h-1 bg-gradient-to-r from-red-600 via-yellow-400 to-red-600 w-full" />
         
-        {}
         <div className="p-4 flex items-center justify-between border-b border-slate-100 dark:border-slate-800/50">
           <div className="flex items-center gap-2">
             <ShieldCheck className="h-6 w-6 text-red-600 dark:text-red-500" />
@@ -47,7 +44,6 @@ export const SidebarMenu: React.FC<SidebarMenuProps> = ({
           </button>
         </div>
 
-        {}
         <div className="p-5 border-b border-slate-100 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-900/30">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-500 flex items-center justify-center font-bold text-lg border border-red-200 dark:border-red-500/20">
@@ -74,7 +70,6 @@ export const SidebarMenu: React.FC<SidebarMenuProps> = ({
           </div>
         </div>
 
-        {}
         <div className="p-3 flex-1 overflow-y-auto space-y-1">
           <button 
             onClick={() => {
@@ -112,7 +107,6 @@ export const SidebarMenu: React.FC<SidebarMenuProps> = ({
           </div>
         </div>
 
-        {}
         <div className="p-4 border-t border-slate-100 dark:border-slate-800/50">
           <button 
             onClick={logout}

@@ -30,8 +30,9 @@ export const FirstLoginResetModal: React.FC = () => {
 
     try {
       await completeFirstLoginReset(user.email, currentPassword, newPassword);
-    } catch (err: any) {
-      setError(err.message || "Failed to update password.");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to update password.";
+      setError(msg);
     } finally {
       setLoading(false);
     }

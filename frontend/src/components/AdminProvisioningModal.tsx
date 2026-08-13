@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { UserPlus, Key, CheckCircle, AlertCircle, Copy, Check } from "lucide-react";
+import { API_BASE_URL } from "@/config";
 
 interface AdminProvisioningModalProps {
   isOpen: boolean;
@@ -27,7 +28,7 @@ export const AdminProvisioningModal: React.FC<AdminProvisioningModalProps> = ({ 
     setResult(null);
 
     try {
-      const res = await fetch("http:
+      const res = await fetch(`${API_BASE_URL}/api/admin/provision`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -45,8 +46,9 @@ export const AdminProvisioningModal: React.FC<AdminProvisioningModalProps> = ({ 
       setResult(data);
       setEmail("");
       setName("");
-    } catch (err: any) {
-      setError(err.message || "Failed to provision trustee account");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to provision trustee account";
+      setError(msg);
     } finally {
       setLoading(false);
     }

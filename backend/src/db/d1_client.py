@@ -6,10 +6,10 @@ Strictly enforces:
 - Schema definitions per TRD §2
 """
 
-import sqlite3 
-from typing import Any 
+import sqlite3
+from typing import Any
 
-D1_SCHEMA_SQL ="""
+D1_SCHEMA_SQL = """
 CREATE TABLE IF NOT EXISTS users (
     user_id TEXT PRIMARY KEY,
     email TEXT UNIQUE NOT NULL,
@@ -150,37 +150,37 @@ CREATE TABLE IF NOT EXISTS embeddings (
 """
 
 
-class D1DatabaseClient :
+class D1DatabaseClient:
     """Cloudflare D1 Client interface (with in-memory SQLite fallback for local execution/testing)."""
 
-    def __init__ (self ,db_path :str =":memory:")->None :
-        self .db_path =db_path 
-        self ._conn =sqlite3 .connect (self .db_path ,check_same_thread =False )
-        self ._conn .row_factory =sqlite3 .Row 
-        self .init_schema ()
+    def __init__(self, db_path: str = ":memory:") -> None:
+        self.db_path = db_path
+        self._conn = sqlite3.connect(self.db_path, check_same_thread=False)
+        self._conn.row_factory = sqlite3.Row
+        self.init_schema()
 
-    def init_schema (self )->None :
+    def init_schema(self) -> None:
         """Initialize all D1 relational tables defined in TRD §2."""
-        with self ._conn :
-            self ._conn .executescript (D1_SCHEMA_SQL )
+        with self._conn:
+            self._conn.executescript(D1_SCHEMA_SQL)
 
-    def execute (self ,sql :str ,params :tuple [Any ,...]=())->sqlite3 .Cursor :
+    def execute(self, sql: str, params: tuple[Any, ...] = ()) -> sqlite3.Cursor:
         """Execute a parameterized SQL query safely."""
-        with self ._conn :
-            return self ._conn .execute (sql ,params )
+        with self._conn:
+            return self._conn.execute(sql, params)
 
-    def fetchall (self ,sql :str ,params :tuple [Any ,...]=())->list [dict [str ,Any ]]:
+    def fetchall(self, sql: str, params: tuple[Any, ...] = ()) -> list[dict[str, Any]]:
         """Fetch all results for a parameterized query as dictionaries."""
-        cursor =self ._conn .execute (sql ,params )
-        rows =cursor .fetchall ()
-        return [dict (row )for row in rows ]
+        cursor = self._conn.execute(sql, params)
+        rows = cursor.fetchall()
+        return [dict(row) for row in rows]
 
-    def fetchone (self ,sql :str ,params :tuple [Any ,...]=())->dict [str ,Any ]|None :
+    def fetchone(self, sql: str, params: tuple[Any, ...] = ()) -> dict[str, Any] | None:
         """Fetch a single result row for a parameterized query."""
-        cursor =self ._conn .execute (sql ,params )
-        row =cursor .fetchone ()
-        return dict (row )if row else None 
+        cursor = self._conn.execute(sql, params)
+        row = cursor.fetchone()
+        return dict(row) if row else None
 
-    def close (self )->None :
+    def close(self) -> None:
         """Close database connection."""
-        self ._conn .close ()
+        self._conn.close()

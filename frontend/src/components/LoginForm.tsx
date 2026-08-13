@@ -29,8 +29,9 @@ export const LoginForm: React.FC = () => {
           setTempToken(result.tempToken || null);
         }
       }
-    } catch (err: any) {
-      setLocalError(err.message || "Failed to sign in.");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to sign in.";
+      setLocalError(msg);
     } finally {
       setLoading(false);
     }
@@ -42,8 +43,9 @@ export const LoginForm: React.FC = () => {
     try {
       const authUrl = await getGoogleLoginUrl();
       window.location.href = authUrl;
-    } catch (err: any) {
-      setLocalError(err.message || "Failed to launch Google Sign-In.");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to launch Google Sign-In.";
+      setLocalError(msg);
       setLoading(false);
     }
   };

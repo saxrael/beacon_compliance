@@ -7,7 +7,7 @@
 > **Beacon Compliance is an agentic OSCR-compliance webapp for Potter's House Christian Mission UK (SCIO, SC054652). It deterministically computes statutory accounts, drafts narrative reports, tracks filing deadlines, and provides an interactive chat assistant—all under 5 strict compliance red-lines.**
 
 ![Build Status](https://img.shields.io/badge/build-passing-brightgreen?style=flat-square)
-![Tests](https://img.shields.io/badge/pytest-62%2F62%20passed-success?style=flat-square)
+![Tests](https://img.shields.io/badge/pytest-104%2F104%20passed-success?style=flat-square)
 ![Preflight Audit](https://img.shields.io/badge/audit-100%25%20passed-success?style=flat-square)
 ![Boundary AST Check](https://img.shields.io/badge/boundary--ast-0%20violations-success?style=flat-square)
 ![Python](https://img.shields.io/badge/python-3.11%2B-blue?style=flat-square)
@@ -19,17 +19,17 @@
 
 ## 📋 Table of Contents
 
-- [System Architecture & Core Principles](#-system-architecture--core-principles)
-- [Key Features](#-key-features)
-- [Technology Stack](#-technology-stack)
-- [Repository Structure](#-repository-structure)
-- [Database & Data Isolation](#-database--data-isolation)
-- [Environment Configuration & Secrets](#-environment-configuration--secrets)
-- [Local Quick Start & Verification](#-local-quick-start--verification)
-- [Automated Testing & Pre-Flight Audits](#-automated-testing--pre-flight-audits)
-- [CI/CD & Production Deployment](#-cicd--production-deployment)
-- [Security & Compliance Red-Lines](#-security--compliance-red-lines)
-- [License & Support](#-license--support)
+- [System Architecture & Core Principles](#system-architecture--core-principles)
+- [Key Features](#key-features)
+- [Technology Stack](#technology-stack)
+- [Repository Structure](#repository-structure)
+- [Database & Data Isolation](#database--data-isolation)
+- [Environment Configuration & Secrets](#environment-configuration--secrets)
+- [Local Quick Start & Verification](#local-quick-start--verification)
+- [Automated Testing & Pre-Flight Audits](#automated-testing--pre-flight-audits)
+- [CI/CD & Production Deployment](#cicd--production-deployment)
+- [Security & Compliance Red-Lines](#security--compliance-red-lines)
+- [License & Support](#license--support)
 
 ---
 
@@ -103,7 +103,7 @@ beacon_compliance/
 │   │   ├── api/                     # FastAPI endpoints (ingest, classify, pipeline, signoff, deliverables, chat)
 │   │   ├── core/                    # Security, PII scrubber, crypto, financial arithmetic, telemetry, retrieval
 │   │   └── db/                      # Cloudflare D1 and R2 client interfaces & repository facade
-│   └── tests/                       # Complete pytest test suite (62 unit & integration tests)
+│   └── tests/                       # Complete pytest test suite (104 unit & integration tests)
 ├── config/
 │   ├── charity_profile.yaml         # SC054652 profile & fund definitions
 │   └── fund_classifier.yaml        # Tier 1 deterministic classification matrix
@@ -222,7 +222,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser to access th
 ## 🧪 Automated Testing & Pre-Flight Audits
 
 ### 1. Pytest Backend Test Suite
-Run the 62 unit & integration tests covering encryption, financial boundaries, PII scrubbing, node calculations, LangGraph pipeline execution, telemetry, authentication (Google OAuth, 2FA/TOTP), email service, and FastAPI routes:
+Run the 104 unit & integration tests covering encryption, financial boundaries, PII scrubbing, node calculations, LangGraph pipeline execution, telemetry, authentication (Google OAuth, 2FA/TOTP), email service, and FastAPI routes:
 
 ```bash
 # From project root

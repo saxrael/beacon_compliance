@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { X, Shield, Lock, Key, Copy, Check, ShieldAlert, ShieldCheck, Mail, User, Settings } from "lucide-react";
 import QRCode from "react-qr-code";
+import { API_BASE_URL } from "@/config";
 
 interface AccountSettingsModalProps {
   onClose: () => void;
@@ -15,7 +16,7 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ onCl
   
 
   const [setup2FA, setSetup2FA] = useState(false);
-  const [qrCodeData, setQrCodeData] = useState<any>(null);
+  const [qrCodeData, setQrCodeData] = useState<{ provisioning_uri: string; secret: string } | null>(null);
   const [totpCode, setTotpCode] = useState("");
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -32,7 +33,7 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ onCl
     setLoading(true);
     setErrorMsg(null);
     try {
-      const res = await fetch("http:
+      const res = await fetch(`${API_BASE_URL}/api/auth/2fa/generate`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -40,8 +41,9 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ onCl
       const data = await res.json();
       setQrCodeData(data);
       setSetup2FA(true);
-    } catch (err: any) {
-      setErrorMsg(err.message);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "An unexpected error occurred.";
+      setErrorMsg(msg);
     } finally {
       setLoading(false);
     }
@@ -51,7 +53,7 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ onCl
     setLoading(true);
     setErrorMsg(null);
     try {
-      const res = await fetch("http:
+      const res = await fetch(`${API_BASE_URL}/api/auth/2fa/enable`, {
         method: "POST",
         headers: { 
           Authorization: `Bearer ${token}`,
@@ -70,8 +72,9 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ onCl
       setQrCodeData(null);
 
       setTimeout(() => window.location.reload(), 2000);
-    } catch (err: any) {
-      setErrorMsg(err.message);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "An unexpected error occurred.";
+      setErrorMsg(msg);
     } finally {
       setLoading(false);
     }
@@ -87,7 +90,7 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ onCl
     setLoading(true);
     setErrorMsg(null);
     try {
-      const res = await fetch("http:
+      const res = await fetch(`${API_BASE_URL}/api/auth/change-password`, {
         method: "POST",
         headers: { 
           Authorization: `Bearer ${token}`,
@@ -111,8 +114,9 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ onCl
       setConfirmPassword("");
       setPwdTotpCode("");
       setTimeout(() => setSuccessMsg(null), 3000);
-    } catch (err: any) {
-      setErrorMsg(err.message);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "An unexpected error occurred.";
+      setErrorMsg(msg);
     } finally {
       setLoading(false);
     }
@@ -130,7 +134,6 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ onCl
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-sm p-4">
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl rounded-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
         
-        {}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-lg text-slate-700 dark:text-slate-300">
@@ -146,7 +149,6 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ onCl
           </button>
         </div>
 
-        {}
         <div className="flex border-b border-slate-100 dark:border-slate-800 px-6">
           <button 
             onClick={() => {setActiveTab("profile"); setErrorMsg(null); setSuccessMsg(null);}}
@@ -162,7 +164,6 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ onCl
           </button>
         </div>
 
-        {}
         <div className="p-6 overflow-y-auto flex-1">
           {errorMsg && (
             <div className="mb-4 p-3 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 text-red-600 dark:text-red-400 text-xs rounded-lg flex items-start gap-2">
@@ -212,7 +213,6 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ onCl
 
           {activeTab === "security" && (
             <div className="space-y-8">
-              {}
               <div className="space-y-4">
                 <div>
                   <h3 className="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
@@ -310,7 +310,6 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ onCl
 
               <div className="h-px bg-slate-100 dark:bg-slate-800 w-full" />
 
-              {}
               <div className="space-y-4">
                 <div>
                   <h3 className="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
