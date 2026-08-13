@@ -74,17 +74,22 @@ Use the safe credentials protocol to populate required production keys:
 ## 4. FastAPI Backend Deployment
 
 ### Render Web Service Deployment Configuration
-To ensure Render selects the Python environment (and doesn't default to Elixir/Erlang):
+> [!IMPORTANT]
+> **Render Runtime Fix**: Render does **not** allow changing the base runtime (e.g. from Elixir to Python) for an existing service once created.
+> To resolve `bash: line 1: python: command not found`:
+> 1. Delete the existing Web Service in Render (or click **New -> Web Service** / **New -> Blueprint**).
+> 2. Select **Python 3** (or **Docker**) as the Runtime during creation.
+> 3. Point to this repository; Render will read `.python-version` (Python 3.11.9) and `render.yaml`.
 
-1. **Environment / Language**: Select **Python 3** (or link using `render.yaml` Blueprint).
-2. **Build Command**:
-   ```bash
-   pip install --upgrade pip && pip install -e "./backend[dev]"
-   ```
-3. **Start Command**:
-   ```bash
-   python -m uvicorn backend.src.api.main:app --host 0.0.0.0 --port $PORT
-   ```
+**Build Command**:
+```bash
+pip install --upgrade pip && pip install -e "./backend[dev]"
+```
+
+**Start Command**:
+```bash
+python -m uvicorn backend.src.api.main:app --host 0.0.0.0 --port $PORT
+```
 
 ### Local Development / Server Hosting
 ```bash
