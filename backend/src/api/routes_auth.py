@@ -270,7 +270,9 @@ async def login_with_2fa(
     if str(payload.get("role", "")).upper() != "2FA_PENDING":
         raise HTTPException(status_code=401, detail="Invalid temporary token.")
 
-    user = db.fetchone("SELECT * FROM users WHERE user_id = ?", (payload.get("user_id") or payload.get("sub"),))
+    user = db.fetchone(
+        "SELECT * FROM users WHERE user_id = ?", (payload.get("user_id") or payload.get("sub"),)
+    )
     if not user or not user.get("totp_secret"):
         raise HTTPException(status_code=401, detail="Invalid user or 2FA not enabled.")
 

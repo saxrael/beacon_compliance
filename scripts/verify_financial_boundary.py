@@ -25,7 +25,7 @@ class FloatCallVisitor(ast.NodeVisitor):
         self.filename = filename
         self.violations: list[str] = []
 
-    def visit_Call(self, node: ast.Call) -> None:  # noqa: N802
+    def visit_Call(self, node: ast.Call) -> None:
         if isinstance(node.func, ast.Name) and node.func.id == "float":
             self.violations.append(
                 f"{self .filename }:L{node .lineno } - Prohibition of float() conversion in financial path."
