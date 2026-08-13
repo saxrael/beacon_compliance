@@ -17,7 +17,7 @@ COPY knowledge-base /app/knowledge-base
 
 # Install backend dependencies & SpaCy English model
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -e "/app/backend[dev]" && \
+    pip install --no-cache-dir "/app/backend" && \
     python -m spacy download en_core_web_sm || true
 
 # Stage 2: Final Production Runtime Image
