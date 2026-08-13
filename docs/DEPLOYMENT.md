@@ -73,9 +73,22 @@ Use the safe credentials protocol to populate required production keys:
 
 ## 4. FastAPI Backend Deployment
 
+### Render Web Service Deployment Configuration
+To ensure Render selects the Python environment (and doesn't default to Elixir/Erlang):
+
+1. **Environment / Language**: Select **Python 3** (or link using `render.yaml` Blueprint).
+2. **Build Command**:
+   ```bash
+   pip install --upgrade pip && pip install -e "./backend[dev]"
+   ```
+3. **Start Command**:
+   ```bash
+   python -m uvicorn backend.src.api.main:app --host 0.0.0.0 --port $PORT
+   ```
+
 ### Local Development / Server Hosting
 ```bash
-uvicorn backend.src.api.main:app --host 0.0.0.0 --port 8000 --workers 4
+python -m uvicorn backend.src.api.main:app --host 0.0.0.0 --port 8000 --workers 4
 ```
 
 ---
