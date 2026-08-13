@@ -43,13 +43,13 @@ The core compliance workflow is driven by an automated, idempotent **LangGraph s
 
 ```mermaid
 graph TD
-    A[Raw Document / Bank Statement Ingest] -->|Presidio + Regex Scrubbing| B[Node 1: Ingest & PII Redactor]
-    B -->|Ingest Income Check < £250k| C[Node 1.5: 3-Tier Classifier]
-    C -->|Tier 1: Rules / Tier 2: Trustee / Tier 2.5: Isolated LLM| D[Node 3: Deterministic Calculator]
-    D -->|Python Decimal Arithmetic| E[Node 2: Gemma 4 26B Narrative Writer]
-    E -->|Tokens & [FIGURE_INJECTED] Placeholders| F[Node 4: Hallucination Auditor]
-    F -->|Zero Discrepancy Gate| G[Node 5: OSCR Package Assembler]
-    G -->|HMAC-SHA256 Sign-off| H[4 OSCR Submission Packages]
+    A[Raw Document / Bank Statement Ingest] -->|"Presidio + Regex Scrubbing"| B[Node 1: Ingest & PII Redactor]
+    B -->|"Ingest Income Check < £250k"| C[Node 1.5: 3-Tier Classifier]
+    C -->|"Tier 1: Rules / Tier 2: Trustee / Tier 2.5: Isolated LLM"| D[Node 3: Deterministic Calculator]
+    D -->|"Python Decimal Arithmetic"| E[Node 2: Gemma 4 26B Narrative Writer]
+    E -->|"Tokens & [FIGURE_INJECTED] Placeholders"| F[Node 4: Hallucination Auditor]
+    F -->|"Zero Discrepancy Gate"| G[Node 5: OSCR Package Assembler]
+    G -->|"HMAC-SHA256 Sign-off"| H[4 OSCR Submission Packages]
 ```
 
 ### Deterministic vs. Probabilistic Boundary Matrix
