@@ -91,7 +91,12 @@ npm run build
 
 Deploy the `.next` or `out` folder to Cloudflare Pages or Vercel.
 
----
+#### Vercel GitHub Actions Secrets Configuration
+To ensure automated deployment passes, configure the following 3 secrets in **GitHub Repository Settings -> Secrets and variables -> Actions**:
+
+1. **`VERCEL_TOKEN`**: Generate under Vercel Dashboard -> **Account Settings** -> **Tokens**.
+2. **`VERCEL_ORG_ID`**: Found in Vercel Dashboard -> **Team Settings** -> **General** (or `.vercel/project.json` `orgId`).
+3. **`VERCEL_PROJECT_ID`**: Found in Vercel Dashboard -> Select Project -> **Settings** -> **General** -> **Project ID** (`prj_...`).
 
 ## 6. Trustee Onboarding & Verification
 
