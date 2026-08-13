@@ -34,12 +34,16 @@ npx wrangler d1 migrations apply beacon-compliance-d1 --remote
 ```
 
 #### Cloudflare API Token & Account ID Configuration (Required for CI/CD)
-To prevent Cloudflare API Code 7403 (`The given account is not valid or is not authorized to access this service`), verify the following in GitHub Repository Secrets:
+> [!IMPORTANT]
+> **R2 (Buckets) vs D1 (Databases) Scope Distinction**:
+> Admin permissions on **R2 Buckets** (Object Storage) do **NOT** grant access to **D1 Databases** (Relational SQLite). If your token only has Workers R2 permissions, calls to `/accounts/.../d1/database/.../query` fail with Cloudflare Error `7403`.
+
+To resolve Cloudflare API Code 7403 (`The given account is not valid or is not authorized to access this service`), update your API Token under **Cloudflare Dashboard** -> **My Profile** -> **API Tokens**:
 
 1. **`CLOUDFLARE_ACCOUNT_ID`**: Found in Cloudflare Dashboard URL (`dash.cloudflare.com/<ACCOUNT_ID>`) or under Account Overview on the right sidebar.
-2. **`CLOUDFLARE_API_TOKEN`**: Create under **Cloudflare Dashboard** -> **My Profile** -> **API Tokens** with these permissions:
-   - **Account** -> **D1** -> **Edit**
-   - **Account** -> **Workers R2 Storage** -> **Edit**
+2. **`CLOUDFLARE_API_TOKEN`**: Must include **D1 -> Edit** permission explicitly:
+   - **Account** -> **D1** -> **Edit** *(Required for `wrangler d1 migrations apply`)*
+   - **Account** -> **Workers R2 Storage** -> **Edit** *(Required for R2 Storage Buckets)*
    - **Account** -> **Workers Scripts** -> **Edit**
    - **Account** -> **Account Details** -> **Read**
    - **Account Resources**: Include -> *All accounts* (or select your specific account).
