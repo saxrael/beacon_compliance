@@ -23,6 +23,11 @@ JWT_SECRET_KEY = os.environ.get(
     os.environ.get("AES_256_GCM_SECRET", "default_high_entropy_32_byte_secret_key_beacon_2026"),
 )
 
+try:
+    import jwt  # type: ignore
+except Exception:
+    jwt = None
+
 
 class TrusteeUser(BaseModel):
     """Authenticated trustee user principal."""
@@ -35,6 +40,7 @@ class TrusteeUser(BaseModel):
 
 def create_jwt_token(
     user_id_or_payload: str | dict[str, Any] | None = None,
+    *,
     role: str = "Chair",
     email: str = "trustee@pottershouse.org.uk",
     name: str = "",
@@ -53,16 +59,14 @@ def create_jwt_token(
             "user_id": uid,
             "role": role.title(),
             "email": email,
-            "name": name or email.split("@")[0].title(),
+            "name": name or email.split("@", maxsplit=1)[0].title(),
         }
-    try:
-        import jwt
-
+    if jwt is not None:
         claims = claims_data.copy()
         claims["exp"] = time.time() + expires_in_seconds
         claims["iat"] = time.time()
         return jwt.encode(claims, secret_key, algorithm="HS256")
-    except ImportError:
+    else:
         header = {"alg": "HS256", "typ": "JWT"}
         claims = claims_data.copy()
         claims["exp"] = time.time() + expires_in_seconds
@@ -80,12 +84,8 @@ def create_jwt_token(
 
 def decode_jwt_token(token: str, secret_key: str = JWT_SECRET_KEY) -> dict[str, Any]:
     """Decode and verify JWT token signature and expiration."""
-    try:
-        import jwt
-
+    if jwt is not None:
         return jwt.decode(token, secret_key, algorithms=["HS256"])
-    except Exception:
-        pass
 
     try:
         parts = token.split(".")

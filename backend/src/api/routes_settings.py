@@ -93,7 +93,7 @@ async def change_password(
         raise HTTPException(status_code=404, detail="User not found.")
 
     salt = os.environ.get("TRUSTEE_SIGNATURE_SALT", "default_salt_beacon_2026")
-    curr_pwd_hash = hmac.new(salt.encode("utf-8"), f"{req.current_password}:{salt}".encode("utf-8"), hashlib.sha256).hexdigest()
+    curr_pwd_hash = hmac.new(salt.encode(), f"{req.current_password}:{salt}".encode(), hashlib.sha256).hexdigest()
 
     if curr_pwd_hash != user["password_hash"]:
         raise HTTPException(status_code=401, detail="Current password incorrect.")
@@ -110,7 +110,7 @@ async def change_password(
             status_code=400, detail="New password must be at least 8 characters long."
         )
 
-    new_pwd_hash = hmac.new(salt.encode("utf-8"), f"{req.new_password}:{salt}".encode("utf-8"), hashlib.sha256).hexdigest()
+    new_pwd_hash = hmac.new(salt.encode(), f"{req.new_password}:{salt}".encode(), hashlib.sha256).hexdigest()
 
     db.execute(
         "UPDATE users SET password_hash = ? WHERE user_id = ?",

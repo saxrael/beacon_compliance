@@ -6,7 +6,6 @@ Scans Python source code ASTs in backend/src/ to enforce Red-Line 2:
 """
 
 import ast
-import os
 import sys
 from pathlib import Path
 
@@ -26,7 +25,7 @@ class FloatCallVisitor(ast.NodeVisitor):
         self.filename = filename
         self.violations: list[str] = []
 
-    def visit_Call(self, node: ast.Call) -> None:
+    def visit_Call(self, node: ast.Call) -> None:  # noqa: N802
         if isinstance(node.func, ast.Name) and node.func.id == "float":
             self.violations.append(
                 f"{self.filename}:L{node.lineno} - Prohibition of float() conversion in financial path."

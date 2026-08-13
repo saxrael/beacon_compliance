@@ -4,8 +4,11 @@ Verifies OAuth login initiation, code exchange callback, pre-approved trustee en
 email/password login, first-login password resets, and session profile endpoints.
 """
 
+import hashlib
+import hmac
 import os
 
+from backend.src.api.auth import create_jwt_token
 from backend.src.api.main import app
 from backend.src.db.d1_client import D1DatabaseClient
 from fastapi.testclient import TestClient
@@ -69,15 +72,8 @@ def test_login_with_password_and_first_login_reset(tmp_path, monkeypatch):
     db_path = str(tmp_path / "test_login.db")
     db = D1DatabaseClient(db_path=db_path)
 
-    import hashlib
-    import hmac
-
     salt = os.environ.get("TRUSTEE_SIGNATURE_SALT", "default_salt_beacon_2026")
-    temp_pwd_hash = hmac.new(
-        salt.encode("utf-8"),
-        f"Temp_Password123!:{salt}".encode("utf-8"),
-        hashlib.sha256,
-    ).hexdigest()
+    temp_pwd_hash = hmac.new(salt.encode(), f"Temp_Password123!:{salt}".encode(), hashlib.sha256).hexdigest()
 
     db.execute(
         "INSERT INTO users (user_id, email, password_hash, name, role, first_login_complete) "
@@ -122,11 +118,7 @@ def test_get_current_user_profile_me(tmp_path, monkeypatch):
 
     monkeypatch.setenv("D1_DB_PATH", db_path)
 
-    from backend.src.api.auth import create_jwt_token
-
-    jwt_token = create_jwt_token(
-        user_id="usr_dev_1", role="Developer", email="developer@pottershouse.org.uk"
-    )
+    jwt_token = create_jwt_token(user_id="usr_dev_1", role="Developer", email="developer@pottershouse.org.uk")
 
     res = client.get("/api/auth/me", headers={"Authorization": f"Bearer {jwt_token}"})
     assert res.status_code == 200

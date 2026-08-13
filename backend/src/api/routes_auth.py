@@ -12,7 +12,18 @@ import secrets
 import urllib.parse
 
 import httpx
-from backend.src.api.auth import TrusteeUser, create_jwt_token, get_current_trustee
+
+try:
+    import pyotp
+except Exception:
+    pyotp = None
+
+from backend.src.api.auth import (
+    TrusteeUser,
+    create_jwt_token,
+    decode_jwt_token,
+    get_current_trustee,
+)
 from backend.src.api.dependencies import get_d1_db
 from backend.src.db.d1_client import D1DatabaseClient
 from fastapi import APIRouter, Depends, HTTPException, Response, status
@@ -203,7 +214,7 @@ async def login_with_password(
         )
 
     salt = os.environ.get("TRUSTEE_SIGNATURE_SALT", "default_salt_beacon_2026")
-    input_pwd_hash = hmac.new(salt.encode("utf-8"), f"{req.password}:{salt}".encode("utf-8"), hashlib.sha256).hexdigest()
+    input_pwd_hash = hmac.new(salt.encode(), f"{req.password}:{salt}".encode(), hashlib.sha256).hexdigest()
 
     if input_pwd_hash != user["password_hash"]:
         raise HTTPException(
@@ -253,8 +264,8 @@ async def login_with_2fa(
     response: Response,
     db: D1DatabaseClient = Depends(get_d1_db),
 ) -> AuthResponse:
-    import pyotp
-    from backend.src.api.auth import decode_jwt_token
+    if pyotp is None:
+        raise HTTPException(status_code=500, detail="pyotp library not available on server")
 
     payload = decode_jwt_token(req.temp_token)
     if payload.get("role") != "2FA_PENDING":
@@ -303,7 +314,7 @@ async def first_login_password_reset(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User account not found.")
 
     salt = os.environ.get("TRUSTEE_SIGNATURE_SALT", "default_salt_beacon_2026")
-    curr_pwd_hash = hmac.new(salt.encode("utf-8"), f"{req.current_password}:{salt}".encode("utf-8"), hashlib.sha256).hexdigest()
+    curr_pwd_hash = hmac.new(salt.encode(), f"{req.current_password}:{salt}".encode(), hashlib.sha256).hexdigest()
 
     if curr_pwd_hash != user["password_hash"]:
         raise HTTPException(
@@ -316,7 +327,7 @@ async def first_login_password_reset(
             detail="New password must be at least 8 characters long.",
         )
 
-    new_pwd_hash = hmac.new(salt.encode("utf-8"), f"{req.new_password}:{salt}".encode("utf-8"), hashlib.sha256).hexdigest()
+    new_pwd_hash = hmac.new(salt.encode(), f"{req.new_password}:{salt}".encode(), hashlib.sha256).hexdigest()
 
     db.execute(
         "UPDATE users SET password_hash = ?, first_login_complete = 1 WHERE user_id = ?",

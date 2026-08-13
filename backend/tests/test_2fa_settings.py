@@ -21,7 +21,7 @@ def setup_test_env(tmp_path, monkeypatch, role="Trustee", email="test@pottershou
 
     monkeypatch.setenv("D1_DB_PATH", db_path)
 
-    token = create_jwt_token("user_123", role, email)
+    token = create_jwt_token("user_123", role=role, email=email)
     client.cookies.set("session_token", token)
 
     return D1DatabaseClient(db_path=db_path)

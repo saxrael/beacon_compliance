@@ -4,6 +4,8 @@ Provides admin provisioning endpoints for creating trustee accounts.
 Requires admin secret credential authentication.
 """
 
+import hashlib
+import hmac
 import os
 import secrets
 
@@ -52,10 +54,8 @@ async def provision_trustee_endpoint(
     user_id = f"usr_{secrets.token_hex(6)}"
     temp_password = f"Temp_{secrets.token_urlsafe(8)}!"
     salt = os.environ.get("TRUSTEE_SIGNATURE_SALT", "default_salt_beacon_2026")
-    import hashlib
-    import hmac
 
-    pwd_hash = hmac.new(salt.encode("utf-8"), f"{temp_password}:{salt}".encode("utf-8"), hashlib.sha256).hexdigest()
+    pwd_hash = hmac.new(salt.encode(), f"{temp_password}:{salt}".encode(), hashlib.sha256).hexdigest()
 
     db.execute(
         "INSERT OR REPLACE INTO users (user_id, email, password_hash, name, role, first_login_complete) "

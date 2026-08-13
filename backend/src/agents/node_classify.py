@@ -7,6 +7,7 @@ Classification Tiers:
 """
 
 import os
+from pathlib import Path
 from typing import Any
 
 import yaml
@@ -125,8 +126,6 @@ def load_tier1_rules(config_path: str = "config/fund_classifier.yaml") -> list[d
     """Load Tier 1 deterministic rules from configuration YAML."""
     target_path = config_path
     if not os.path.exists(target_path):
-        from pathlib import Path
-
         project_root = Path(__file__).resolve().parents[3]
         target_path = str(project_root / config_path)
 
