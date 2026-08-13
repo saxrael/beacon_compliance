@@ -1,0 +1,28 @@
+services:
+  beacon-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: beacon-compliance-backend
+    restart: always
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - APP_ENV=production
+      - PORT=8000
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1024M
+        reservations:
+          memory: 256M

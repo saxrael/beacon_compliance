@@ -21,8 +21,8 @@ _repository_instance: ComplianceRepository | None = None
 def get_d1_db() -> Generator[D1DatabaseClient, None, None]:
     """Dependency provider for Cloudflare D1 Database Client."""
     global _d1_instance
-    if _d1_instance is None:
-        db_path = os.environ.get("D1_DB_PATH", ":memory:")
+    db_path = os.environ.get("D1_DB_PATH", ":memory:")
+    if _d1_instance is None or getattr(_d1_instance, "db_path", None) != db_path:
         _d1_instance = D1DatabaseClient(db_path=db_path)
     yield _d1_instance
 
@@ -38,13 +38,12 @@ def get_r2_storage() -> R2StorageClient:
 def get_repository() -> Generator[ComplianceRepository, None, None]:
     """Dependency provider for ComplianceRepository facade."""
     global _repository_instance, _d1_instance, _r2_instance
-    if _repository_instance is None:
-        if _d1_instance is None:
-            db_path = os.environ.get("D1_DB_PATH", ":memory:")
-            _d1_instance = D1DatabaseClient(db_path=db_path)
-        if _r2_instance is None:
-            _r2_instance = R2StorageClient()
-        _repository_instance = ComplianceRepository(db_client=_d1_instance, r2_client=_r2_instance)
+    db_path = os.environ.get("D1_DB_PATH", ":memory:")
+    if _d1_instance is None or getattr(_d1_instance, "db_path", None) != db_path:
+        _d1_instance = D1DatabaseClient(db_path=db_path)
+    if _r2_instance is None:
+        _r2_instance = R2StorageClient()
+    _repository_instance = ComplianceRepository(db_client=_d1_instance, r2_client=_r2_instance)
     yield _repository_instance
 
 

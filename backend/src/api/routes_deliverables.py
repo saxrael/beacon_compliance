@@ -5,13 +5,15 @@ Enforces non-blocking execution, D1 query integration, and Pydantic response mod
 """
 
 import asyncio
+from decimal import Decimal
 from typing import Any
 
 from backend.src.agents.node_assembler import run_node_assembler
 from backend.src.agents.state import BeaconComplianceState
+from backend.src.api.auth import TrusteeUser, get_current_trustee
 from backend.src.api.dependencies import get_repository
 from backend.src.db.repository import ComplianceRepository
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 
 router = APIRouter(prefix="/api/deliverables", tags=["Deliverables"])
@@ -37,27 +39,32 @@ class DeliverablesResponse(BaseModel):
 @router.get("/{run_id}", response_model=DeliverablesResponse)
 async def get_deliverables(
     run_id: str,
+    current_user: TrusteeUser = Depends(get_current_trustee),
     repo: ComplianceRepository = Depends(get_repository),
 ) -> DeliverablesResponse:
     fin_state = repo.get_financial_state(run_id)
 
-    if fin_state:
-        receipts = fin_state.get("receipts", {})
-        payments = fin_state.get("payments", {})
-        gross_rec = receipts.get("total_receipts_decimal", "15000.00")
-        gross_pay = payments.get("total_payments_decimal", "9500.00")
-        net_mov = str(float(gross_rec) - float(gross_pay))
-        rnp_data = {
-            "gross_receipts_decimal": gross_rec,
-            "gross_payments_decimal": gross_pay,
-            "net_movement_decimal": net_mov,
-        }
-    else:
-        rnp_data = {
-            "gross_receipts_decimal": "15000.00",
-            "gross_payments_decimal": "9500.00",
-            "net_movement_decimal": "5500.00",
-        }
+    if not fin_state:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Financial state for run_id '{run_id}' not found.",
+        )
+
+    receipts = fin_state.get("receipts", {})
+    payments = fin_state.get("payments", {})
+    gross_rec_dec = Decimal(
+        str(receipts.get("gross_receipts_decimal", receipts.get("total_receipts_decimal", "0.00")))
+    )
+    gross_pay_dec = Decimal(
+        str(payments.get("gross_payments_decimal", payments.get("total_payments_decimal", "0.00")))
+    )
+    net_mov_dec = gross_rec_dec - gross_pay_dec
+
+    rnp_data = {
+        "gross_receipts_decimal": str(gross_rec_dec),
+        "gross_payments_decimal": str(gross_pay_dec),
+        "net_movement_decimal": str(net_mov_dec),
+    }
 
     sample_state: BeaconComplianceState = {
         "run_id": run_id,

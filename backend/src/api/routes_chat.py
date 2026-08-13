@@ -6,9 +6,11 @@ Enforces non-blocking execution, dynamic D1 state lookup, dependency injection, 
 
 import asyncio
 import json
+from decimal import Decimal
 from typing import Any
 
 from backend.src.agents.chat_agent import ComplianceChatAgent
+from backend.src.api.auth import TrusteeUser, get_current_trustee
 from backend.src.api.dependencies import get_chat_agent, get_d1_db
 from backend.src.db.d1_client import D1DatabaseClient
 from fastapi import APIRouter, Depends
@@ -32,6 +34,7 @@ class ChatMessageResponse(BaseModel):
 @router.post("/message", response_model=ChatMessageResponse)
 async def chat_message(
     req: ChatMessageRequest,
+    current_user: TrusteeUser = Depends(get_current_trustee),
     agent: ComplianceChatAgent = Depends(get_chat_agent),
     db: D1DatabaseClient = Depends(get_d1_db),
 ) -> ChatMessageResponse:
@@ -44,14 +47,26 @@ async def chat_message(
         if fin_row:
             receipts = json.loads(fin_row.get("receipts_json", "{}"))
             payments = json.loads(fin_row.get("payments_json", "{}"))
-            gross_rec = receipts.get("total_receipts_decimal", "15000.00")
-            gross_pay = payments.get("total_payments_decimal", "9500.00")
-            net_mov = str(float(gross_rec) - float(gross_pay))
+            gross_rec_dec = Decimal(
+                str(
+                    receipts.get(
+                        "gross_receipts_decimal", receipts.get("total_receipts_decimal", "0.00")
+                    )
+                )
+            )
+            gross_pay_dec = Decimal(
+                str(
+                    payments.get(
+                        "gross_payments_decimal", payments.get("total_payments_decimal", "0.00")
+                    )
+                )
+            )
+            net_mov_dec = gross_rec_dec - gross_pay_dec
             state = {
                 "receipts_payments": {
-                    "gross_receipts_decimal": gross_rec,
-                    "gross_payments_decimal": gross_pay,
-                    "net_movement_decimal": net_mov,
+                    "gross_receipts_decimal": str(gross_rec_dec),
+                    "gross_payments_decimal": str(gross_pay_dec),
+                    "net_movement_decimal": str(net_mov_dec),
                     "is_threshold_breached": False,
                 },
                 "statement_of_balances": {"reconciled": True},
@@ -59,9 +74,9 @@ async def chat_message(
         else:
             state = {
                 "receipts_payments": {
-                    "gross_receipts_decimal": "15000.00",
-                    "gross_payments_decimal": "9500.00",
-                    "net_movement_decimal": "5500.00",
+                    "gross_receipts_decimal": "0.00",
+                    "gross_payments_decimal": "0.00",
+                    "net_movement_decimal": "0.00",
                     "is_threshold_breached": False,
                 },
                 "statement_of_balances": {"reconciled": True},

@@ -35,6 +35,25 @@ class RedactionAuditRecord(BaseModel):
     entities_detected: list[str]
 
 
+_GLOBAL_ANALYZER = None
+_GLOBAL_ANONYMIZER = None
+_PRESIDIO_INITIALIZED = False
+
+
+def _get_presidio_engines():
+    global _GLOBAL_ANALYZER, _GLOBAL_ANONYMIZER, _PRESIDIO_INITIALIZED
+    if not _PRESIDIO_INITIALIZED:
+        _PRESIDIO_INITIALIZED = True
+        try:
+            if AnalyzerEngine is not None and AnonymizerEngine is not None:
+                _GLOBAL_ANALYZER = AnalyzerEngine()
+                _GLOBAL_ANONYMIZER = AnonymizerEngine()
+        except Exception:
+            _GLOBAL_ANALYZER = None
+            _GLOBAL_ANONYMIZER = None
+    return _GLOBAL_ANALYZER, _GLOBAL_ANONYMIZER
+
+
 class PIIRedactor:
     """Deterministic PII Redactor using structural regex and entity masking."""
 
@@ -48,18 +67,6 @@ class PIIRedactor:
         "CARD_NUMBER": re.compile(r"\b(?:\d[ -]*?){13,16}\b"),
         "UK_POSTCODE": re.compile(r"\b[A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2}\b", re.IGNORECASE),
     }
-
-    def __init__(self) -> None:
-        self._presidio_available = False
-        try:
-            if AnalyzerEngine is None or AnonymizerEngine is None:
-                raise ImportError("Presidio not available")
-            self._analyzer = AnalyzerEngine()
-            self._anonymizer = AnonymizerEngine()
-            self._presidio_available = True
-        except Exception:
-            self._analyzer = None
-            self._anonymizer = None
 
     def redact_text(self, text: str, field_name: str = "text") -> tuple[str, RedactionAuditRecord]:
         """Redact PII from a given string field."""
@@ -77,14 +84,15 @@ class PIIRedactor:
                     entities_found.append(entity_type)
                 redacted = pattern.sub(f"[{entity_type}_REDACTED]", redacted)
 
-        if self._presidio_available and self._analyzer and self._anonymizer:
+        analyzer, anonymizer = _get_presidio_engines()
+        if analyzer and anonymizer:
             try:
-                analyzer_results = self._analyzer.analyze(text=redacted, language="en")
+                analyzer_results = analyzer.analyze(text=redacted, language="en")
                 if analyzer_results:
                     for res in analyzer_results:
                         if res.entity_type not in entities_found:
                             entities_found.append(res.entity_type)
-                    anonymized_res = self._anonymizer.anonymize(
+                    anonymized_res = anonymizer.anonymize(
                         text=redacted, analyzer_results=analyzer_results
                     )
                     redacted = anonymized_res.text

@@ -1,18 +1,22 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
+import { AuthProvider, useAuth } from "@/context/AuthContext";
+import { LoginForm } from "@/components/LoginForm";
+import { FirstLoginResetModal } from "@/components/FirstLoginResetModal";
 import { Header } from "@/components/Header";
+import { Play, FileText, CheckCircle } from "lucide-react";
+import { useComplianceOS } from "@/hooks/useComplianceOS";
 import { FinancialSummaryCards } from "@/components/FinancialSummaryCards";
 import { DeliverableDownloadGrid } from "@/components/DeliverableDownloadGrid";
 import { TrusteeSignoffModal } from "@/components/TrusteeSignoffModal";
+import { AdminProvisioningModal } from "@/components/AdminProvisioningModal";
 import { ComplianceChatDrawer } from "@/components/ComplianceChatDrawer";
-import { Play, FileText, CheckCircle } from "lucide-react";
-import { useComplianceOS } from "@/hooks/useComplianceOS";
 
-export default function Home() {
+function DashboardContent() {
+  const [adminModalOpen, setAdminModalOpen] = useState(false);
+  const { user, loading: authLoading } = useAuth();
   const {
-    trusteeRole,
-    setTrusteeRole,
     pipelineResult,
     loading,
     activeSignoffHash,
@@ -22,44 +26,61 @@ export default function Home() {
     handleSignoffSuccess,
   } = useComplianceOS();
 
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center text-yellow-400 font-mono text-sm">
+        Authenticating trustee session...
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <LoginForm />;
+  }
+
   const rnp = pipelineResult?.receipts_payments || {};
   const balances = pipelineResult?.statement_of_balances || {};
   const deliverables = pipelineResult?.deliverables || [];
+  const trusteeRole = user.role ? (user.role.charAt(0).toUpperCase() + user.role.slice(1).toLowerCase()) : "Trustee";
 
   return (
     <div className="min-h-screen bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col transition-colors duration-300">
-      <Header currentRole={trusteeRole} onRoleChange={setTrusteeRole} />
+      <Header onOpenAdminModal={() => setAdminModalOpen(true)} />
 
       <main className="flex-1 max-w-7xl w-full mx-auto p-6 space-y-8">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 glass-card p-6 rounded-2xl">
+        <div className="tour-dashboard-actions flex flex-col md:flex-row md:items-center justify-between gap-4 glass-card p-6 rounded-2xl">
           <div>
             <h2 className="text-xl font-bold text-slate-900 dark:text-slate-50">OSCR Annual Compliance Pipeline</h2>
             <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
               Financial Year Ended 31 December 2026 • SCIO Registration SC054652
             </p>
           </div>
-          <button
-            onClick={runCompliancePipeline}
-            disabled={loading}
-            className="brand-gradient text-white font-bold px-5 py-2.5 rounded-xl shadow-lg shadow-red-900/30 hover:opacity-90 transition-opacity flex items-center justify-center gap-2 text-sm"
-          >
-            <Play className="h-4 w-4" />
-            {loading ? "Running State Machine..." : "Run Compliance State Machine"}
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={runCompliancePipeline}
+              disabled={loading}
+              className="brand-gradient text-white font-bold px-5 py-2.5 rounded-xl shadow-lg shadow-red-900/30 hover:opacity-90 transition-opacity flex items-center justify-center gap-2 text-sm"
+            >
+              <Play className="h-4 w-4" />
+              {loading ? "Running State Machine..." : "Run Compliance State Machine"}
+            </button>
+          </div>
         </div>
 
         {loading && !pipelineResult ? (
-          <div className="p-8 text-center glass-card rounded-xl animate-pulse text-red-600 dark:text-yellow-400 font-mono text-sm">
+          <div className="tour-dashboard-stats p-8 text-center glass-card rounded-xl animate-pulse text-red-600 dark:text-yellow-400 font-mono text-sm">
             Executing deterministic state machine & hallucination audit...
           </div>
         ) : (
-          <FinancialSummaryCards
-            grossReceipts={rnp.gross_receipts_decimal || "15000.00"}
-            grossPayments={rnp.gross_payments_decimal || "9500.00"}
-            netMovement={rnp.net_movement_decimal || "5500.00"}
-            reconciled={balances.reconciled ?? true}
-            thresholdBreached={pipelineResult?.income_threshold_breach ?? false}
-          />
+          <div className="tour-dashboard-stats">
+            <FinancialSummaryCards
+              grossReceipts={rnp.gross_receipts_decimal || "15000.00"}
+              grossPayments={rnp.gross_payments_decimal || "9500.00"}
+              netMovement={rnp.net_movement_decimal || "5500.00"}
+              reconciled={balances.reconciled ?? true}
+              thresholdBreached={pipelineResult?.income_threshold_breach ?? false}
+            />
+          </div>
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -125,6 +146,13 @@ export default function Home() {
           }}
         />
 
+        <AdminProvisioningModal
+          isOpen={adminModalOpen}
+          onClose={() => setAdminModalOpen(false)}
+        />
+
+        <FirstLoginResetModal />
+
         <ComplianceChatDrawer />
       </main>
 
@@ -132,5 +160,13 @@ export default function Home() {
         Potter's House Christian Mission UK (SCIO, SC054652) • 5B Beachmont Court, Dunbar, Scotland, EH42 1YF
       </footer>
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <AuthProvider>
+      <DashboardContent />
+    </AuthProvider>
   );
 }

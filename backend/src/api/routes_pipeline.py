@@ -5,11 +5,14 @@ Persists execution results to Cloudflare D1 database.
 """
 
 import asyncio
+import os
 from typing import Any
 
 from backend.src.agents.graph import BeaconComplianceGraph
 from backend.src.agents.state import BeaconComplianceState
+from backend.src.api.auth import TrusteeUser, get_current_trustee
 from backend.src.api.dependencies import get_repository
+from backend.src.core.email_service import send_email
 from backend.src.db.repository import ComplianceRepository
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
@@ -37,6 +40,7 @@ class PipelineRunResponse(BaseModel):
 @router.post("/run", response_model=PipelineRunResponse)
 async def run_pipeline(
     req: PipelineRunRequest,
+    current_user: TrusteeUser = Depends(get_current_trustee),
     repo: ComplianceRepository = Depends(get_repository),
 ) -> PipelineRunResponse:
     graph = BeaconComplianceGraph()
@@ -81,9 +85,18 @@ async def run_pipeline(
         closing_balance_pence=req.closing_balance_pence,
     )
 
+    breached = final_state.get("income_threshold_breach", False)
+    if breached:
+        target_email = os.environ.get("NOTIFICATION_FROM_EMAIL", "compliance@pottershouse.org.uk")
+        send_email(
+            to_email=target_email,
+            subject="[CRITICAL ALERT] OSCR Income Threshold Breach (£250,000)",
+            body_html="<p>Red-Line 5 Hard-Halt Triggered: Annual receipts reached or exceeded £250,000. R&P pipeline execution halted per Scottish charity regulations.</p>",
+        )
+
     return PipelineRunResponse(
         run_id=req.run_id,
-        income_threshold_breach=final_state.get("income_threshold_breach", False),
+        income_threshold_breach=breached,
         receipts_payments=rnp,
         statement_of_balances=balances,
         tar_draft_fields=final_state.get("tar_draft_fields", {}),

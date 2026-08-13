@@ -7,7 +7,8 @@ from typing import Any
 
 from backend.src.agents.node_ingest import run_node_ingest
 from backend.src.agents.state import BeaconComplianceState
-from fastapi import APIRouter, File, UploadFile
+from backend.src.api.auth import TrusteeUser, get_current_trustee
+from fastapi import APIRouter, Depends, File, UploadFile
 from pydantic import BaseModel
 
 router = APIRouter(prefix="/api/ingest", tags=["Ingestion"])
@@ -26,6 +27,7 @@ class IngestResponse(BaseModel):
 async def upload_documents(
     run_id: str = "run_001",
     files: list[UploadFile] = File(...),
+    current_user: TrusteeUser = Depends(get_current_trustee),
 ) -> IngestResponse:
     raw_documents = []
     for idx, f in enumerate(files):

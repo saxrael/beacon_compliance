@@ -9,6 +9,7 @@ from typing import Any
 
 from backend.src.agents.node_classify import run_node_classify
 from backend.src.agents.state import BeaconComplianceState
+from backend.src.api.auth import TrusteeUser, get_current_trustee
 from backend.src.api.dependencies import get_repository
 from backend.src.db.repository import ComplianceRepository
 from fastapi import APIRouter, Depends
@@ -48,6 +49,7 @@ class ClassificationConfirmResponse(BaseModel):
 @router.get("/pending", response_model=PendingClassificationResponse)
 async def get_pending_classifications(
     run_id: str = "run_001",
+    current_user: TrusteeUser = Depends(get_current_trustee),
     repo: ComplianceRepository = Depends(get_repository),
 ) -> PendingClassificationResponse:
     db_txns = repo.get_transactions_for_run(run_id)
@@ -111,6 +113,7 @@ async def get_pending_classifications(
 @router.post("/confirm", response_model=ClassificationConfirmResponse)
 async def confirm_classification(
     req: ClassificationConfirmRequest,
+    current_user: TrusteeUser = Depends(get_current_trustee),
     repo: ComplianceRepository = Depends(get_repository),
 ) -> ClassificationConfirmResponse:
     """Confirm a trustee classification recommendation and persist Tier 2 learned rule."""

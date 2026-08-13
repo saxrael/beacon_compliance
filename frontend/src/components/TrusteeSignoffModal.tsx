@@ -36,9 +36,13 @@ export const TrusteeSignoffModal: React.FC<SignoffModalProps> = ({
     setError("");
 
     try {
+      const token = typeof window !== "undefined" ? localStorage.getItem("trustee_token") || "secret_trustee_token_chair" : "secret_trustee_token_chair";
       const res = await fetch(`${API_BASE_URL}/api/signoff/approve`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
         body: JSON.stringify({
           trustee_role: trusteeRole,
           trustee_secret: secret,

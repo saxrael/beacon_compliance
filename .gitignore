@@ -48,6 +48,8 @@ yarn-error.log*
 .env.development.local
 .env.test.local
 .env.production.local
+*.key
+*.pem
 
 # IDE & OS
 .vscode/

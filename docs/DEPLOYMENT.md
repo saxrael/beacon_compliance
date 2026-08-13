@@ -71,30 +71,126 @@ Use the safe credentials protocol to populate required production keys:
 
 ---
 
-## 4. FastAPI Backend Deployment
+## 4. FastAPI Backend Deployment (Oracle Cloud Infrastructure — OCI Always-Free VM)
 
-### Render Web Service Deployment Configuration
+The backend is deployed as a Docker container on a dedicated **OCI Always-Free VM** (1 OCPU, 1GB RAM, Ubuntu 22.04 LTS). Both Presidio SpaCy NLP and deterministic regex engines run natively with zero OOM pressure.
+
+### Step 1: Launch a Dedicated OCI Compute Instance
 > [!IMPORTANT]
-> **Render Runtime Fix**: Render does **not** allow changing the base runtime (e.g. from Elixir to Python) for an existing service once created.
-> To resolve `bash: line 1: python: command not found`:
-> 1. Delete the existing Web Service in Render (or click **New -> Web Service** / **New -> Blueprint**).
-> 2. Select **Python 3** (or **Docker**) as the Runtime during creation.
-> 3. Point to this repository; Render will read `.python-version` (Python 3.11.9) and `render.yaml`.
+> **New Instance Required**: You MUST launch a new compute instance specifically for Beacon Compliance to ensure dedicated 1GB RAM resources.
 
-**Build Command**:
-```bash
-pip install --upgrade pip && pip install -e "./backend[dev]"
-```
+1. Log into **Oracle Cloud Console** -> **Compute** -> **Instances** -> Click **Create Instance**.
+2. **Instance Name**: `Beacon Compliance`.
+3. **Image**: Select `Ubuntu 22.04 LTS` (or `Ubuntu 24.04 LTS`).
+4. **Shape**: Select `VM.Standard.A1.Flex` (1 OCPU, 1 GB RAM) or `VM.Standard.E2.1.Micro` (1 OCPU, 1 GB RAM).
+5. **Networking (VCN)**:
+   - You can select an **existing VCN** from your compartment OR select **Create new virtual cloud network**. (Using an existing VCN is completely fine as long as you open ports on its Security List).
+   - Ensure **Assign a public IPv4 address** is set to **Yes**.
+6. **Add SSH Keys**: Generate an SSH key pair or upload your existing public key (`~/.ssh/id_rsa.pub`). Save the private key securely on your local machine.
+7. Click **Create**. Once active, note the **Public IP Address** (e.g. `129.159.x.x`).
 
-**Start Command**:
-```bash
-python -m uvicorn backend.src.api.main:app --host 0.0.0.0 --port $PORT
-```
+---
 
-### Local Development / Server Hosting
+### Step 2: Open Ingress Ports in OCI VCN Security List & VM Firewall
+1. In Oracle Cloud Console, navigate to **Networking** -> **Virtual Cloud Networks** -> Select the VCN assigned to `beacon-compliance-vm`.
+2. Click **Security Lists** -> Select the **Default Security List** (or the active Security List for your subnet).
+3. Click **Add Ingress Rules**:
+   - **Source CIDR**: `0.0.0.0/0`
+   - **IP Protocol**: `TCP`
+   - **Destination Port Range**: `8000, 80, 443`
+4. SSH into your new VM (`ssh ubuntu@<OCI_PUBLIC_IP>`) and open host firewall ports:
+   ```bash
+   sudo ufw allow 8000/tcp
+   sudo ufw allow 80/tcp
+   sudo ufw allow 443/tcp
+   sudo iptables -I INPUT 6 -m state --state NEW -p tcp --dport 8000 -j ACCEPT
+   sudo iptables -I INPUT 6 -m state --state NEW -p tcp --dport 80 -j ACCEPT
+   sudo iptables -I INPUT 6 -m state --state NEW -p tcp --dport 443 -j ACCEPT
+   sudo netfilter-persistent save
+   ```
+
+---
+
+### Step 3: OCI VM Instance Preparation (Docker Setup)
+On your OCI Ubuntu VM instance:
 ```bash
-python -m uvicorn backend.src.api.main:app --host 0.0.0.0 --port 8000 --workers 4
+sudo apt-get update && sudo apt-get install -y docker.io docker-compose-v2
+sudo systemctl enable --now docker
+sudo usermod -aG docker ubuntu
 ```
+*(Log out of SSH and log back in for `docker` group membership to take effect)*.
+
+---
+
+### Step 4: Dynamic DNS & Automated Caddy HTTPS Reverse Proxy
+1. **Register DuckDNS Subdomain**: Go to [duckdns.org](https://www.duckdns.org/), create a free domain e.g. `beacon-compliance-api.duckdns.org`, and point it to your OCI VM Public IP (`129.x.x.x`).
+2. **Install Caddy on OCI VM**:
+   ```bash
+   sudo apt install -y debian-keyring debian-archive-keyring apt-transport-https
+   curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | sudo gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+   curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | sudo tee /etc/apt/sources.list.d/caddy-stable.list
+   sudo apt update && sudo apt install caddy
+   ```
+3. **Automated Caddy & Docker Compose Deployment**:
+   The GitHub Actions workflow automatically creates a project directory at `~/beacon_compliance` on your OCI VM containing `docker-compose.yml` and `.env`, and reloads Caddy automatically on every push!
+
+4. **Useful Machine Commands on OCI VM**:
+   ```bash
+   # Navigate to project directory
+   cd ~/beacon_compliance
+
+   # View container logs
+   docker compose logs -f
+
+   # Check container status
+   docker compose ps
+
+   # Restart backend service
+   docker compose restart
+   ```
+
+---
+
+### Step 5: Complete GitHub Secrets Matrix & Cleanup
+
+#### GitHub Secrets to ADD (Settings ➔ Secrets and variables ➔ Actions):
+| Secret Name | Description / Value |
+|---|---|
+| `OCI_HOST` | OCI VM Public IP Address (e.g. `129.159.x.x`) |
+| `OCI_USERNAME` | `ubuntu` |
+| `OCI_SSH_KEY` | Contents of your private SSH key (`id_rsa`) |
+| `DUCKDNS_DOMAIN` | Your DuckDNS domain (e.g. `beacon-compliance-api.duckdns.org`) |
+| `SMTP_HOST` | Direct SMTP Server (e.g. `smtp.gmail.com` or `mail.pottershouse.org.uk`) |
+| `SMTP_PORT` | `587` (STARTTLS) or `465` (SSL) |
+| `SMTP_USERNAME` | SMTP account email |
+| `SMTP_PASSWORD` | SMTP password / App password |
+| `SMTP_USE_TLS` | `true` |
+| `AES_256_GCM_SECRET` | 32-byte production encryption secret |
+| `TRUSTEE_SIGNATURE_SALT` | Trustee HMAC signature salt |
+| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare Account ID |
+| `CLOUDFLARE_D1_DATABASE_ID` | `ae9bc1a9-395d-468a-891e-172587c73189` |
+| `CLOUDFLARE_R2_BUCKET_NAME` | `beacon-compliance-r2-prod` |
+| `R2_ACCESS_KEY_ID` | R2 Access Key ID |
+| `R2_SECRET_ACCESS_KEY` | R2 Secret Access Key |
+| `ALLOWED_ORIGINS` | `https://your-vercel-app.vercel.app,http://localhost:3000` |
+| `GROQ_API_KEY` | Groq API Key |
+| `OPENROUTER_API_KEY` | OpenRouter API Key |
+| `NOTIFICATION_FROM_EMAIL` | `testbackend00@gmail.com` |
+| `LANGFUSE_ENABLED` | `false` (or `true` if enabled) |
+| `LANGFUSE_PUBLIC_KEY` | Langfuse Public Key |
+| `LANGFUSE_SECRET_KEY` | Langfuse Secret Key |
+| `LANGFUSE_HOST` | `https://cloud.langfuse.com` |
+
+#### Secrets to REMOVE from GitHub Secrets:
+- **`RENDER_DEPLOY_HOOK_URL`**: Obsolete. Delete from GitHub Secrets.
+- **`RESEND_API_KEY`**: Obsolete. Resend is replaced by direct SMTP. Delete from GitHub Secrets.
+
+---
+
+### Step 6: Update `NEXT_PUBLIC_API_URL` on Vercel
+1. Go to **Vercel Dashboard** ➔ Select your Frontend Project ➔ **Settings** ➔ **Environment Variables**.
+2. Set `NEXT_PUBLIC_API_URL` to `https://beacon-compliance.duckdns.org` (or `http://<OCI_PUBLIC_IP>:8000`).
+3. Trigger a redeploy on Vercel.
 
 ---
 

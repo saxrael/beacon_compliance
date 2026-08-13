@@ -123,10 +123,17 @@ Return strictly a single JSON object matching the ClassificationSuggestion schem
 
 def load_tier1_rules(config_path: str = "config/fund_classifier.yaml") -> list[dict[str, Any]]:
     """Load Tier 1 deterministic rules from configuration YAML."""
-    if not os.path.exists(config_path):
+    target_path = config_path
+    if not os.path.exists(target_path):
+        from pathlib import Path
+
+        project_root = Path(__file__).resolve().parents[3]
+        target_path = str(project_root / config_path)
+
+    if not os.path.exists(target_path):
         return []
     try:
-        with open(config_path, encoding="utf-8") as f:
+        with open(target_path, encoding="utf-8") as f:
             data = yaml.safe_load(f)
             return data.get("rules", [])
     except Exception:

@@ -1,5 +1,6 @@
 """Unit tests for FastAPI REST API Endpoints (backend/tests/test_api_endpoints.py)."""
 
+from backend.src.api.auth import create_jwt_token
 from backend.src.api.main import app
 from fastapi.testclient import TestClient
 
@@ -15,8 +16,17 @@ def test_health_endpoint():
 
 
 def test_signoff_endpoint_valid_role():
+    token = create_jwt_token(
+        {
+            "user_id": "trustee_001",
+            "name": "Treasurer User",
+            "email": "treasurer@pottershouse.org.uk",
+            "role": "Treasurer",
+        }
+    )
     res = client.post(
         "/api/signoff/approve",
+        headers={"Authorization": f"Bearer {token}"},
         json={
             "trustee_role": "Treasurer",
             "trustee_secret": "secret_treasurer_key_123",

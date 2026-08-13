@@ -10,6 +10,10 @@ Validates:
 import os
 import sys
 
+from pathlib import Path
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+
 REQUIRED_ENV_KEYS = [
     "APP_ENV",
     "CHARITY_NUMBER",
@@ -18,6 +22,7 @@ REQUIRED_ENV_KEYS = [
     "CLOUDFLARE_D1_DATABASE_ID",
     "CLOUDFLARE_R2_BUCKET_NAME",
     "ALLOWED_ORIGINS",
+    "GOOGLE_CLIENT_ID",
 ]
 
 REQUIRED_TEMPLATES = [
@@ -30,7 +35,7 @@ REQUIRED_TEMPLATES = [
 
 def check_env_template_coverage() -> tuple[bool, str]:
     """Verify .env.template exists and defines all required keys."""
-    template_path = ".env.template"
+    template_path = PROJECT_ROOT / ".env.template"
     if not os.path.exists(template_path):
         return False, "Missing .env.template file."
 
@@ -59,7 +64,7 @@ def check_crypto_secret_strength() -> tuple[bool, str]:
 
 def check_document_templates() -> tuple[bool, str]:
     """Verify all 4 OSCR deliverable document HTML templates exist."""
-    missing = [t for t in REQUIRED_TEMPLATES if not os.path.exists(t)]
+    missing = [t for t in REQUIRED_TEMPLATES if not os.path.exists(PROJECT_ROOT / t)]
     if missing:
         return False, f"Missing OSCR document templates: {missing}"
     return True, "All 4 OSCR deliverable document templates present."
@@ -67,7 +72,7 @@ def check_document_templates() -> tuple[bool, str]:
 
 def check_d1_migrations_exist() -> tuple[bool, str]:
     """Verify Cloudflare D1 migration scripts exist in migrations/."""
-    migration_file = "migrations/0001_initial_schema.sql"
+    migration_file = PROJECT_ROOT / "migrations/0001_initial_schema.sql"
     if not os.path.exists(migration_file):
         return (
             False,

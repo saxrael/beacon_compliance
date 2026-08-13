@@ -63,7 +63,9 @@ class BeaconLangfuseTracer:
                     )
                     logger.info("Langfuse telemetry initialized successfully (Host: %s)", self.host)
                 except Exception as exc:
-                    logger.warning("Failed to initialize Langfuse client: %s. Telemetry disabled.", exc)
+                    logger.warning(
+                        "Failed to initialize Langfuse client: %s. Telemetry disabled.", exc
+                    )
                     self.enabled = False
 
     def is_enabled(self) -> bool:

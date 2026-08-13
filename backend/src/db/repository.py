@@ -142,3 +142,40 @@ class ComplianceRepository:
     def fetch_document_blob(self, object_key: str) -> bytes:
         """Fetch and decrypt document blob from R2 object storage."""
         return self.r2.get_object(object_key)
+
+    def save_approval(
+        self,
+        approval_id: str,
+        *,
+        run_id: str,
+        deliverable_id: str,
+        trustee_id: str,
+        role: str,
+        approval_hash: str,
+        approved_at: str,
+    ) -> dict[str, Any]:
+        """Persist trustee HMAC sign-off approval record to D1 database."""
+        self.db.execute(
+            "INSERT OR REPLACE INTO approvals "
+            "(approval_id, run_id, deliverable_id, trustee_id, role, approval_hash, approved_at) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (approval_id, run_id, deliverable_id, trustee_id, role, approval_hash, approved_at),
+        )
+        return {
+            "approval_id": approval_id,
+            "run_id": run_id,
+            "deliverable_id": deliverable_id,
+            "trustee_id": trustee_id,
+            "role": role,
+            "approval_hash": approval_hash,
+            "approved_at": approved_at,
+        }
+
+    def get_approvals_for_run(self, run_id: str) -> list[dict[str, Any]]:
+        """Fetch all trustee approvals recorded for run_id."""
+        rows = self.db.fetchall(
+            "SELECT approval_id, run_id, deliverable_id, trustee_id, role, approval_hash, approved_at "
+            "FROM approvals WHERE run_id = ?",
+            (run_id,),
+        )
+        return [dict(r) for r in rows]

@@ -9,12 +9,35 @@ import time
 from collections import defaultdict
 from collections.abc import Callable
 
-from fastapi import HTTPException, Request, Response, status
+from fastapi import Request, Response, status
 from starlette.middleware.base import BaseHTTPMiddleware
 
+try:
+    from slowapi import Limiter, _rate_limit_exceeded_handler
+    from slowapi.errors import RateLimitExceeded
 
-class RateLimiter:
-    """In-memory sliding window rate limiter."""
+    HAS_SLOWAPI = True
+except ImportError:
+    HAS_SLOWAPI = False
+    RateLimitExceeded = Exception
+    _rate_limit_exceeded_handler = None
+
+
+def get_real_client_ip(request: Request) -> str:
+    """Extract real client IP handling X-Forwarded-For proxy headers."""
+    x_forwarded = request.headers.get("X-Forwarded-For")
+    if x_forwarded:
+        return x_forwarded.split(",")[0].strip()
+    return request.client.host if request.client else "127.0.0.1"
+
+
+limiter = (
+    Limiter(key_func=get_real_client_ip, default_limits=["100/minute"]) if HAS_SLOWAPI else None
+)
+
+
+class SlidingWindowLimiter:
+    """Sliding window rate limiter with multi-key IP tracking."""
 
     def __init__(self, requests_per_minute: int = 60) -> None:
         self.requests_per_minute = requests_per_minute
@@ -24,10 +47,6 @@ class RateLimiter:
     def is_allowed(
         self, client_ip: str, limit_override: int | None = None
     ) -> tuple[bool, int, int]:
-        """Check if request from client_ip is allowed under the rate limit.
-
-        Returns (allowed, remaining, reset_seconds).
-        """
         now = time.time()
         limit = limit_override or self.requests_per_minute
         cutoff = now - self.window_seconds
@@ -45,15 +64,15 @@ class RateLimiter:
         return True, remaining, self.window_seconds
 
 
-standard_limiter = RateLimiter(requests_per_minute=100)
-strict_signoff_limiter = RateLimiter(requests_per_minute=10)
+standard_limiter = SlidingWindowLimiter(requests_per_minute=100)
+strict_signoff_limiter = SlidingWindowLimiter(requests_per_minute=10)
 
 
 class RateLimitMiddleware(BaseHTTPMiddleware):
     """FastAPI Middleware enforcing IP-based sliding window rate limiting."""
 
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
-        client_ip = request.client.host if request.client else "127.0.0.1"
+        client_ip = get_real_client_ip(request)
         path = request.url.path
 
         if path.startswith("/api/signoff"):
@@ -68,19 +87,20 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             allowed, remaining, reset_in = True, 100, 60
 
         if not allowed:
-            raise HTTPException(
+            return Response(
+                content=f'{{"detail":"Rate limit exceeded. Please try again in {reset_in} seconds."}}',
                 status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                detail=f"Rate limit exceeded. Please try again in {reset_in} seconds.",
+                media_type="application/json",
                 headers={
                     "Retry-After": str(reset_in),
-                    "X-RateLimit-Limit": "10",
+                    "X-RateLimit-Limit": str(10 if path.startswith("/api/signoff") else 100),
                     "X-RateLimit-Remaining": "0",
+                    "Access-Control-Allow-Origin": request.headers.get("origin", "*"),
+                    "Access-Control-Allow-Credentials": "true",
                 },
             )
 
         response = await call_next(request)
-        response.headers["X-RateLimit-Limit"] = str(
-            100 if not path.startswith("/api/signoff") else 10
-        )
+        response.headers["X-RateLimit-Limit"] = str(10 if path.startswith("/api/signoff") else 100)
         response.headers["X-RateLimit-Remaining"] = str(remaining)
         return response

@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS users (
     email TEXT UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
     name TEXT NOT NULL,
-    role TEXT CHECK(role IN ('Chair', 'Secretary', 'Treasurer', 'Trustee', 'Admin')) NOT NULL,
+    role TEXT CHECK(role IN ('Chair', 'Secretary', 'Treasurer', 'Trustee', 'Admin', 'Developer')) NOT NULL,
     first_login_complete INTEGER NOT NULL DEFAULT 0
 );
 

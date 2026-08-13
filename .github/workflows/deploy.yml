@@ -96,13 +96,98 @@ jobs:
         run: npx vercel --prod --token=${{ secrets.VERCEL_TOKEN }} --yes
 
   deploy-backend:
-    name: Deploy Backend to Render
+    name: Deploy Backend Docker Container to OCI
     needs: [test-and-audit, migrate-database]
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Trigger Render Deploy Hook
-        run: |
-          curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and Push Production Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/beacon-compliance-backend:latest
+            ghcr.io/${{ github.repository_owner }}/beacon-compliance-backend:${{ github.sha }}
+
+      - name: Deploy to OCI VM via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.OCI_HOST }}
+          username: ${{ secrets.OCI_USERNAME }}
+          key: ${{ secrets.OCI_SSH_KEY }}
+            mkdir -p ~/beacon_compliance
+            cat << EOF > ~/beacon_compliance/.env
+APP_ENV=production
+LOG_LEVEL=INFO
+CHARITY_NUMBER=SC054652
+CHARITY_NAME=Potter's House Christian Mission UK
+AES_256_GCM_SECRET=${{ secrets.AES_256_GCM_SECRET }}
+TRUSTEE_SIGNATURE_SALT=${{ secrets.TRUSTEE_SIGNATURE_SALT }}
+CLOUDFLARE_ACCOUNT_ID=${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+CLOUDFLARE_D1_DATABASE_ID=${{ secrets.CLOUDFLARE_D1_DATABASE_ID }}
+CLOUDFLARE_R2_BUCKET_NAME=${{ secrets.CLOUDFLARE_R2_BUCKET_NAME }}
+R2_ACCESS_KEY_ID=${{ secrets.R2_ACCESS_KEY_ID }}
+R2_SECRET_ACCESS_KEY=${{ secrets.R2_SECRET_ACCESS_KEY }}
+ALLOWED_ORIGINS=${{ secrets.ALLOWED_ORIGINS }}
+GROQ_API_KEY=${{ secrets.GROQ_API_KEY }}
+OPENROUTER_API_KEY=${{ secrets.OPENROUTER_API_KEY }}
+SMTP_HOST=${{ secrets.SMTP_HOST }}
+SMTP_PORT=${{ secrets.SMTP_PORT }}
+SMTP_USERNAME=${{ secrets.SMTP_USERNAME }}
+SMTP_PASSWORD=${{ secrets.SMTP_PASSWORD }}
+SMTP_USE_TLS=${{ secrets.SMTP_USE_TLS }}
+NOTIFICATION_FROM_EMAIL=${{ secrets.NOTIFICATION_FROM_EMAIL }}
+LANGFUSE_ENABLED=${{ secrets.LANGFUSE_ENABLED }}
+LANGFUSE_PUBLIC_KEY=${{ secrets.LANGFUSE_PUBLIC_KEY }}
+LANGFUSE_SECRET_KEY=${{ secrets.LANGFUSE_SECRET_KEY }}
+LANGFUSE_HOST=${{ secrets.LANGFUSE_HOST }}
+EOF
+
+            cat << EOF > ~/beacon_compliance/docker-compose.yml
+services:
+  beacon-backend:
+    image: ghcr.io/${{ github.repository_owner }}/beacon-compliance-backend:latest
+    container_name: beacon-compliance-backend
+    restart: always
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+EOF
+
+            cd ~/beacon_compliance
+            docker compose pull
+            docker compose up -d
+
+            if [ -n "${{ secrets.DUCKDNS_DOMAIN }}" ]; then
+              cat << EOF | sudo tee /etc/caddy/Caddyfile
+${{ secrets.DUCKDNS_DOMAIN }} {
+    reverse_proxy localhost:8000
+
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        Referrer-Policy "strict-origin-when-cross-origin"
+    }
+}
+EOF
+              sudo systemctl reload caddy || sudo systemctl restart caddy
+            fi
