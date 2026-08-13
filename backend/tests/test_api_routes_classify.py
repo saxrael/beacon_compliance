@@ -27,7 +27,7 @@ def setup_auth_env(tmp_path, monkeypatch):
 
 
 def test_get_pending_classifications_endpoint(tmp_path, monkeypatch):
-    headers, db_path = setup_auth_env(tmp_path, monkeypatch)
+    headers, _db_path = setup_auth_env(tmp_path, monkeypatch)
 
     res = client.get("/api/classify/pending?run_id=run_test_01", headers=headers)
     assert res.status_code == 200
@@ -38,7 +38,7 @@ def test_get_pending_classifications_endpoint(tmp_path, monkeypatch):
 
 
 def test_confirm_classification_endpoint(tmp_path, monkeypatch):
-    headers, db_path = setup_auth_env(tmp_path, monkeypatch)
+    headers, _db_path = setup_auth_env(tmp_path, monkeypatch)
 
     res = client.post(
         "/api/classify/confirm",

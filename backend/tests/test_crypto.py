@@ -83,9 +83,7 @@ def test_aes_gcm_decryption_invalid_tag_error():
     nonce, ciphertext = cipher.encrypt(payload)
 
     corrupted_ciphertext = (
-        ciphertext[:-1] + b"\x00"
-        if ciphertext[-1:] != b"\x00"
-        else ciphertext[:-1] + b"\xff"
+        ciphertext[:-1] + b"\x00" if ciphertext[-1:] != b"\x00" else ciphertext[:-1] + b"\xff"
     )
     with pytest.raises(InvalidTag):
         cipher.decrypt(nonce, corrupted_ciphertext)

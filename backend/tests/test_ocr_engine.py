@@ -76,7 +76,7 @@ def test_excel_csv_extraction_success():
     extractor = MultiFormatDocumentExtractor()
     csv_bytes = b"Date,Description,Amount\n2026-01-10,Tithes,150.00\n"
 
-    res, flag = extractor.extract_document("doc_csv_01", "tithes.csv", csv_bytes)
+    res, _flag = extractor.extract_document("doc_csv_01", "tithes.csv", csv_bytes)
 
     assert res.file_type == "csv"
     assert "Tithes" in res.extracted_text
@@ -98,7 +98,7 @@ def test_excel_xlsx_extraction_mocked():
     mock_pd.read_excel.return_value = mock_df
 
     with patch("backend.src.core.ocr_engine.pd", mock_pd):
-        res, flag = extractor.extract_document("doc_xlsx_01", "ledger.xlsx", b"xlsx_bytes")
+        res, _flag = extractor.extract_document("doc_xlsx_01", "ledger.xlsx", b"xlsx_bytes")
 
     assert res.file_type == "xlsx"
     assert "Cash Ledger" in res.extracted_text
@@ -120,7 +120,7 @@ def test_docx_extraction_success():
     mock_docx.Document.return_value = mock_doc
 
     with patch("backend.src.core.ocr_engine.docx", mock_docx):
-        res, flag = extractor.extract_document("doc_docx_01", "minutes.docx", b"docx_bytes")
+        res, _flag = extractor.extract_document("doc_docx_01", "minutes.docx", b"docx_bytes")
 
     assert res.file_type == "docx"
     assert "Trustee Meeting Minutes 2026" in res.extracted_text
@@ -169,12 +169,12 @@ def test_unknown_extension_handling():
     extractor = MultiFormatDocumentExtractor()
     raw_content = b"Unknown format text file content."
 
-    res, flag = extractor.extract_document("doc_unk_01", "notes.unknown", raw_content)
+    res, _flag = extractor.extract_document("doc_unk_01", "notes.unknown", raw_content)
 
     assert res.file_type == "unknown"
     assert res.extracted_text == "Unknown format text file content."
 
-    res2, flag2 = extractor.extract_document(
+    res2, _flag2 = extractor.extract_document(
         "doc_no_ext", "filename_without_extension", raw_content
     )
     assert res2.file_type == "raw"
