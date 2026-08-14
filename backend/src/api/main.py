@@ -4,6 +4,7 @@ Provides CORS middleware, API route registration, and health status endpoint.
 """
 
 import os
+from typing import Any
 
 from backend.src.api.rate_limiter import (
     RateLimitExceeded,
@@ -67,3 +68,24 @@ app.include_router(chat_router)
 @app.get("/health")
 async def health_check() -> dict[str, str]:
     return {"status": "healthy", "charity": "SC054652", "version": "1.0.0"}
+
+
+@app.get("/ready")
+async def readiness_check() -> dict[str, Any]:
+    checks: dict[str, str] = {}
+    try:
+        from backend.src.api.dependencies import get_d1_db
+
+        gen = get_d1_db()
+        db = next(gen)
+        db.execute("SELECT 1")
+        checks["database"] = "healthy"
+    except Exception as err:
+        checks["database"] = f"unhealthy: {err}"
+
+    all_ready = all(v == "healthy" for v in checks.values())
+    return {
+        "status": "ready" if all_ready else "degraded",
+        "charity": "SC054652",
+        "checks": checks,
+    }

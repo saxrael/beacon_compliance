@@ -187,3 +187,18 @@ class D1DatabaseClient:
     def close(self) -> None:
         """Close database connection."""
         self._conn.close()
+
+    def backup_to_bytes(self) -> bytes:
+        """Create an in-memory SQLite binary snapshot suitable for R2 disaster recovery upload."""
+        dest = sqlite3.connect(":memory:")
+        self._conn.backup(dest)
+        raw_bytes = dest.serialize() if hasattr(dest, "serialize") else b""
+        if not raw_bytes:
+            import io
+
+            buf = io.BytesIO()
+            for line in dest.iterdump():
+                buf.write(f"{line}\n".encode())
+            raw_bytes = buf.getvalue()
+        dest.close()
+        return raw_bytes

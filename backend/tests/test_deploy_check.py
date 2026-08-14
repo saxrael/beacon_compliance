@@ -2,6 +2,7 @@
 
 from scripts.deploy_check import (
     check_crypto_secret_strength,
+    check_dockerignore_present,
     check_document_templates,
     check_env_template_coverage,
     run_full_preflight_check,
@@ -24,6 +25,12 @@ def test_crypto_secret_strength(monkeypatch):
 def test_document_templates_exist():
     passed, _ = check_document_templates()
     assert passed is True
+
+
+def test_dockerignore_present():
+    passed, msg = check_dockerignore_present()
+    assert passed is True
+    assert "configured" in msg
 
 
 def test_run_full_preflight_check(monkeypatch):

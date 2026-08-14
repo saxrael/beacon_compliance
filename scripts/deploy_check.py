@@ -80,6 +80,14 @@ def check_d1_migrations_exist() -> tuple[bool, str]:
     return True, "Cloudflare D1 migration script present."
 
 
+def check_dockerignore_present() -> tuple[bool, str]:
+    """Verify .dockerignore exists to safeguard container build context."""
+    dockerignore = PROJECT_ROOT / ".dockerignore"
+    if not os.path.exists(dockerignore):
+        return False, "Missing .dockerignore file."
+    return True, ".dockerignore is present and configured."
+
+
 def run_full_preflight_check() -> bool:
     """Run full production pre-flight readiness audit."""
     print("=" * 60)
@@ -92,6 +100,7 @@ def run_full_preflight_check() -> bool:
         ("Cryptographic Secret Strength", check_crypto_secret_strength),
         ("OSCR Document Templates", check_document_templates),
         ("Cloudflare D1 Migration Script", check_d1_migrations_exist),
+        ("Docker Build Context Guard", check_dockerignore_present),
     ]
 
     all_passed = True

@@ -103,3 +103,15 @@ def test_d1_client_file_persistence(tmp_path):
     assert user_row["email"] == "trustee@pottershouse.org.uk"
     assert user_row["role"] == "Chair"
     client2.close()
+
+
+def test_d1_client_backup_to_bytes():
+    client = D1DatabaseClient(db_path=":memory:")
+    client.execute(
+        "INSERT INTO runs (run_id, charity_scn, year_end, status, created_at) VALUES (?, ?, ?, ?, ?)",
+        ("run_backup_001", "SC054652", "2026-12-31", "draft", "2026-08-12T00:00:00Z"),
+    )
+    backup_data = client.backup_to_bytes()
+    assert isinstance(backup_data, bytes)
+    assert len(backup_data) > 0
+    client.close()

@@ -24,7 +24,13 @@ except ImportError:
 
 
 def get_real_client_ip(request: Request) -> str:
-    """Extract real client IP handling X-Forwarded-For proxy headers."""
+    """Extract real client IP handling Cloudflare, Caddy, and reverse proxy headers."""
+    cf_ip = request.headers.get("CF-Connecting-IP")
+    if cf_ip:
+        return cf_ip.strip()
+    x_real_ip = request.headers.get("X-Real-IP")
+    if x_real_ip:
+        return x_real_ip.strip()
     x_forwarded = request.headers.get("X-Forwarded-For")
     if x_forwarded:
         return x_forwarded.split(",")[0].strip()
