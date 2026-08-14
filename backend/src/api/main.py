@@ -6,6 +6,7 @@ Provides CORS middleware, API route registration, and health status endpoint.
 import os
 from typing import Any
 
+from backend.src.api.dependencies import get_d1_db
 from backend.src.api.rate_limiter import (
     RateLimitExceeded,
     RateLimitMiddleware,
@@ -74,8 +75,6 @@ async def health_check() -> dict[str, str]:
 async def readiness_check() -> dict[str, Any]:
     checks: dict[str, str] = {}
     try:
-        from backend.src.api.dependencies import get_d1_db
-
         gen = get_d1_db()
         db = next(gen)
         db.execute("SELECT 1")

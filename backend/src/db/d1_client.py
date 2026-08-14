@@ -6,6 +6,7 @@ Strictly enforces:
 - Schema definitions per TRD §2
 """
 
+import io
 import sqlite3
 from pathlib import Path
 from typing import Any
@@ -194,8 +195,6 @@ class D1DatabaseClient:
         self._conn.backup(dest)
         raw_bytes = dest.serialize() if hasattr(dest, "serialize") else b""
         if not raw_bytes:
-            import io
-
             buf = io.BytesIO()
             for line in dest.iterdump():
                 buf.write(f"{line}\n".encode())
