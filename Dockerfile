@@ -43,6 +43,8 @@ COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/pytho
 COPY --from=builder /usr/local/bin /usr/local/bin
 COPY --from=builder --chown=appuser:appgroup /app /app
 
+RUN mkdir -p /app/data && chown -R appuser:appgroup /app/data
+
 # Verify langfuse is importable in production stage
 RUN python -c "from langfuse import Langfuse; print('langfuse production OK')"
 

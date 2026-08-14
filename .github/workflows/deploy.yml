@@ -187,6 +187,8 @@ jobs:
             EOF
 
             cd ~/beacon_compliance
+            mkdir -p ~/beacon_compliance/data
+            chmod 777 ~/beacon_compliance/data
             docker compose pull
             docker compose up -d
 

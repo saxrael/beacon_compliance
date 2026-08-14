@@ -7,6 +7,7 @@ Strictly enforces:
 """
 
 import sqlite3
+from pathlib import Path
 from typing import Any
 
 D1_SCHEMA_SQL = """
@@ -155,6 +156,8 @@ class D1DatabaseClient:
 
     def __init__(self, db_path: str = ":memory:") -> None:
         self.db_path = db_path
+        if self.db_path != ":memory:":
+            Path(self.db_path).parent.mkdir(parents=True, exist_ok=True)
         self._conn = sqlite3.connect(self.db_path, check_same_thread=False)
         self._conn.row_factory = sqlite3.Row
         self.init_schema()
