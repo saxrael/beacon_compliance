@@ -14,23 +14,21 @@ import secrets
 import sys
 from pathlib import Path
 
+from backend.src.db.d1_client import D1DatabaseClient
+
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
 
 
 def hash_password(password: str) -> str:
     """Hash password using SHA-256 with salt."""
     salt = os.environ.get("TRUSTEE_SIGNATURE_SALT", "default_salt_beacon_2026")
-    return hashlib.sha256(f"{password }:{salt }".encode()).hexdigest()
+    return hashlib.sha256(f"{password}:{salt}".encode()).hexdigest()
 
 
 def provision_trustee(
     email: str, name: str, role: str, db_path: str | None = None
 ) -> dict[str, str]:
     """Provision a new trustee account in Cloudflare D1 database."""
-    from backend.src.db.d1_client import D1DatabaseClient
-
     normalized_role = role.title()
     if normalized_role not in ("Chair", "Secretary", "Treasurer", "Trustee", "Admin", "Developer"):
         raise ValueError(
