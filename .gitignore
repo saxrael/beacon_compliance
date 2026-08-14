@@ -52,6 +52,12 @@ yarn-error.log*
 *.key
 *.pem
 
+# Local Data & SQLite
+data/
+*.db
+*.sqlite
+*.sqlite3
+
 # IDE & OS
 .vscode/
 .idea/

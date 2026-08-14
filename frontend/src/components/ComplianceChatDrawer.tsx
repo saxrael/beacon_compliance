@@ -4,8 +4,10 @@ import React, { useState } from "react";
 import { MessageSquare, Send, X, Bot, Sparkles } from "lucide-react";
 import { MarkdownRenderer } from "./MarkdownRenderer";
 import { API_BASE_URL } from "@/config";
+import { useAuth } from "@/context/AuthContext";
 
 export const ComplianceChatDrawer: React.FC = () => {
+  const { token } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Array<{ role: string; content: string }>>([
@@ -27,9 +29,15 @@ export const ComplianceChatDrawer: React.FC = () => {
     setLoading(true);
 
     try {
+      const activeToken = token || (typeof window !== "undefined" ? localStorage.getItem("beacon_auth_token") : null);
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (activeToken) {
+        headers["Authorization"] = `Bearer ${activeToken}`;
+      }
+
       const res = await fetch(`${API_BASE_URL}/api/chat/message`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({ message: userText, run_id: "run_001" }),
       });
 

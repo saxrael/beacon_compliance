@@ -145,6 +145,9 @@ jobs:
             R2_ACCESS_KEY_ID=${{ secrets.R2_ACCESS_KEY_ID }}
             R2_SECRET_ACCESS_KEY=${{ secrets.R2_SECRET_ACCESS_KEY }}
             ALLOWED_ORIGINS=${{ secrets.ALLOWED_ORIGINS }}
+            GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
+            GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
+            GOOGLE_REDIRECT_URI=${{ secrets.GOOGLE_REDIRECT_URI }}
             GROQ_API_KEY=${{ secrets.GROQ_API_KEY }}
             OPENROUTER_API_KEY=${{ secrets.OPENROUTER_API_KEY }}
             SMTP_HOST=${{ secrets.SMTP_HOST }}
@@ -169,6 +172,12 @@ jobs:
                   - "8000:8000"
                 env_file:
                   - .env
+                environment:
+                  - APP_ENV=production
+                  - PORT=8000
+                  - D1_DB_PATH=/app/data/beacon_compliance.db
+                volumes:
+                  - ./data:/app/data
                 healthcheck:
                   test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
                   interval: 30s
