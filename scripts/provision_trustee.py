@@ -18,8 +18,6 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from backend.src.db.d1_client import D1DatabaseClient  # noqa: E402
-
 
 def hash_password(password: str) -> str:
     """Hash password using SHA-256 with salt."""
@@ -31,6 +29,8 @@ def provision_trustee(
     email: str, name: str, role: str, db_path: str | None = None
 ) -> dict[str, str]:
     """Provision a new trustee account in Cloudflare D1 database."""
+    from backend.src.db.d1_client import D1DatabaseClient
+
     normalized_role = role.title()
     if normalized_role not in ("Chair", "Secretary", "Treasurer", "Trustee", "Admin", "Developer"):
         raise ValueError(

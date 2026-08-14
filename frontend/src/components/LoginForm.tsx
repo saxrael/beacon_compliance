@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { ShieldCheck, Lock, Mail, AlertCircle, ArrowRight, KeyRound, Sparkles } from "lucide-react";
+import { ShieldCheck, Lock, Mail, AlertCircle, ArrowRight, KeyRound, Sparkles, Building2 } from "lucide-react";
 
 export const LoginForm: React.FC = () => {
   const { loginWithEmail, loginWith2FA, getGoogleLoginUrl, error: authError } = useAuth();
@@ -53,46 +53,46 @@ export const LoginForm: React.FC = () => {
   const activeError = localError || authError;
 
   return (
-    <div className="min-h-screen bg-[#070B14] relative overflow-hidden flex flex-col justify-center items-center p-6 text-slate-100 selection:bg-red-500/30">
-      {/* Background ambient lighting */}
-      <div className="absolute top-1/4 -left-32 w-96 h-96 bg-red-600/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+    <div className="min-h-screen bg-[#F8F7F4] dark:bg-[#090D16] relative overflow-hidden flex flex-col justify-center items-center p-4 sm:p-6 text-slate-900 dark:text-slate-100 transition-colors duration-300">
+      <div className="fixed top-0 left-0 right-0 h-1 bg-gradient-to-r from-red-600 via-amber-500 to-red-600 z-50" />
 
-      <div className="max-w-md w-full glass-card p-8 sm:p-10 rounded-3xl border border-white/10 shadow-2xl relative z-10 space-y-7">
-        {/* Header Branding */}
-        <div className="text-center space-y-3">
-          <div className="inline-flex p-3.5 rounded-2xl bg-gradient-to-br from-red-500/20 to-amber-500/20 text-red-400 border border-red-500/30 shadow-lg shadow-red-500/5 mb-1">
-            <ShieldCheck className="h-9 w-9 text-red-500" />
+      <div className="absolute top-1/4 -left-32 w-96 h-96 bg-red-500/5 dark:bg-red-600/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-amber-500/5 dark:bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+
+      <div className="max-w-md w-full bg-white dark:bg-slate-900 p-8 sm:p-10 rounded-3xl border border-stone-200 dark:border-slate-800 shadow-xl relative z-10 space-y-6">
+        <div className="text-center space-y-2.5">
+          <div className="inline-flex p-3 rounded-2xl bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-500/30 shadow-xs mb-1">
+            <Building2 className="h-8 w-8 text-red-600 dark:text-red-500" />
           </div>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white flex items-center justify-center gap-2">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white font-serif">
               Beacon Compliance
             </h1>
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 mt-2 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-300 text-[11px] font-mono font-medium">
-              <Sparkles className="h-3 w-3 text-amber-400" />
+            <div className="inline-flex items-center gap-1.5 px-3 py-0.5 mt-2 rounded-full bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 text-amber-800 dark:text-amber-300 text-xs font-mono font-medium">
+              <Sparkles className="h-3 w-3 text-amber-600 dark:text-amber-400" />
               <span>SCIO SC054652 • Trustee Portal</span>
             </div>
           </div>
-          <p className="text-xs text-slate-400 max-w-xs mx-auto">
-            Potter&apos;s House Christian Mission UK (Dunbar, Scotland)
+          <p className="text-xs font-medium text-stone-600 dark:text-slate-400 max-w-xs mx-auto">
+            Potter&apos;s House Christian Mission UK <br />
+            <span className="text-[11px] text-stone-500 dark:text-slate-500 italic">&quot;Building Lives, Strengthening Homes, Shaping Nations for Christ&quot;</span>
           </p>
         </div>
 
         {activeError && (
-          <div className="p-3.5 bg-red-950/40 border border-red-500/40 rounded-xl text-xs text-red-300 flex items-start gap-2.5 shadow-sm">
-            <AlertCircle className="h-4 w-4 shrink-0 text-red-400 mt-0.5" />
-            <span className="leading-relaxed">{activeError}</span>
+          <div className="p-3.5 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-500/40 rounded-xl text-xs text-red-700 dark:text-red-300 flex items-start gap-2.5 shadow-xs">
+            <AlertCircle className="h-4 w-4 shrink-0 text-red-600 dark:text-red-400 mt-0.5" />
+            <span className="leading-relaxed font-medium">{activeError}</span>
           </div>
         )}
 
-        {/* Google Auth Button */}
         <button
           type="button"
           onClick={handleGoogleSignIn}
           disabled={loading}
-          className="w-full py-3.5 px-4 bg-white hover:bg-slate-100 active:bg-slate-200 text-slate-900 rounded-xl font-semibold text-sm flex items-center justify-center gap-3 shadow-lg shadow-black/20 transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50"
+          className="w-full py-3 px-4 bg-white dark:bg-slate-800 hover:bg-stone-50 dark:hover:bg-slate-700 active:bg-stone-100 text-slate-800 dark:text-slate-100 rounded-xl font-semibold text-xs sm:text-sm flex items-center justify-center gap-3 border border-stone-300 dark:border-slate-700 shadow-xs transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50"
         >
-          <svg className="h-5 w-5" viewBox="0 0 24 24">
+          <svg className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" viewBox="0 0 24 24">
             <path
               fill="#4285F4"
               d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -113,20 +113,18 @@ export const LoginForm: React.FC = () => {
           <span>Sign in with Google</span>
         </button>
 
-        {/* Divider */}
         <div className="flex items-center gap-3">
-          <div className="h-px flex-1 bg-white/10" />
-          <span className="text-[11px] text-slate-500 uppercase tracking-wider font-mono">Or Credentials</span>
-          <div className="h-px flex-1 bg-white/10" />
+          <div className="h-px flex-1 bg-stone-200 dark:bg-slate-800" />
+          <span className="text-[11px] text-stone-500 dark:text-slate-500 uppercase tracking-wider font-mono font-medium">Or Credentials</span>
+          <div className="h-px flex-1 bg-stone-200 dark:bg-slate-800" />
         </div>
 
-        {/* Credentials Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
           {!pending2FA ? (
             <>
               <div className="space-y-1.5">
-                <label className="block text-slate-300 font-medium text-xs flex items-center gap-1.5">
-                  <Mail className="h-3.5 w-3.5 text-slate-400" />
+                <label className="block text-stone-700 dark:text-slate-300 font-semibold text-xs flex items-center gap-1.5">
+                  <Mail className="h-3.5 w-3.5 text-stone-500 dark:text-slate-400" />
                   <span>Trustee Email</span>
                 </label>
                 <input
@@ -135,14 +133,14 @@ export const LoginForm: React.FC = () => {
                   placeholder="name@pottershouse.org.uk"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-4 py-3 bg-slate-900/80 border border-white/10 rounded-xl text-slate-100 placeholder:text-slate-500 text-sm focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500/50 transition-all"
+                  className="w-full px-3.5 py-2.5 bg-stone-50 dark:bg-slate-800/80 border border-stone-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-slate-100 placeholder:text-stone-400 dark:placeholder:text-slate-500 text-sm focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-500/20 transition-all shadow-xs"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="block text-slate-300 font-medium text-xs flex items-center gap-1.5">
-                  <Lock className="h-3.5 w-3.5 text-slate-400" />
-                  <span>Password / Temporary Key</span>
+                <label className="block text-stone-700 dark:text-slate-300 font-semibold text-xs flex items-center gap-1.5">
+                  <Lock className="h-3.5 w-3.5 text-stone-500 dark:text-slate-400" />
+                  <span>Password / Key</span>
                 </label>
                 <input
                   type="password"
@@ -150,14 +148,14 @@ export const LoginForm: React.FC = () => {
                   placeholder="••••••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 bg-slate-900/80 border border-white/10 rounded-xl text-slate-100 placeholder:text-slate-500 text-sm focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500/50 transition-all"
+                  className="w-full px-3.5 py-2.5 bg-stone-50 dark:bg-slate-800/80 border border-stone-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-slate-100 placeholder:text-stone-400 dark:placeholder:text-slate-500 text-sm focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-500/20 transition-all shadow-xs"
                 />
               </div>
             </>
           ) : (
             <div className="space-y-2">
-              <label className="block text-slate-300 font-medium text-xs flex items-center gap-1.5">
-                <KeyRound className="h-3.5 w-3.5 text-amber-400" />
+              <label className="block text-stone-700 dark:text-slate-300 font-semibold text-xs flex items-center gap-1.5">
+                <KeyRound className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
                 <span>Authenticator Code (2FA)</span>
               </label>
               <input
@@ -167,10 +165,10 @@ export const LoginForm: React.FC = () => {
                 placeholder="000000"
                 value={totpCode}
                 onChange={(e) => setTotpCode(e.target.value)}
-                className="w-full px-4 py-3 bg-slate-900/80 border border-amber-500/40 rounded-xl text-white focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400/50 transition-all text-center text-xl tracking-[0.3em] font-mono"
+                className="w-full px-4 py-3 bg-stone-50 dark:bg-slate-800/80 border border-amber-500/50 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:border-amber-600 focus:ring-2 focus:ring-amber-500/20 transition-all text-center text-xl tracking-[0.3em] font-mono shadow-xs"
               />
-              <p className="text-[11px] text-slate-400 text-center pt-1">
-                Enter the 6-digit code from Google Authenticator or your 2FA app.
+              <p className="text-[11px] text-stone-500 dark:text-slate-400 text-center pt-1">
+                Enter the 6-digit code from Google Authenticator.
               </p>
             </div>
           )}
@@ -178,15 +176,15 @@ export const LoginForm: React.FC = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3.5 brand-gradient text-white font-semibold rounded-xl shadow-lg shadow-red-600/20 hover:opacity-95 active:scale-[0.99] transition-all flex items-center justify-center gap-2 text-sm disabled:opacity-50 pt-3"
+            className="w-full py-3 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 text-sm disabled:opacity-50"
           >
             <span>{loading ? "Authenticating..." : pending2FA ? "Verify Code" : "Sign In to Portal"}</span>
             <ArrowRight className="h-4 w-4" />
           </button>
         </form>
 
-        <div className="text-center pt-2">
-          <p className="text-[11px] text-slate-500">
+        <div className="text-center pt-1 border-t border-stone-100 dark:border-slate-800/60">
+          <p className="text-[11px] text-stone-500 dark:text-slate-500">
             Access strictly restricted to authorized SCIO trustees.
           </p>
         </div>

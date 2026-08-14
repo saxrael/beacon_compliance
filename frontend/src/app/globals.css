@@ -1,17 +1,22 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: #F8FAFC;
+    --background: #F8F7F4;
     --foreground: #0F172A;
     --card: #FFFFFF;
     --card-foreground: #0F172A;
-    --card-border: #E2E8F0;
-    --accent-crimson: #D6162F;
-    --accent-gold: #EAB308;
+    --card-border: #E7E5E4;
+    --brand-crimson: #D6162F;
+    --brand-crimson-dark: #B81026;
+    --brand-gold: #D97706;
+    --brand-gold-dark: #B45309;
     --muted: #64748B;
+    --muted-bg: #F5F5F4;
   }
 
   .dark {
@@ -20,53 +25,83 @@
     --card: #111827;
     --card-foreground: #F8FAFC;
     --card-border: rgba(255, 255, 255, 0.08);
-    --accent-crimson: #EF4444;
-    --accent-gold: #FACC15;
+    --brand-crimson: #EF4444;
+    --brand-crimson-dark: #DC2626;
+    --brand-gold: #F59E0B;
+    --brand-gold-dark: #D97706;
     --muted: #94A3B8;
+    --muted-bg: #1E293B;
   }
 }
 
 body {
   color: var(--foreground);
   background-color: var(--background);
-  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-.glass-card {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(226, 232, 240, 0.8);
-  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 2px 6px -1px rgba(0, 0, 0, 0.03);
+h1, h2, h3, .font-serif-brand {
+  font-family: 'Cinzel', 'Playfair Display', Georgia, serif;
 }
 
-.dark .glass-card {
-  background: rgba(17, 24, 39, 0.75);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+.institutional-card {
+  background-color: #FFFFFF;
+  border: 1px solid #E7E5E4;
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05), 0 2px 6px -1px rgba(15, 23, 42, 0.03);
+}
+
+.dark .institutional-card {
+  background-color: rgba(17, 24, 39, 0.85);
   border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
 }
 
+.glass-card {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(231, 229, 228, 0.9);
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.04), 0 2px 6px -1px rgba(15, 23, 42, 0.02);
+}
+
+.dark .glass-card {
+  background: rgba(17, 24, 39, 0.8);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+}
+
 .brand-gradient {
-  background: linear-gradient(135deg, #DC2626 0%, #E11D48 50%, #D97706 100%);
+  background: linear-gradient(135deg, #D6162F 0%, #B81026 50%, #D97706 100%);
 }
 
 .gold-gradient {
-  background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+  background: linear-gradient(135deg, #F59E0B 0%, #D97706 50%, #B45309 100%);
 }
 
-.brand-badge {
-  background: rgba(220, 38, 38, 0.1);
-  border-left: 3px solid #EAB308;
-  color: var(--foreground);
+.stone-gradient {
+  background: linear-gradient(180deg, #FAFAF9 0%, #F5F5F4 100%);
 }
 
-.dark .brand-badge {
-  background: rgba(239, 68, 68, 0.15);
-  border-left: 3px solid #FACC15;
-  color: var(--foreground);
+.dark .stone-gradient {
+  background: linear-gradient(180deg, #111827 0%, #0B1120 100%);
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 9999px;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: #334155;
 }
