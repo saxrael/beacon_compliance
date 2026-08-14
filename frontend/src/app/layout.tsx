@@ -9,6 +9,14 @@ export const metadata: Metadata = {
   title: "Beacon Compliance OS — Potter's House Christian Mission UK (SC054652)",
   description:
     "Agentic OSCR-compliance web application for Potter's House Christian Mission UK (SCIO, SC054652). Deterministic Receipts & Payments accounts, Trustees' Annual Report synthesis, and trustee sign-off.",
+  icons: {
+    icon: [
+      { url: "/assets/logo_mark.png", type: "image/png" },
+      { url: "/assets/logo.png", type: "image/png" },
+    ],
+    shortcut: "/assets/logo_mark.png",
+    apple: "/assets/logo_mark.png",
+  },
 };
 
 export default function RootLayout({
