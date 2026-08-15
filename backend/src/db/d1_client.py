@@ -158,8 +158,21 @@ class D1DatabaseClient:
     def __init__(self, db_path: str = ":memory:") -> None:
         self.db_path = db_path
         if self.db_path != ":memory:":
-            Path(self.db_path).parent.mkdir(parents=True, exist_ok=True)
-        self._conn = sqlite3.connect(self.db_path, check_same_thread=False)
+            try:
+                Path(self.db_path).parent.mkdir(parents=True, exist_ok=True)
+                self._conn = sqlite3.connect(self.db_path, check_same_thread=False)
+            except (sqlite3.OperationalError, OSError):
+                # Fallback to local /tmp writable path or in-memory if volume is unwritable
+                fallback_path = "/tmp/beacon_compliance.db"
+                try:
+                    Path(fallback_path).parent.mkdir(parents=True, exist_ok=True)
+                    self._conn = sqlite3.connect(fallback_path, check_same_thread=False)
+                    self.db_path = fallback_path
+                except Exception:
+                    self._conn = sqlite3.connect(":memory:", check_same_thread=False)
+                    self.db_path = ":memory:"
+        else:
+            self._conn = sqlite3.connect(":memory:", check_same_thread=False)
         self._conn.row_factory = sqlite3.Row
         self.init_schema()
 

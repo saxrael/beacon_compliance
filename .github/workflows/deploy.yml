@@ -188,7 +188,8 @@ jobs:
 
             cd ~/beacon_compliance
             mkdir -p ~/beacon_compliance/data
-            chmod 777 ~/beacon_compliance/data
+            sudo chmod -R 777 ~/beacon_compliance/data || chmod -R 777 ~/beacon_compliance/data
+            sudo chown -R 1001:1001 ~/beacon_compliance/data || true
             docker compose pull
             docker compose up -d
 

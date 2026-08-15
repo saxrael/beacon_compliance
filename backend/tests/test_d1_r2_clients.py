@@ -1,3 +1,5 @@
+import sqlite3
+
 import pytest
 from backend.src.db.d1_client import D1DatabaseClient
 from backend.src.db.r2_client import R2StorageClient
@@ -114,4 +116,29 @@ def test_d1_client_backup_to_bytes():
     backup_data = client.backup_to_bytes()
     assert isinstance(backup_data, bytes)
     assert len(backup_data) > 0
+    client.close()
+
+
+def test_d1_client_unwritable_path_graceful_fallback(monkeypatch):
+    import uuid
+
+    original_connect = sqlite3.connect
+
+    def mock_connect(database, **kwargs):
+        if database == "/invalid/unwritable/dir/beacon.db":
+            raise sqlite3.OperationalError("unable to open database file")
+        return original_connect(database, **kwargs)
+
+    monkeypatch.setattr(sqlite3, "connect", mock_connect)
+    client = D1DatabaseClient(db_path="/invalid/unwritable/dir/beacon.db")
+    assert client._conn is not None
+
+    test_run_id = f"run_fallback_{uuid.uuid4().hex[:8]}"
+    client.execute(
+        "INSERT INTO runs (run_id, charity_scn, year_end, status, created_at) VALUES (?, ?, ?, ?, ?)",
+        (test_run_id, "SC054652", "2026-12-31", "draft", "2026-08-12T00:00:00Z"),
+    )
+    row = client.fetchone("SELECT run_id FROM runs WHERE run_id = ?", (test_run_id,))
+    assert row is not None
+    assert row["run_id"] == test_run_id
     client.close()
