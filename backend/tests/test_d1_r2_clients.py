@@ -1,4 +1,5 @@
 import sqlite3
+import uuid
 
 import pytest
 from backend.src.db.d1_client import D1DatabaseClient
@@ -120,8 +121,6 @@ def test_d1_client_backup_to_bytes():
 
 
 def test_d1_client_unwritable_path_graceful_fallback(monkeypatch):
-    import uuid
-
     original_connect = sqlite3.connect
 
     def mock_connect(database, **kwargs):
