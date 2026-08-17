@@ -2,13 +2,16 @@
 
 import React, { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { KeyRound, ShieldAlert, CheckCircle } from "lucide-react";
+import { KeyRound, ShieldAlert, CheckCircle, Eye, EyeOff } from "lucide-react";
 
 export const FirstLoginResetModal: React.FC = () => {
   const { user, completeFirstLoginReset } = useAuth();
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -47,14 +50,14 @@ export const FirstLoginResetModal: React.FC = () => {
           </div>
           <div>
             <h3 className="text-lg font-bold font-serif">Set Permanent Password</h3>
-            <p className="text-xs text-stone-500 dark:text-slate-400">First-Login Credential Security Gate</p>
+            <p className="text-xs text-stone-500 dark:text-slate-400">First-time sign-in security setup</p>
           </div>
         </div>
 
         <div className="p-3.5 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-500/30 rounded-2xl text-xs text-amber-800 dark:text-amber-300 flex items-start gap-2.5">
           <ShieldAlert className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
           <span className="leading-relaxed">
-            You are signed in with a temporary password. UK OSCR security regulations require setting a permanent password before accessing compliance records.
+            You are signed in with a temporary password. To protect your charity&apos;s records, please set a permanent password before continuing.
           </span>
         </div>
 
@@ -67,36 +70,66 @@ export const FirstLoginResetModal: React.FC = () => {
         <form onSubmit={handleSubmit} className="space-y-4 text-xs">
           <div className="space-y-1">
             <label className="block text-stone-700 dark:text-slate-300 font-semibold">Temporary Password</label>
-            <input
-              type="password"
-              required
-              value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
-              className="w-full px-3.5 py-2.5 bg-stone-50 dark:bg-slate-800 border border-stone-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-slate-100 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-500/20 shadow-xs"
-            />
+            <div className="relative flex items-center">
+              <input
+                type={showCurrentPassword ? "text" : "password"}
+                required
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                className="w-full px-3.5 py-2.5 pr-10 bg-stone-50 dark:bg-slate-800 border border-stone-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-slate-100 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-500/20 shadow-xs"
+              />
+              <button
+                type="button"
+                onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                className="absolute right-3 text-stone-400 hover:text-stone-600 dark:text-slate-500 dark:hover:text-slate-300 focus:outline-none transition-colors"
+                aria-label={showCurrentPassword ? "Hide temporary password" : "Show temporary password"}
+              >
+                {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
           </div>
 
           <div className="space-y-1">
             <label className="block text-stone-700 dark:text-slate-300 font-semibold">New Permanent Password</label>
-            <input
-              type="password"
-              required
-              placeholder="At least 8 characters"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              className="w-full px-3.5 py-2.5 bg-stone-50 dark:bg-slate-800 border border-stone-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-slate-100 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-500/20 shadow-xs"
-            />
+            <div className="relative flex items-center">
+              <input
+                type={showNewPassword ? "text" : "password"}
+                required
+                placeholder="At least 8 characters"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                className="w-full px-3.5 py-2.5 pr-10 bg-stone-50 dark:bg-slate-800 border border-stone-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-slate-100 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-500/20 shadow-xs"
+              />
+              <button
+                type="button"
+                onClick={() => setShowNewPassword(!showNewPassword)}
+                className="absolute right-3 text-stone-400 hover:text-stone-600 dark:text-slate-500 dark:hover:text-slate-300 focus:outline-none transition-colors"
+                aria-label={showNewPassword ? "Hide new password" : "Show new password"}
+              >
+                {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
           </div>
 
           <div className="space-y-1">
             <label className="block text-stone-700 dark:text-slate-300 font-semibold">Confirm New Password</label>
-            <input
-              type="password"
-              required
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full px-3.5 py-2.5 bg-stone-50 dark:bg-slate-800 border border-stone-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-slate-100 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-500/20 shadow-xs"
-            />
+            <div className="relative flex items-center">
+              <input
+                type={showConfirmPassword ? "text" : "password"}
+                required
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="w-full px-3.5 py-2.5 pr-10 bg-stone-50 dark:bg-slate-800 border border-stone-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-slate-100 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-500/20 shadow-xs"
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-3 text-stone-400 hover:text-stone-600 dark:text-slate-500 dark:hover:text-slate-300 focus:outline-none transition-colors"
+                aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
+              >
+                {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
           </div>
 
           <button
@@ -105,7 +138,7 @@ export const FirstLoginResetModal: React.FC = () => {
             className="w-full py-3 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white rounded-xl font-bold shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 text-sm disabled:opacity-50 mt-2"
           >
             <CheckCircle className="h-4 w-4" />
-            <span>{loading ? "Updating Credentials..." : "Update Password & Enter Portal"}</span>
+            <span>{loading ? "Updating Password..." : "Update Password & Enter Portal"}</span>
           </button>
         </form>
       </div>

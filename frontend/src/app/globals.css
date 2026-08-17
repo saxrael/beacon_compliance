@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,28 +6,32 @@
 
 @layer base {
   :root {
-    --background: #F8F7F4;
+    --background: #FBF9F5;
     --foreground: #0F172A;
     --card: #FFFFFF;
     --card-foreground: #0F172A;
     --card-border: #E7E5E4;
     --brand-crimson: #D6162F;
-    --brand-crimson-dark: #B81026;
+    --brand-crimson-dark: #990C1F;
+    --brand-crimson-deep: #5C0511;
     --brand-gold: #D97706;
+    --brand-gold-light: #F59E0B;
     --brand-gold-dark: #B45309;
     --muted: #64748B;
-    --muted-bg: #F5F5F4;
+    --muted-bg: #F5F4F0;
   }
 
   .dark {
-    --background: #090D16;
+    --background: #0B0F19;
     --foreground: #F8FAFC;
     --card: #111827;
     --card-foreground: #F8FAFC;
     --card-border: rgba(255, 255, 255, 0.08);
     --brand-crimson: #EF4444;
     --brand-crimson-dark: #DC2626;
+    --brand-crimson-deep: #990C1F;
     --brand-gold: #F59E0B;
+    --brand-gold-light: #FBBF24;
     --brand-gold-dark: #D97706;
     --muted: #94A3B8;
     --muted-bg: #1E293B;
@@ -45,50 +49,105 @@ body {
 
 h1, h2, h3, .font-serif-brand {
   font-family: 'Cinzel', 'Playfair Display', Georgia, serif;
+  letter-spacing: -0.01em;
 }
 
-.institutional-card {
+.font-editorial {
+  font-family: 'Playfair Display', Georgia, serif;
+}
+
+.font-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+.royal-card {
   background-color: #FFFFFF;
   border: 1px solid #E7E5E4;
-  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05), 0 2px 6px -1px rgba(15, 23, 42, 0.03);
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.04), 0 2px 6px -1px rgba(15, 23, 42, 0.02);
+  transition: all 0.25s cubic-bezier(0.25, 0.1, 0.25, 1);
 }
 
-.dark .institutional-card {
-  background-color: rgba(17, 24, 39, 0.85);
+.dark .royal-card {
+  background-color: rgba(17, 24, 39, 0.9);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.04);
 }
 
-.glass-card {
-  background: rgba(255, 255, 255, 0.92);
+.royal-card:hover {
+  box-shadow: 0 12px 32px -4px rgba(15, 23, 42, 0.08), 0 4px 12px -2px rgba(15, 23, 42, 0.04);
+}
+
+.dark .royal-card:hover {
+  box-shadow: 0 16px 40px -8px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(217, 119, 6, 0.2);
+}
+
+.royal-card-gold {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(254, 243, 199, 0.35) 100%);
+  border: 1px solid rgba(217, 119, 6, 0.25);
+  box-shadow: 0 6px 24px -4px rgba(217, 119, 6, 0.08);
+}
+
+.dark .royal-card-gold {
+  background: linear-gradient(135deg, rgba(17, 24, 39, 0.95) 0%, rgba(217, 119, 6, 0.12) 100%);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  box-shadow: 0 10px 30px -10px rgba(217, 119, 6, 0.15);
+}
+
+.royal-card-crimson {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(254, 226, 226, 0.35) 100%);
+  border: 1px solid rgba(214, 22, 47, 0.22);
+  box-shadow: 0 6px 24px -4px rgba(214, 22, 47, 0.08);
+}
+
+.dark .royal-card-crimson {
+  background: linear-gradient(135deg, rgba(17, 24, 39, 0.95) 0%, rgba(214, 22, 47, 0.15) 100%);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  box-shadow: 0 10px 30px -10px rgba(214, 22, 47, 0.15);
+}
+
+.royal-btn-crimson {
+  background: linear-gradient(135deg, #D6162F 0%, #B81026 50%, #990C1F 100%);
+  color: #FFFFFF;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 4px 14px 0 rgba(214, 22, 47, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  transition: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+.royal-btn-crimson:hover {
+  background: linear-gradient(135deg, #E01D36 0%, #C4132B 50%, #A80E23 100%);
+  box-shadow: 0 6px 20px 0 rgba(214, 22, 47, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.royal-btn-gold {
+  background: linear-gradient(135deg, #F59E0B 0%, #D97706 50%, #B45309 100%);
+  color: #FFFFFF;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 14px 0 rgba(217, 119, 6, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  transition: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+.royal-btn-gold:hover {
+  background: linear-gradient(135deg, #FBBF24 0%, #E08408 50%, #C25B0B 100%);
+  box-shadow: 0 6px 20px 0 rgba(217, 119, 6, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.gold-ribbon {
+  background: linear-gradient(90deg, #990C1F 0%, #D6162F 25%, #F59E0B 50%, #D6162F 75%, #990C1F 100%);
+}
+
+.glass-surface {
+  background: rgba(255, 255, 255, 0.94);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(231, 229, 228, 0.9);
-  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.04), 0 2px 6px -1px rgba(15, 23, 42, 0.02);
 }
 
-.dark .glass-card {
-  background: rgba(17, 24, 39, 0.8);
+.dark .glass-surface {
+  background: rgba(17, 24, 39, 0.85);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
-}
-
-.brand-gradient {
-  background: linear-gradient(135deg, #D6162F 0%, #B81026 50%, #D97706 100%);
-}
-
-.gold-gradient {
-  background: linear-gradient(135deg, #F59E0B 0%, #D97706 50%, #B45309 100%);
-}
-
-.stone-gradient {
-  background: linear-gradient(180deg, #FAFAF9 0%, #F5F5F4 100%);
-}
-
-.dark .stone-gradient {
-  background: linear-gradient(180deg, #111827 0%, #0B1120 100%);
 }
 
 ::-webkit-scrollbar {

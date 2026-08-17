@@ -13,7 +13,7 @@ export const startProductTour = () => {
         element: ".tour-header-logo", 
         popover: { 
           title: "Welcome to Beacon Compliance", 
-          description: "This is your OSCR Compliance Dashboard. Let's take a quick tour to help you get started.", 
+          description: "This is your Scottish Charity Regulator (OSCR) compliance dashboard. Let's take a quick tour to help you get started.", 
           side: "bottom", 
           align: "start" 
         } 
@@ -22,7 +22,7 @@ export const startProductTour = () => {
         element: ".tour-menu-btn", 
         popover: { 
           title: "Main Menu", 
-          description: "Click here to open the sidebar. You can manage your Account Settings, enable 2FA, and contact the Administrator.", 
+          description: "Click here to open the navigation menu. You can manage your account, set up two-step verification for extra security, and contact support.", 
           side: "bottom", 
           align: "center" 
         } 
@@ -49,7 +49,7 @@ export const startProductTour = () => {
         element: ".tour-dashboard-stats", 
         popover: { 
           title: "Compliance Overview", 
-          description: "Here you will see the high-level metrics and your progress towards OSCR compliance deliverables.", 
+          description: "Track your charity's filing status, view key deadlines, and review your progress toward the Scottish Charity Regulator (OSCR) annual return.", 
           side: "top", 
           align: "start" 
         } 
@@ -58,7 +58,7 @@ export const startProductTour = () => {
         element: ".tour-dashboard-actions", 
         popover: { 
           title: "Quick Actions", 
-          description: "Upload financial documents, generate the R&P accounts, or chat with the AI compliance assistant from here.", 
+          description: "Upload financial documents, compile annual accounts, and review official Scottish charity filings.", 
           side: "top", 
           align: "start" 
         } 

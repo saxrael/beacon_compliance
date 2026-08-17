@@ -47,7 +47,7 @@ export function useComplianceOS() {
         setPipelineResult(data);
       }
     } catch {
-      console.error("Failed to run compliance pipeline.");
+      console.error("Failed to generate annual charity compliance accounts.");
     } finally {
       setLoading(false);
     }

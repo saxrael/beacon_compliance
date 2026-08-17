@@ -1,18 +1,33 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { ShieldCheck, Lock, Mail, AlertCircle, ArrowRight, KeyRound, Sparkles, Building2 } from "lucide-react";
+import { ShieldCheck, Lock, Mail, AlertCircle, ArrowRight, KeyRound, Landmark, Building2, Award, Eye, EyeOff } from "lucide-react";
+import { motion } from "framer-motion";
+import { springs } from "@/lib/motion-tokens";
 
 export const LoginForm: React.FC = () => {
   const { loginWithEmail, loginWith2FA, getGoogleLoginUrl, error: authError } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [totpCode, setTotpCode] = useState("");
   const [pending2FA, setPending2FA] = useState(false);
   const [tempToken, setTempToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
+
+  // Restore interactivity if user navigates back from external OAuth screen
+  useEffect(() => {
+    setLoading(false);
+    const handlePageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) {
+        setLoading(false);
+      }
+    };
+    window.addEventListener("pageshow", handlePageShow);
+    return () => window.removeEventListener("pageshow", handlePageShow);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,29 +68,43 @@ export const LoginForm: React.FC = () => {
   const activeError = localError || authError;
 
   return (
-    <div className="min-h-screen bg-[#F8F7F4] dark:bg-[#090D16] relative overflow-hidden flex flex-col justify-center items-center p-4 sm:p-6 text-slate-900 dark:text-slate-100 transition-colors duration-300">
-      <div className="fixed top-0 left-0 right-0 h-1 bg-gradient-to-r from-red-600 via-amber-500 to-red-600 z-50" />
+    <div className="min-h-screen bg-[#FBF9F5] dark:bg-[#0B0F19] relative overflow-hidden flex flex-col justify-center items-center p-4 sm:p-6 text-slate-900 dark:text-slate-100 transition-colors duration-300">
+      <div className="fixed top-0 left-0 right-0 h-1.5 gold-ribbon z-50" />
 
       <div className="absolute top-1/4 -left-32 w-96 h-96 bg-red-500/5 dark:bg-red-600/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-amber-500/5 dark:bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
 
-      <div className="max-w-md w-full bg-white dark:bg-slate-900 p-8 sm:p-10 rounded-3xl border border-stone-200 dark:border-slate-800 shadow-xl relative z-10 space-y-6">
+      <motion.div 
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={springs.gentle}
+        className="max-w-md w-full royal-card bg-white dark:bg-[#111827] p-8 sm:p-10 rounded-3xl border border-stone-200 dark:border-slate-800 shadow-xl relative z-10 space-y-6"
+      >
         <div className="text-center space-y-2.5">
-          <div className="inline-flex p-3 rounded-2xl bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-500/30 shadow-xs mb-1">
-            <Building2 className="h-8 w-8 text-red-600 dark:text-red-500" />
+          <div className="inline-flex items-center justify-center p-3 rounded-2xl bg-stone-50/80 dark:bg-slate-900 border border-stone-200 dark:border-slate-800 shadow-sm mb-1">
+            <img
+              src="/assets/logo.png"
+              alt="Potter's House Christian Mission UK Crest"
+              className="h-12 w-auto object-contain dark:hidden"
+            />
+            <img
+              src="/assets/logo_dark.png"
+              alt="Potter's House Christian Mission UK Crest"
+              className="h-12 w-auto object-contain hidden dark:block"
+            />
           </div>
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white font-serif">
               Beacon Compliance
             </h1>
             <div className="inline-flex items-center gap-1.5 px-3 py-0.5 mt-2 rounded-full bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 text-amber-800 dark:text-amber-300 text-xs font-mono font-medium">
-              <Sparkles className="h-3 w-3 text-amber-600 dark:text-amber-400" />
-              <span>SCIO SC054652 • Trustee Portal</span>
+              <Landmark className="h-3 w-3 text-amber-600 dark:text-amber-400" />
+              <span>Scottish Charity SC054652 • Trustee Portal</span>
             </div>
           </div>
           <p className="text-xs font-medium text-stone-600 dark:text-slate-400 max-w-xs mx-auto">
             Potter&apos;s House Christian Mission UK <br />
-            <span className="text-[11px] text-stone-500 dark:text-slate-500 italic">&quot;Building Lives, Strengthening Homes, Shaping Nations for Christ&quot;</span>
+            <span className="text-[11px] text-stone-500 dark:text-slate-500 italic font-editorial">&quot;Building Lives, Strengthening Homes, Shaping Nations for Christ&quot;</span>
           </p>
         </div>
 
@@ -115,7 +144,7 @@ export const LoginForm: React.FC = () => {
 
         <div className="flex items-center gap-3">
           <div className="h-px flex-1 bg-stone-200 dark:bg-slate-800" />
-          <span className="text-[11px] text-stone-500 dark:text-slate-500 uppercase tracking-wider font-mono font-medium">Or Credentials</span>
+          <span className="text-[11px] text-stone-500 dark:text-slate-500 uppercase tracking-wider font-mono font-medium">Or sign in with email</span>
           <div className="h-px flex-1 bg-stone-200 dark:bg-slate-800" />
         </div>
 
@@ -133,30 +162,44 @@ export const LoginForm: React.FC = () => {
                   placeholder="name@pottershouse.org.uk"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-stone-50 dark:bg-slate-800/80 border border-stone-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-slate-100 placeholder:text-stone-400 dark:placeholder:text-slate-500 text-sm focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-500/20 transition-all shadow-xs"
+                  className="w-full px-3.5 py-2.5 bg-stone-50 dark:bg-slate-800/80 border border-stone-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-slate-100 placeholder:text-stone-400 dark:placeholder:text-slate-500 text-sm focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all shadow-xs"
                 />
               </div>
 
               <div className="space-y-1.5">
                 <label className="block text-stone-700 dark:text-slate-300 font-semibold text-xs flex items-center gap-1.5">
                   <Lock className="h-3.5 w-3.5 text-stone-500 dark:text-slate-400" />
-                  <span>Password / Key</span>
+                  <span>Password</span>
                 </label>
-                <input
-                  type="password"
-                  required
-                  placeholder="••••••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-stone-50 dark:bg-slate-800/80 border border-stone-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-slate-100 placeholder:text-stone-400 dark:placeholder:text-slate-500 text-sm focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-500/20 transition-all shadow-xs"
-                />
+                <div className="relative flex items-center">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    required
+                    placeholder="••••••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full px-3.5 py-2.5 pr-10 bg-stone-50 dark:bg-slate-800/80 border border-stone-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-slate-100 placeholder:text-stone-400 dark:placeholder:text-slate-500 text-sm focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all shadow-xs"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 text-stone-400 hover:text-stone-600 dark:text-slate-500 dark:hover:text-slate-300 focus:outline-none transition-colors"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
               </div>
             </>
           ) : (
             <div className="space-y-2">
               <label className="block text-stone-700 dark:text-slate-300 font-semibold text-xs flex items-center gap-1.5">
                 <KeyRound className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
-                <span>Authenticator Code (2FA)</span>
+                <span>6-Digit Authenticator App Code</span>
               </label>
               <input
                 type="text"
@@ -168,7 +211,7 @@ export const LoginForm: React.FC = () => {
                 className="w-full px-4 py-3 bg-stone-50 dark:bg-slate-800/80 border border-amber-500/50 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:border-amber-600 focus:ring-2 focus:ring-amber-500/20 transition-all text-center text-xl tracking-[0.3em] font-mono shadow-xs"
               />
               <p className="text-[11px] text-stone-500 dark:text-slate-400 text-center pt-1">
-                Enter the 6-digit code from Google Authenticator.
+                Enter the 6-digit code from your authenticator app (e.g. Google or Microsoft Authenticator).
               </p>
             </div>
           )}
@@ -176,19 +219,19 @@ export const LoginForm: React.FC = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 text-sm disabled:opacity-50"
+            className="w-full py-3 royal-btn-crimson font-bold rounded-xl shadow-md transition-all flex items-center justify-center gap-2 text-sm disabled:opacity-50 active:scale-[0.98]"
           >
-            <span>{loading ? "Authenticating..." : pending2FA ? "Verify Code" : "Sign In to Portal"}</span>
+            <span>{loading ? "Signing in..." : pending2FA ? "Verify Code" : "Sign In to Portal"}</span>
             <ArrowRight className="h-4 w-4" />
           </button>
         </form>
 
         <div className="text-center pt-1 border-t border-stone-100 dark:border-slate-800/60">
           <p className="text-[11px] text-stone-500 dark:text-slate-500">
-            Access strictly restricted to authorized SCIO trustees.
+            Access restricted to authorised Potter&apos;s House charity trustees (SC054652).
           </p>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 };

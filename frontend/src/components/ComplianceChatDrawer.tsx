@@ -1,10 +1,12 @@
 "use client";
 
 import React, { useState } from "react";
-import { MessageSquare, Send, X, Bot, Sparkles } from "lucide-react";
+import { Send, X, Sparkles, Scale, BookOpen, ShieldCheck, Landmark } from "lucide-react";
 import { MarkdownRenderer } from "./MarkdownRenderer";
 import { API_BASE_URL } from "@/config";
 import { useAuth } from "@/context/AuthContext";
+import { motion, AnimatePresence } from "framer-motion";
+import { springs } from "@/lib/motion-tokens";
 
 export const ComplianceChatDrawer: React.FC = () => {
   const { token } = useAuth();
@@ -14,7 +16,7 @@ export const ComplianceChatDrawer: React.FC = () => {
     {
       role: "assistant",
       content:
-        "Hello! I am your **Gemma 4 26B Compliance Assistant** for Potter's House Christian Mission UK (SC054652).\n\nHow can I assist with OSCR governance rules, Receipts & Payments accounting, or narrative review?",
+        "Welcome to the **Beacon Compliance Advisor** for Potter's House Christian Mission UK (SC054652).\n\nI am here to assist the charity trustees with:\n- **Scottish Charity Regulator (OSCR) Statutory Reporting** & filing timelines\n- **Receipts & Payments Accounts** classification\n- **Trustees' Annual Report (TAR)** narrative guidance\n- **Independent Examination (IE)** governance obligations\n\nHow may I support your statutory duties today?",
     },
   ]);
   const [loading, setLoading] = useState(false);
@@ -47,101 +49,187 @@ export const ComplianceChatDrawer: React.FC = () => {
       } else {
         setMessages((prev) => [
           ...prev,
-          { role: "assistant", content: "Apologies, unable to process compliance query at this time." },
+          { role: "assistant", content: "Apologies, unable to process compliance query at this time. Please try again shortly." },
         ]);
       }
     } catch {
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", content: "Network error contacting compliance assistant endpoint." },
+        { role: "assistant", content: "Unable to connect to the Compliance Advisor. Please check your connection and try again." },
       ]);
     } finally {
       setLoading(false);
     }
   };
 
+  const quickPrompts = [
+    "What is the OSCR annual return deadline?",
+    "Explain Receipts & Payments reserve policy",
+    "What is required for Independent Examination?",
+  ];
+
   return (
     <>
       {!isOpen && (
-        <button
+        <motion.button
           onClick={() => setIsOpen(true)}
-          aria-label="Open compliance chat assistant"
-          title="OSCR Compliance Assistant"
-          className="fixed bottom-6 right-6 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white p-4 rounded-2xl shadow-xl hover:scale-105 active:scale-95 transition-all z-50 flex items-center justify-center border border-red-500/40"
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0, opacity: 0 }}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          aria-label="Open Beacon Statutory Intelligence Agent"
+          title="Autonomous OSCR Compliance Sentinel"
+          className="fixed bottom-6 right-6 royal-btn-crimson p-2.5 sm:px-4 sm:py-3 rounded-2xl shadow-2xl z-40 flex items-center gap-3 border border-amber-500/40 group transition-all"
         >
-          <MessageSquare className="h-6 w-6" />
-        </button>
-      )}
-
-      {isOpen && (
-        <div className="fixed inset-y-0 right-0 w-full max-w-md bg-white dark:bg-slate-900 border-l border-stone-200 dark:border-slate-800 shadow-2xl z-50 flex flex-col transition-colors duration-300">
-          <div className="p-4 border-b border-stone-200 dark:border-slate-800 flex items-center justify-between bg-stone-50/80 dark:bg-slate-950/80 backdrop-blur-md">
-            <div className="flex items-center gap-3">
-              <div className="h-9 w-9 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-500/30 flex items-center justify-center text-red-600 dark:text-red-400">
-                <Bot className="h-5 w-5" />
-              </div>
-              <div>
-                <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5 font-serif">
-                  <span>OSCR Compliance Assistant</span>
-                </h3>
-                <span className="text-[10px] text-amber-700 dark:text-amber-400 font-mono font-medium flex items-center gap-1">
-                  <Sparkles className="h-2.5 w-2.5" />
-                  Gemma 4 26B A4B • Zero LLM Math
-                </span>
-              </div>
-            </div>
-            <button
-              onClick={() => setIsOpen(false)}
-              className="p-1.5 rounded-lg text-stone-400 hover:text-stone-700 dark:hover:text-slate-200 hover:bg-stone-100 dark:hover:bg-slate-800 transition-colors"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          </div>
-
-          <div className="flex-1 p-4 overflow-y-auto space-y-3.5 bg-stone-50/40 dark:bg-slate-900/40">
-            {messages.map((m, idx) => (
-              <div key={idx} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
-                <div
-                  className={`max-w-[85%] rounded-2xl p-3.5 text-xs leading-relaxed shadow-xs ${
-                    m.role === "user"
-                      ? "bg-red-600 text-white font-medium rounded-tr-xs"
-                      : "bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-stone-200 dark:border-slate-700/60 rounded-tl-xs"
-                  }`}
-                >
-                  {m.role === "assistant" ? (
-                    <MarkdownRenderer content={m.content} />
-                  ) : (
-                    m.content
-                  )}
-                </div>
-              </div>
-            ))}
-            {loading && (
-              <div className="text-xs text-stone-500 dark:text-slate-400 italic flex items-center gap-2 p-2">
-                <span className="h-2 w-2 rounded-full bg-red-600 animate-pulse" />
-                <span>Assistant retrieving guidance from knowledge base...</span>
-              </div>
-            )}
-          </div>
-
-          <form onSubmit={sendMessage} className="p-3.5 border-t border-stone-200 dark:border-slate-800 bg-white dark:bg-slate-950 flex gap-2">
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask about OSCR reporting, R&P rules..."
-              className="flex-1 bg-stone-50 dark:bg-slate-900 border border-stone-300 dark:border-slate-700 rounded-xl px-3.5 py-2 text-xs text-slate-900 dark:text-slate-100 placeholder:text-stone-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-500/20 shadow-xs"
+          <div className="relative h-9 w-9 rounded-xl bg-slate-950/40 border border-amber-400/40 p-1 flex items-center justify-center shrink-0">
+            <img
+              src="/assets/logo_mark.png"
+              alt="Beacon Sentinel"
+              className="h-full w-full object-contain filter drop-shadow-xs"
             />
-            <button
-              type="submit"
-              disabled={loading}
-              className="bg-red-600 hover:bg-red-700 text-white px-3.5 py-2 rounded-xl font-bold shadow-xs transition-opacity flex items-center justify-center disabled:opacity-50"
-            >
-              <Send className="h-4 w-4" />
-            </button>
-          </form>
-        </div>
+            <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-amber-400 border-2 border-red-900 animate-pulse" />
+          </div>
+          <div className="text-left hidden sm:block">
+            <span className="text-xs font-bold font-serif block leading-tight text-white">Statutory Intelligence</span>
+            <span className="text-[10px] text-amber-200 font-mono block leading-none opacity-90">OSCR Sentinel</span>
+          </div>
+        </motion.button>
       )}
+
+      <AnimatePresence>
+        {isOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-slate-950/40 backdrop-blur-xs z-50 lg:hidden"
+              onClick={() => setIsOpen(false)}
+            />
+
+            {/* Slide-out Drawer */}
+            <motion.div
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={springs.gentle}
+              className="fixed inset-y-0 right-0 w-full max-w-md bg-white dark:bg-[#0B0F19] border-l border-stone-200 dark:border-slate-800 shadow-2xl z-50 flex flex-col justify-between overflow-hidden"
+            >
+              {/* Header */}
+              <div className="p-4 sm:p-5 border-b border-stone-200 dark:border-slate-800 flex items-center justify-between bg-stone-50/80 dark:bg-slate-900/60 backdrop-blur-md">
+                <div className="flex items-center gap-3">
+                  <div className="h-11 w-11 rounded-2xl bg-stone-100 dark:bg-slate-950 border border-amber-500/40 p-1.5 flex items-center justify-center shadow-xs shrink-0 relative">
+                    <img
+                      src="/assets/logo_mark.png"
+                      alt="Potter's House Emblem"
+                      className="h-full w-full object-contain"
+                    />
+                    <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-emerald-500 border-2 border-white dark:border-slate-950" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 font-serif flex items-center gap-1.5">
+                      <span>Beacon Statutory Intelligence</span>
+                    </h3>
+                    <span className="text-[10px] text-amber-700 dark:text-amber-400 font-mono font-semibold flex items-center gap-1">
+                      <ShieldCheck className="h-3 w-3" />
+                      Scottish Charity Sentinel (SC054652)
+                    </span>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setIsOpen(false)}
+                  className="p-1.5 rounded-xl text-stone-400 hover:text-stone-700 dark:hover:text-slate-200 hover:bg-stone-200/60 dark:hover:bg-slate-800 transition-colors"
+                  aria-label="Close Advisor"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              {/* Chat Body */}
+              <div className="flex-1 p-4 overflow-y-auto space-y-3.5 bg-stone-50/30 dark:bg-slate-950/30">
+                {messages.map((m, idx) => (
+                  <motion.div 
+                    key={idx} 
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={springs.gentle}
+                    className={`flex gap-2.5 ${m.role === "user" ? "justify-end" : "justify-start"}`}
+                  >
+                    {m.role === "assistant" && (
+                      <div className="h-7 w-7 rounded-lg bg-stone-100 dark:bg-slate-900 border border-stone-300/80 dark:border-slate-700 p-0.5 shrink-0 mt-0.5 flex items-center justify-center">
+                        <img
+                          src="/assets/logo_mark.png"
+                          alt="Advisor"
+                          className="h-full w-full object-contain"
+                        />
+                      </div>
+                    )}
+                    <div
+                      className={`max-w-[84%] rounded-2xl p-3.5 text-xs leading-relaxed shadow-xs ${
+                        m.role === "user"
+                          ? "royal-btn-crimson text-white font-medium rounded-tr-xs"
+                          : "bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 border border-stone-200/80 dark:border-slate-800 rounded-tl-xs"
+                      }`}
+                    >
+                      {m.role === "assistant" ? (
+                        <MarkdownRenderer content={m.content} />
+                      ) : (
+                        m.content
+                      )}
+                    </div>
+                  </motion.div>
+                ))}
+                {loading && (
+                  <div className="text-xs text-amber-800 dark:text-amber-400 italic flex items-center gap-2 p-2">
+                    <span className="h-2 w-2 rounded-full bg-amber-600 animate-pulse" />
+                    <span>Searching Scottish charity regulatory guidance...</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Quick Questions & Input Area */}
+              <div className="p-3.5 border-t border-stone-200 dark:border-slate-800 bg-white dark:bg-[#0B0F19] space-y-3">
+                {messages.length === 1 && (
+                  <div className="space-y-1.5">
+                    <p className="text-[10px] uppercase font-bold text-stone-400 dark:text-slate-500 tracking-wider">Suggested Inquiries:</p>
+                    <div className="flex flex-col gap-1">
+                      {quickPrompts.map((q, i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => setInput(q)}
+                          className="text-left text-[11px] p-2 rounded-xl bg-stone-100 dark:bg-slate-900 hover:bg-amber-500/10 hover:text-amber-700 dark:hover:text-amber-400 border border-stone-200 dark:border-slate-800 transition-colors text-slate-700 dark:text-slate-300"
+                        >
+                          {q}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <form onSubmit={sendMessage} className="flex gap-2">
+                  <input
+                    type="text"
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    placeholder="Ask about filing deadlines, annual accounts, trustee reports..."
+                    className="flex-1 bg-stone-50 dark:bg-slate-900 border border-stone-300 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-slate-100 placeholder:text-stone-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 shadow-xs"
+                  />
+                  <button
+                    type="submit"
+                    disabled={loading || !input.trim()}
+                    className="royal-btn-crimson px-4 py-2.5 rounded-xl font-bold shadow-xs transition-opacity flex items-center justify-center disabled:opacity-50 active:scale-95"
+                  >
+                    <Send className="h-4 w-4" />
+                  </button>
+                </form>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </>
   );
 };

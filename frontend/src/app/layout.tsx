@@ -6,9 +6,9 @@ import { ThemeProvider } from "@/context/ThemeContext";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Beacon Compliance OS — Potter's House Christian Mission UK (SC054652)",
+  title: "Beacon Compliance — Potter's House Christian Mission UK (SC054652)",
   description:
-    "Agentic OSCR-compliance web application for Potter's House Christian Mission UK (SCIO, SC054652). Deterministic Receipts & Payments accounts, Trustees' Annual Report synthesis, and trustee sign-off.",
+    "Scottish charity annual filing and statutory compliance portal for Potter's House Christian Mission UK (SCIO, SC054652). Prepare Receipts & Payments accounts, Trustees' Annual Reports, and sign off annual returns for the Scottish Charity Regulator (OSCR).",
   icons: {
     icon: [
       { url: "/assets/logo_mark.png", type: "image/png" },

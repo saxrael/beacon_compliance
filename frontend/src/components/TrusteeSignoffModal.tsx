@@ -1,8 +1,10 @@
 "use client";
 
 import React, { useState } from "react";
-import { KeyRound, ShieldCheck, X, AlertCircle } from "lucide-react";
+import { KeyRound, ShieldCheck, X, AlertCircle, Award, Lock, FileCheck } from "lucide-react";
 import { API_BASE_URL } from "@/config";
+import { motion } from "framer-motion";
+import { springs } from "@/lib/motion-tokens";
 
 interface SignoffModalProps {
   isOpen: boolean;
@@ -28,7 +30,7 @@ export const TrusteeSignoffModal: React.FC<SignoffModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!secret) {
-      setError("Please enter your secret trustee key.");
+      setError("Please enter your trustee authorization key.");
       return;
     }
 
@@ -69,44 +71,50 @@ export const TrusteeSignoffModal: React.FC<SignoffModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 bg-slate-950/65 backdrop-blur-sm flex items-center justify-center p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="modal-title"
     >
-      <div className="bg-white dark:bg-slate-900 max-w-md w-full rounded-3xl p-6 sm:p-8 border border-stone-200 dark:border-slate-800 space-y-5 shadow-2xl relative">
-        <div className="flex items-center justify-between">
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.95, y: 10 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 10 }}
+        transition={springs.gentle}
+        className="royal-card bg-white dark:bg-[#0B0F19] max-w-md w-full rounded-3xl p-6 sm:p-8 border border-stone-200 dark:border-slate-800 space-y-5 shadow-2xl relative"
+      >
+        <div className="flex items-center justify-between border-b border-stone-200/80 dark:border-slate-800 pb-4">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-2xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-500/30 flex items-center justify-center shadow-xs">
-              <ShieldCheck className="h-6 w-6 text-red-600 dark:text-amber-400" />
+            <div className="h-10 w-10 rounded-2xl bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/30 flex items-center justify-center shadow-xs">
+              <Award className="h-6 w-6 text-amber-600 dark:text-amber-400" />
             </div>
             <div>
               <h3 id="modal-title" className="text-base font-bold text-slate-900 dark:text-slate-100 font-serif">
-                Trustee Sign-off Approval
+                Trustee Statutory Approval
               </h3>
               <p className="text-xs font-semibold text-stone-600 dark:text-slate-400 capitalize">
-                Designated Signatory: <span className="text-red-700 dark:text-amber-400">{trusteeRole}</span>
+                Designated Signatory Role: <span className="text-red-700 dark:text-amber-400 font-bold">{trusteeRole}</span>
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
             aria-label="Close sign-off modal"
-            className="p-1.5 rounded-lg text-stone-400 hover:text-stone-700 dark:hover:text-slate-200 hover:bg-stone-100 dark:hover:bg-slate-800 transition-colors"
+            className="p-1.5 rounded-xl text-stone-400 hover:text-stone-700 dark:hover:text-slate-200 hover:bg-stone-100 dark:hover:bg-slate-800 transition-colors"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        <div className="bg-stone-50 dark:bg-slate-950 rounded-xl p-3.5 border border-stone-200 dark:border-slate-800 text-xs space-y-1.5 font-mono">
-          <span className="text-[10px] uppercase font-bold text-stone-500 dark:text-slate-500 block">Deliverable SHA-256 Hash:</span>
+        <div className="bg-stone-50 dark:bg-slate-950 rounded-2xl p-4 border border-stone-200 dark:border-slate-800 text-xs space-y-1.5 font-mono">
+          <span className="text-[10px] uppercase font-bold text-stone-500 dark:text-slate-500 block">Document Security Seal:</span>
           <span className="break-all text-slate-800 dark:text-amber-300 text-[11px] font-semibold">{deliverableHash}</span>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1.5">
-            <label htmlFor="trustee-secret-input" className="block text-xs font-semibold text-stone-700 dark:text-slate-300">
-              Trustee Secret HMAC Key
+            <label htmlFor="trustee-secret-input" className="block text-xs font-bold text-stone-700 dark:text-slate-300 uppercase tracking-wider">
+              Trustee Signing Key / Security Passcode
             </label>
             <div className="relative">
               <input
@@ -114,18 +122,18 @@ export const TrusteeSignoffModal: React.FC<SignoffModalProps> = ({
                 type="password"
                 value={secret}
                 onChange={(e) => setSecret(e.target.value)}
-                placeholder="Enter your secret trustee key"
-                className="w-full bg-stone-50 dark:bg-slate-800 border border-stone-300 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder:text-stone-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-500/20 shadow-xs"
+                placeholder="Enter your confidential trustee signing key"
+                className="w-full bg-stone-50 dark:bg-slate-900 border border-stone-300 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder:text-stone-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 shadow-xs"
               />
-              <KeyRound className="h-4 w-4 text-stone-400 absolute right-3 top-3 pointer-events-none" />
+              <KeyRound className="h-4 w-4 text-stone-400 absolute right-3.5 top-3 pointer-events-none" />
             </div>
-            <p className="text-[11px] text-stone-500 dark:text-slate-500">
-              Signs the SHA-256 package using per-trustee HMAC-SHA256 cryptography per Red-Line 3.
+            <p className="text-[11px] text-stone-500 dark:text-slate-400 leading-relaxed">
+              Applies your verified digital signature, certifying formal trustee approval of this statutory document for submission to the Scottish Charity Regulator (OSCR).
             </p>
           </div>
 
           {error && (
-            <div className="p-3 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-500/40 rounded-xl text-xs text-red-700 dark:text-red-300 flex items-start gap-2">
+            <div className="p-3.5 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-500/40 rounded-xl text-xs text-red-700 dark:text-red-300 flex items-start gap-2">
               <AlertCircle className="h-4 w-4 shrink-0 text-red-600 dark:text-red-400 mt-0.5" />
               <span className="font-medium">{error}</span>
             </div>
@@ -134,13 +142,13 @@ export const TrusteeSignoffModal: React.FC<SignoffModalProps> = ({
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-red-600 hover:bg-red-700 active:bg-red-800 font-bold text-white rounded-xl py-3 text-sm shadow-md transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+            className="w-full royal-btn-crimson font-bold rounded-xl py-3 text-sm shadow-md transition-all flex items-center justify-center gap-2 disabled:opacity-50 active:scale-[0.98]"
           >
             <ShieldCheck className="h-4 w-4" />
-            <span>{loading ? "Verifying HMAC Signature..." : "Apply Trustee Digital Signature"}</span>
+            <span>{loading ? "Verifying Trustee Signature..." : "Approve & Apply Trustee Signature"}</span>
           </button>
         </form>
-      </div>
+      </motion.div>
     </div>
   );
 };
