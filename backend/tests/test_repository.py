@@ -208,3 +208,41 @@ def test_user_profile_crud():
     )
     assert cleared["avatar"] == ""
     assert cleared["name"] == "Updated Chair Name"
+
+
+def test_user_profile_migration_on_preexisting_table():
+    import sqlite3
+
+    conn = sqlite3.connect(":memory:")
+    conn.row_factory = sqlite3.Row
+    conn.execute(
+        "CREATE TABLE users ("
+        "user_id TEXT PRIMARY KEY, "
+        "email TEXT UNIQUE NOT NULL, "
+        "password_hash TEXT NOT NULL, "
+        "name TEXT NOT NULL, "
+        "role TEXT NOT NULL"
+        ")"
+    )
+    conn.execute(
+        "INSERT INTO users (user_id, email, password_hash, name, role) VALUES (?, ?, ?, ?, ?)",
+        ("usr_legacy", "legacy@pottershouse.org.uk", "hash123", "Legacy Trustee", "Trustee"),
+    )
+
+    d1 = D1DatabaseClient(db_path=":memory:")
+    d1._conn = conn
+    d1.init_schema()
+
+    repo = ComplianceRepository(db_client=d1)
+    updated = repo.update_user_profile(
+        "usr_legacy",
+        name="Migrated Trustee",
+        avatar="data:image/jpeg;base64,mockavatarlegacy",
+    )
+    assert updated["name"] == "Migrated Trustee"
+    assert updated["avatar"] == "data:image/jpeg;base64,mockavatarlegacy"
+
+    fetched = repo.get_user_profile("usr_legacy")
+    assert fetched is not None
+    assert fetched["avatar"] == "data:image/jpeg;base64,mockavatarlegacy"
+

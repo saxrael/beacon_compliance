@@ -193,9 +193,41 @@ class D1DatabaseClient:
         self.init_schema()
 
     def init_schema(self) -> None:
-        """Initialize all D1 relational tables defined in TRD §2."""
+        """Initialize all D1 relational tables and verify/migrate existing columns."""
         with self._conn:
             self._conn.executescript(D1_SCHEMA_SQL)
+            self._migrate_existing_tables()
+
+    def _migrate_existing_tables(self) -> None:
+        """Ensure all columns exist on pre-existing database tables."""
+        try:
+            cursor = self._conn.execute("PRAGMA table_info(users)")
+            existing_user_cols = {
+                row[1] if isinstance(row, tuple) else row["name"] for row in cursor.fetchall()
+            }
+
+            user_migrations = [
+                ("first_login_complete", "INTEGER NOT NULL DEFAULT 0"),
+                ("google_id", "TEXT"),
+                ("totp_secret", "TEXT"),
+                ("totp_enabled", "INTEGER NOT NULL DEFAULT 0"),
+                ("avatar", "TEXT"),
+            ]
+            for col_name, col_def in user_migrations:
+                if col_name not in existing_user_cols:
+                    try:
+                        self._conn.execute(f"ALTER TABLE users ADD COLUMN {col_name} {col_def}")
+                    except sqlite3.OperationalError:
+                        pass
+
+            try:
+                self._conn.execute(
+                    "CREATE UNIQUE INDEX IF NOT EXISTS idx_users_google_id ON users(google_id)"
+                )
+            except sqlite3.OperationalError:
+                pass
+        except Exception:
+            pass
 
     def execute(self, sql: str, params: tuple[Any, ...] = ()) -> sqlite3.Cursor:
         """Execute a parameterized SQL query safely."""

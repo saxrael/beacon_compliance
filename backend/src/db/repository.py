@@ -384,20 +384,41 @@ class ComplianceRepository:
 
         if updates:
             params.append(user_id)
-            self.db.execute(
-                f"UPDATE users SET {', '.join(updates)} WHERE user_id = ?", tuple(params)
-            )
+            try:
+                self.db.execute(
+                    f"UPDATE users SET {', '.join(updates)} WHERE user_id = ?", tuple(params)
+                )
+            except Exception:
+                if hasattr(self.db, "_migrate_existing_tables"):
+                    self.db._migrate_existing_tables()
+                self.db.execute(
+                    f"UPDATE users SET {', '.join(updates)} WHERE user_id = ?", tuple(params)
+                )
 
-        user = self.db.fetchone(
-            "SELECT user_id, email, name, role, avatar FROM users WHERE user_id = ?", (user_id,)
-        )
+        try:
+            user = self.db.fetchone(
+                "SELECT user_id, email, name, role, avatar FROM users WHERE user_id = ?", (user_id,)
+            )
+        except Exception:
+            if hasattr(self.db, "_migrate_existing_tables"):
+                self.db._migrate_existing_tables()
+            user = self.db.fetchone(
+                "SELECT user_id, email, name, role, avatar FROM users WHERE user_id = ?", (user_id,)
+            )
         return dict(user) if user else {}
 
     def get_user_profile(self, user_id: str) -> dict[str, Any] | None:
         """Fetch trustee user profile from D1."""
-        row = self.db.fetchone(
-            "SELECT user_id, email, name, role, avatar FROM users WHERE user_id = ?", (user_id,)
-        )
+        try:
+            row = self.db.fetchone(
+                "SELECT user_id, email, name, role, avatar FROM users WHERE user_id = ?", (user_id,)
+            )
+        except Exception:
+            if hasattr(self.db, "_migrate_existing_tables"):
+                self.db._migrate_existing_tables()
+            row = self.db.fetchone(
+                "SELECT user_id, email, name, role, avatar FROM users WHERE user_id = ?", (user_id,)
+            )
         return dict(row) if row else None
 
 
