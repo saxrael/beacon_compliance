@@ -163,17 +163,6 @@
             letter-spacing: 0.04em;
         }
 
-        .code-hash {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 11px;
-            background: #F1F5F9;
-            color: var(--color-slate-dark);
-            padding: 3px 8px;
-            border-radius: 3px;
-            border: 1px solid #CBD5E1;
-            word-break: break-all;
-        }
-
         .footer {
             margin-top: 40px;
             padding-top: 16px;
@@ -217,32 +206,32 @@
 
             <!-- Section 1 -->
             <div class="section-header">
-                <h2 class="section-title">1. Included Deliverables & Cryptographic Verification Hashes</h2>
+                <h2 class="section-title">1. Included Deliverables & Document Reference Index</h2>
                 <div class="section-line"></div>
             </div>
             <table class="data-table">
                 <thead>
                     <tr>
                         <th style="width: 35%;">Deliverable Package</th>
-                        <th style="width: 20%;">Status</th>
-                        <th style="width: 45%;">Cryptographic Content Hash</th>
+                        <th style="width: 35%;">Document Reference</th>
+                        <th style="width: 30%;">Statutory Status</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
                         <td>Deliverable 1: OAR Data Sheet</td>
-                        <td><strong style="color: #16A34A;">Ready</strong></td>
-                        <td><span class="code-hash">{{ content_hash }}</span></td>
+                        <td><strong>Doc Ref: SC054652-{{ financial_year }}-OAR</strong></td>
+                        <td><strong style="color: #16A34A;">Certified by Trustees</strong></td>
                     </tr>
                     <tr>
                         <td>Deliverable 2: Trustees' Annual Report</td>
-                        <td><strong style="color: #16A34A;">Ready</strong></td>
-                        <td><span class="code-hash">{{ content_hash }}</span></td>
+                        <td><strong>Doc Ref: SC054652-{{ financial_year }}-TAR</strong></td>
+                        <td><strong style="color: #16A34A;">Approved by Trustees</strong></td>
                     </tr>
                     <tr>
                         <td>Deliverable 3: R&P Accounts</td>
-                        <td><strong style="color: #16A34A;">Ready</strong></td>
-                        <td><span class="code-hash">{{ content_hash }}</span></td>
+                        <td><strong>Doc Ref: SC054652-{{ financial_year }}-RPA</strong></td>
+                        <td><strong style="color: #16A34A;">Approved by Trustees</strong></td>
                     </tr>
                 </tbody>
             </table>
@@ -259,9 +248,26 @@
                 <tr><th>Zero LLM Math Enforcement (Red-Line 2)</th><td><strong style="color:#16A34A;">PASSED (100% Deterministic Decimal)</strong></td></tr>
             </table>
 
+            <!-- Section 3 -->
+            <div class="section-header">
+                <h2 class="section-title">3. Trustee Transmittal Declaration</h2>
+                <div class="section-line"></div>
+            </div>
+            <div style="margin-top: 14px; background: #FFFFFF; border: 1.5px solid var(--color-border); border-left: 5px solid var(--color-gold); border-radius: 6px; padding: 20px; page-break-inside: avoid;">
+                <p style="margin-bottom:14px; font-size:13px; color: var(--color-slate-dark); font-weight: 500;">
+                    Transmitted to the Independent Examiner on behalf of the Board of Trustees of Potter's House Christian Mission UK:
+                </p>
+                <table class="data-table" style="margin-top: 8px;">
+                    <tr><th>Signing Trustee Name</th><td><strong>{{ signing_trustee_name }}</strong></td></tr>
+                    <tr><th>Designated Office / Role</th><td>{{ signing_trustee_role }}</td></tr>
+                    <tr><th>Date of Transmittal</th><td>{{ approval_date }}</td></tr>
+                    <tr><th>Document Reference</th><td><strong>Doc Ref: {{ doc_ref }}</strong></td></tr>
+                </table>
+            </div>
+
             <div class="footer">
-                <div>Beacon Compliance OS — Independent Examiner Pack (Deliverable 4)</div>
-                <div>SC054652 — Dunbar, Scotland</div>
+                <div>Potter's House Christian Mission UK (SCIO SC054652)</div>
+                <div>Independent Examiner Review Pack • Year Ended 31 Dec {{ financial_year }}</div>
             </div>
         </div>
     </div>

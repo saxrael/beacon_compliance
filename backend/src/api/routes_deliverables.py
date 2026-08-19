@@ -25,6 +25,10 @@ class DeliverableItemModel(BaseModel):
     charity_number: str
     status: str
     content_hash: str
+    doc_ref: str | None = None
+    signing_trustee_name: str | None = None
+    chair_name: str | None = None
+    financial_year: str | None = None
     sections: dict[str, Any] | None = None
     receipts_payments_account: dict[str, Any] | None = None
     statement_of_balances: dict[str, Any] | None = None
@@ -47,8 +51,26 @@ async def get_deliverables(
     if not fin_state:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Financial state for run_id '{run_id }' not found.",
+            detail=f"Financial state for run_id '{run_id}' not found.",
         )
+
+    chair_name = repo.get_signing_chair_name(run_id)
+    if (
+        chair_name == "Chair of the Board of Trustees"
+        and current_user
+        and current_user.role == "Chair"
+    ):
+        if current_user.name and current_user.name.strip():
+            candidate = current_user.name.strip()
+            if candidate.lower() not in (
+                "chair",
+                "default trustee",
+                "authenticated trustee",
+                "none",
+                "null",
+                "undefined",
+            ):
+                chair_name = candidate
 
     receipts = fin_state.get("receipts", {})
     payments = fin_state.get("payments", {})
@@ -69,6 +91,9 @@ async def get_deliverables(
     sample_state: BeaconComplianceState = {
         "run_id": run_id,
         "charity_number": "SC054652",
+        "financial_year": "2026",
+        "chair_name": chair_name,
+        "signing_trustee_name": chair_name,
         "receipts_payments": rnp_data,
         "statement_of_balances": {"reconciled": True},
         "tar_draft_fields": {

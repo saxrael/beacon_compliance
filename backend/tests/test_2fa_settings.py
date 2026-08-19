@@ -167,3 +167,34 @@ def test_change_password_with_2fa_flow(tmp_path, monkeypatch):
     assert res_success.status_code == 200
     assert res_success.json()["status"] == "success"
     db.close()
+
+
+def test_get_and_update_profile_success(tmp_path, monkeypatch):
+    db = setup_test_env(tmp_path, monkeypatch)
+
+    get_res = client.get("/api/settings/profile")
+    assert get_res.status_code == 200
+    profile_data = get_res.json()
+    assert profile_data["user_id"] == "user_123"
+    assert profile_data["name"] == "Test User"
+    assert profile_data["email"] == "test@pottershouse.org.uk"
+
+    update_res = client.post(
+        "/api/settings/profile/update",
+        json={
+            "name": "Updated Trustee Name",
+            "email": "updated.trustee@pottershouse.org.uk",
+            "avatar": "data:image/png;base64,mockavatarstring123",
+        },
+    )
+    assert update_res.status_code == 200
+    updated_data = update_res.json()
+    assert updated_data["name"] == "Updated Trustee Name"
+    assert updated_data["email"] == "updated.trustee@pottershouse.org.uk"
+    assert updated_data["avatar"] == "data:image/png;base64,mockavatarstring123"
+
+    user_in_db = db.fetchone("SELECT * FROM users WHERE user_id = 'user_123'")
+    assert user_in_db["name"] == "Updated Trustee Name"
+    assert user_in_db["email"] == "updated.trustee@pottershouse.org.uk"
+    assert user_in_db["avatar"] == "data:image/png;base64,mockavatarstring123"
+    db.close()

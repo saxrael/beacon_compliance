@@ -17,9 +17,11 @@ class ComplianceKnowledgeContext:
         self,
         retriever: HybridRRFRetriever | None = None,
         memory_manager: CognitiveMemoryManager | None = None,
+        repository: Any | None = None,
     ) -> None:
         self.retriever = retriever or HybridRRFRetriever()
         self.memory = memory_manager or CognitiveMemoryManager()
+        self.repository = repository
         self.stored_facts: list[MemoryFact] = []
 
     def add_non_financial_fact(
@@ -31,6 +33,17 @@ class ComplianceKnowledgeContext:
         )
         if fact:
             self.stored_facts.append(fact)
+            if self.repository is not None and hasattr(self.repository, "save_memory_fact"):
+                try:
+                    self.repository.save_memory_fact(
+                        fact_id=fact_id,
+                        user_id=user_id,
+                        fact_text=fact_text,
+                        source_type="non_financial_convo",
+                        created_at=created_at,
+                    )
+                except Exception:
+                    pass
             return True
         return False
 
@@ -50,6 +63,19 @@ class ComplianceKnowledgeContext:
             )
 
         user_facts = [f.fact_text for f in self.stored_facts if f.user_id == user_id]
+        if self.repository is not None and hasattr(self.repository, "get_memory_facts"):
+            try:
+                db_facts = self.repository.get_memory_facts(user_id)
+                for df in db_facts:
+                    text = df.get("fact_text")
+                    if (
+                        text
+                        and text not in user_facts
+                        and not self.memory.is_financial_content(text)
+                    ):
+                        user_facts.append(text)
+            except Exception:
+                pass
 
         kb_texts = [m.text for m in kb_matches]
         sources = [m.chunk_id for m in kb_matches]

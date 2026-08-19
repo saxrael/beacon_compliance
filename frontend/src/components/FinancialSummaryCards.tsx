@@ -46,7 +46,7 @@ export const FinancialSummaryCards: React.FC<FinancialSummaryProps> = ({
   thresholdBreached,
 }) => {
   return (
-    <div className="space-y-4">
+    <div className="tour-financial-cards space-y-4">
       {thresholdBreached && (
         <motion.div 
           initial={{ opacity: 0, scale: 0.98 }}

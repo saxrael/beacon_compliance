@@ -5,7 +5,7 @@ import { UserCheck, Sun, Moon, LogOut, UserPlus, Menu, HelpCircle, Landmark } fr
 import { useTheme } from "@/context/ThemeContext";
 import { useAuth } from "@/context/AuthContext";
 import { SidebarMenu } from "./SidebarMenu";
-import { AccountSettingsModal } from "./AccountSettingsModal";
+import { AccountSettingsModal, getInitials } from "./AccountSettingsModal";
 import { startProductTour } from "@/utils/ProductTour";
 import { motion } from "framer-motion";
 
@@ -24,7 +24,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenAdminModal }) => {
   const isAdminOrDev = userRole === "Developer" || userRole === "Admin";
 
   return (
-    <header className="border-b border-stone-200/80 dark:border-slate-800 bg-white/95 dark:bg-[#0B0F19]/95 backdrop-blur-md sticky top-0 z-40 flex flex-col transition-colors duration-300 shadow-xs">
+    <header className="border-b border-stone-200/80 dark:border-slate-800 bg-white/95 dark:bg-[#070A11]/95 backdrop-blur-md sticky top-0 z-40 flex flex-col transition-colors duration-300 shadow-xs">
       <div className="h-1 gold-ribbon w-full" />
       
       <div className="max-w-7xl w-full mx-auto px-4 sm:px-6 py-3.5 flex flex-col md:flex-row items-center justify-between gap-4">
@@ -38,11 +38,11 @@ export const Header: React.FC<HeaderProps> = ({ onOpenAdminModal }) => {
               <Menu className="h-5 w-5" />
             </button>
             
-            <div className="tour-header-logo h-11 px-2.5 rounded-xl bg-stone-50 dark:bg-slate-900 border border-stone-200 dark:border-slate-800 flex items-center justify-center shadow-xs">
+            <div className="tour-header-logo flex items-center justify-center">
               <img
                 src={theme === "dark" ? "/assets/logo_dark.png" : "/assets/logo.png"}
                 alt="Potter's House Crest"
-                className="h-8 max-h-8 w-auto object-contain"
+                className="h-9 w-auto max-w-[150px] sm:max-w-[200px] object-contain drop-shadow-xs"
                 onError={(e) => { 
                   (e.target as HTMLElement).style.display = 'none'; 
                 }}
@@ -109,16 +109,33 @@ export const Header: React.FC<HeaderProps> = ({ onOpenAdminModal }) => {
           </button>
 
           {user && (
-            <div className="flex items-center gap-2 bg-stone-100/90 dark:bg-slate-800/90 border border-stone-300/80 dark:border-slate-700 rounded-xl px-3 py-1.5 text-xs shadow-xs">
-              <div className="h-7 w-7 rounded-lg bg-gradient-to-br from-red-600 to-amber-600 text-white font-bold flex items-center justify-center text-xs shadow-xs">
-                {user.name ? user.name.charAt(0).toUpperCase() : "T"}
-              </div>
+            <div 
+              onClick={() => setIsSettingsOpen(true)}
+              title="Account & Profile Settings"
+              className="flex items-center gap-2 bg-stone-100/90 hover:bg-stone-200/90 dark:bg-slate-800/90 dark:hover:bg-slate-700/90 border border-stone-300/80 dark:border-slate-700 rounded-xl px-2.5 py-1.5 text-xs shadow-xs transition-all cursor-pointer group"
+            >
+              {user.avatar ? (
+                <img
+                  src={user.avatar}
+                  alt={user.name || "Trustee"}
+                  className="h-7 w-7 rounded-full object-cover border border-amber-500/50 shadow-xs ring-1 ring-amber-500/20"
+                />
+              ) : (
+                <div className="h-7 w-7 rounded-full bg-gradient-to-br from-red-700 via-red-600 to-amber-600 text-white font-bold flex items-center justify-center text-[10px] shadow-xs border border-amber-500/40">
+                  {getInitials(user.name || "")}
+                </div>
+              )}
               <div className="flex flex-col text-left">
-                <span className="font-semibold text-stone-900 dark:text-slate-100 leading-tight">{user.name}</span>
+                <span className="font-semibold text-stone-900 dark:text-slate-100 leading-tight group-hover:text-amber-700 dark:group-hover:text-amber-300 transition-colors">
+                  {user.name}
+                </span>
                 <span className="text-[10px] text-red-600 dark:text-amber-400 uppercase font-bold tracking-wider">{userRole}</span>
               </div>
               <button
-                onClick={logout}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  logout();
+                }}
                 title="Log Out"
                 className="ml-1 text-stone-400 hover:text-red-600 dark:hover:text-red-400 transition-colors p-1 rounded-md"
               >

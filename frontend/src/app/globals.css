@@ -22,9 +22,9 @@
   }
 
   .dark {
-    --background: #0B0F19;
-    --foreground: #F8FAFC;
-    --card: #111827;
+    --background: #070A11;
+    --foreground: #F1F5F9;
+    --card: #0E1524;
     --card-foreground: #F8FAFC;
     --card-border: rgba(255, 255, 255, 0.08);
     --brand-crimson: #EF4444;
@@ -34,7 +34,7 @@
     --brand-gold-light: #FBBF24;
     --brand-gold-dark: #D97706;
     --muted: #94A3B8;
-    --muted-bg: #1E293B;
+    --muted-bg: #141C30;
   }
 }
 
@@ -69,9 +69,9 @@ h1, h2, h3, .font-serif-brand {
 }
 
 .dark .royal-card {
-  background-color: rgba(17, 24, 39, 0.9);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.04);
+  background-color: #0E1524;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow: 0 10px 32px -8px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.04);
 }
 
 .royal-card:hover {
@@ -79,7 +79,8 @@ h1, h2, h3, .font-serif-brand {
 }
 
 .dark .royal-card:hover {
-  box-shadow: 0 16px 40px -8px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(217, 119, 6, 0.2);
+  background-color: #121A2C;
+  box-shadow: 0 16px 40px -8px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(245, 158, 11, 0.22);
 }
 
 .royal-card-gold {
@@ -89,9 +90,9 @@ h1, h2, h3, .font-serif-brand {
 }
 
 .dark .royal-card-gold {
-  background: linear-gradient(135deg, rgba(17, 24, 39, 0.95) 0%, rgba(217, 119, 6, 0.12) 100%);
-  border: 1px solid rgba(245, 158, 11, 0.25);
-  box-shadow: 0 10px 30px -10px rgba(217, 119, 6, 0.15);
+  background: linear-gradient(135deg, rgba(14, 21, 36, 0.98) 0%, rgba(217, 119, 6, 0.15) 100%);
+  border: 1px solid rgba(245, 158, 11, 0.28);
+  box-shadow: 0 10px 30px -10px rgba(217, 119, 6, 0.2);
 }
 
 .royal-card-crimson {
@@ -101,9 +102,9 @@ h1, h2, h3, .font-serif-brand {
 }
 
 .dark .royal-card-crimson {
-  background: linear-gradient(135deg, rgba(17, 24, 39, 0.95) 0%, rgba(214, 22, 47, 0.15) 100%);
-  border: 1px solid rgba(239, 68, 68, 0.25);
-  box-shadow: 0 10px 30px -10px rgba(214, 22, 47, 0.15);
+  background: linear-gradient(135deg, rgba(14, 21, 36, 0.98) 0%, rgba(214, 22, 47, 0.18) 100%);
+  border: 1px solid rgba(239, 68, 68, 0.28);
+  box-shadow: 0 10px 30px -10px rgba(214, 22, 47, 0.2);
 }
 
 .royal-btn-crimson {
@@ -144,7 +145,7 @@ h1, h2, h3, .font-serif-brand {
 }
 
 .dark .glass-surface {
-  background: rgba(17, 24, 39, 0.85);
+  background: rgba(14, 21, 36, 0.9);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -162,5 +163,114 @@ h1, h2, h3, .font-serif-brand {
   border-radius: 9999px;
 }
 .dark ::-webkit-scrollbar-thumb {
-  background: #334155;
+  background: #1E293B;
 }
+
+/* =========================================================================
+   Driver.js Interactive Guided Tour Custom Theme (Beacon Royal Palette)
+   ========================================================================= */
+.beacon-tour-popover.driver-popover {
+  background-color: #FFFFFF;
+  color: #0F172A;
+  border: 1px solid #E2E8F0;
+  border-radius: 1.25rem;
+  box-shadow: 0 20px 40px -8px rgba(15, 23, 42, 0.25), 0 0 0 1px rgba(217, 119, 6, 0.15);
+  padding: 1.25rem 1.5rem;
+  max-width: 360px;
+}
+
+.dark .beacon-tour-popover.driver-popover {
+  background-color: #0E1524;
+  color: #F8FAFC;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(245, 158, 11, 0.25);
+}
+
+.beacon-tour-popover .driver-popover-title {
+  font-family: 'Cinzel', serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0F172A;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid rgba(217, 119, 6, 0.2);
+}
+
+.dark .beacon-tour-popover .driver-popover-title {
+  color: #F8FAFC;
+  border-bottom-color: rgba(245, 158, 11, 0.3);
+}
+
+.beacon-tour-popover .driver-popover-description {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8rem;
+  line-height: 1.55;
+  color: #475569;
+}
+
+.dark .beacon-tour-popover .driver-popover-description {
+  color: #94A3B8;
+}
+
+.beacon-tour-popover .driver-popover-footer {
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.beacon-tour-popover .driver-popover-progress-text {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #D97706;
+}
+
+.dark .beacon-tour-popover .driver-popover-progress-text {
+  color: #FBBF24;
+}
+
+.beacon-tour-popover .driver-popover-next-btn {
+  background: linear-gradient(135deg, #D6162F 0%, #B81026 50%, #990C1F 100%) !important;
+  color: #FFFFFF !important;
+  font-family: 'Inter', sans-serif !important;
+  font-size: 0.75rem !important;
+  font-weight: 700 !important;
+  border-radius: 0.75rem !important;
+  padding: 0.4rem 0.85rem !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  text-shadow: none !important;
+  box-shadow: 0 2px 8px rgba(214, 22, 47, 0.35) !important;
+}
+
+.beacon-tour-popover .driver-popover-prev-btn {
+  background-color: transparent !important;
+  color: #64748B !important;
+  font-family: 'Inter', sans-serif !important;
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  border-radius: 0.75rem !important;
+  padding: 0.4rem 0.75rem !important;
+  border: 1px solid #CBD5E1 !important;
+  text-shadow: none !important;
+}
+
+.dark .beacon-tour-popover .driver-popover-prev-btn {
+  color: #94A3B8 !important;
+  border-color: #334155 !important;
+}
+
+.beacon-tour-popover .driver-popover-close-btn {
+  color: #94A3B8;
+  font-size: 1.1rem;
+}
+
+.beacon-tour-popover .driver-popover-close-btn:hover {
+  color: #0F172A;
+}
+
+.dark .beacon-tour-popover .driver-popover-close-btn:hover {
+  color: #F8FAFC;
+}
+

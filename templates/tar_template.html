@@ -195,18 +195,6 @@
             background: #FFFFFF;
         }
 
-        /* Monospace Code & Signatures */
-        .code-hash {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 11.5px;
-            background: #F1F5F9;
-            color: var(--color-slate-dark);
-            padding: 3px 8px;
-            border-radius: 3px;
-            border: 1px solid #CBD5E1;
-            word-break: break-all;
-        }
-
         /* Trustee Sign-Off Box */
         .signoff-box {
             margin-top: 24px;
@@ -216,34 +204,6 @@
             border-radius: 6px;
             padding: 22px;
             page-break-inside: avoid;
-        }
-
-        .signoff-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 14px;
-        }
-
-        .signoff-title {
-            font-size: 14px;
-            font-weight: 700;
-            color: var(--color-slate-dark);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        .verified-badge {
-            background: #DCFCE7;
-            color: #166534;
-            border: 1px solid #86EFAC;
-            padding: 3px 10px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: 700;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
         }
 
         /* Footer */
@@ -307,7 +267,7 @@
                 <tr><th>Charity Name</th><td><strong>Potter's House Christian Mission UK</strong></td></tr>
                 <tr><th>Charity Registration Number</th><td>SC054652 (SCIO, Scotland)</td></tr>
                 <tr><th>Principal Address</th><td>5B Beachmont Court, Dunbar, Scotland, EH42 1YF</td></tr>
-                <tr><th>Current Board of Trustees</th><td>Chair, Secretary, Treasurer</td></tr>
+                <tr><th>Current Board of Trustees</th><td>{{ current_trustees }}</td></tr>
             </table>
 
             <!-- Section 2 -->
@@ -348,27 +308,26 @@
 
             <!-- Section 6 -->
             <div class="section-header">
-                <h2 class="section-title">6. Trustee Declaration & Signature Attestation</h2>
+                <h2 class="section-title">6. Trustee Declaration & Formal Approval</h2>
                 <div class="section-line"></div>
             </div>
             
             <div class="signoff-box">
-                <div class="signoff-header">
-                    <div class="signoff-title">Role-Restricted Trustee Sign-Off Attestation</div>
-                    <div class="verified-badge">✓ HMAC-SHA256 VERIFIED</div>
-                </div>
-                <p style="margin-bottom:14px; font-size:12.5px;">Approved by the Board of Trustees of Potter's House Christian Mission UK and signed on their behalf by:</p>
+                <p style="margin-bottom:14px; font-size:13px; color: var(--color-slate-dark); font-weight: 500;">
+                    The trustees declare that they have approved the trustees' annual report above. Signed on behalf of the Board of Trustees:
+                </p>
                 <table class="data-table">
-                    <tr><th>Signing Trustee Role</th><td><strong>{{ signing_trustee_role }}</strong></td></tr>
-                    <tr><th>Cryptographic HMAC Signature</th><td><span class="code-hash">{{ hmac_signature }}</span></td></tr>
-                    <tr><th>Timestamp (ISO 8601)</th><td>{{ signoff_timestamp }}</td></tr>
+                    <tr><th>Signing Trustee Name</th><td><strong>{{ signing_trustee_name }}</strong></td></tr>
+                    <tr><th>Designated Office / Role</th><td>{{ signing_trustee_role }}</td></tr>
+                    <tr><th>Date of Approval</th><td>{{ approval_date }}</td></tr>
+                    <tr><th>Document Reference</th><td><strong>Doc Ref: {{ doc_ref }}</strong></td></tr>
                 </table>
             </div>
 
             <!-- Footer -->
             <div class="footer">
-                <div>Beacon Compliance OS — Regulatory Package (Deliverable 2)</div>
-                <div>Document Content Hash: <span class="code-hash">{{ content_hash }}</span></div>
+                <div>Potter's House Christian Mission UK (SCIO SC054652)</div>
+                <div>Trustees' Annual Report • Year Ended 31 Dec {{ financial_year }}</div>
             </div>
         </div>
     </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useAuth } from "@/context/AuthContext";
 import { KeyRound, ShieldCheck, X, AlertCircle, Award, Lock, FileCheck } from "lucide-react";
 import { API_BASE_URL } from "@/config";
 import { motion } from "framer-motion";
@@ -21,6 +22,7 @@ export const TrusteeSignoffModal: React.FC<SignoffModalProps> = ({
   deliverableHash,
   onSuccess,
 }) => {
+  const { token: authToken } = useAuth();
   const [secret, setSecret] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -38,12 +40,12 @@ export const TrusteeSignoffModal: React.FC<SignoffModalProps> = ({
     setError("");
 
     try {
-      const token = typeof window !== "undefined" ? localStorage.getItem("trustee_token") || "secret_trustee_token_chair" : "secret_trustee_token_chair";
+      const activeToken = authToken || (typeof window !== "undefined" ? localStorage.getItem("beacon_auth_token") || localStorage.getItem("trustee_token") || "secret_trustee_token_chair" : "secret_trustee_token_chair");
       const res = await fetch(`${API_BASE_URL}/api/signoff/approve`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
+          "Authorization": `Bearer ${activeToken}`,
         },
         body: JSON.stringify({
           trustee_role: trusteeRole,
@@ -81,7 +83,7 @@ export const TrusteeSignoffModal: React.FC<SignoffModalProps> = ({
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 10 }}
         transition={springs.gentle}
-        className="royal-card bg-white dark:bg-[#0B0F19] max-w-md w-full rounded-3xl p-6 sm:p-8 border border-stone-200 dark:border-slate-800 space-y-5 shadow-2xl relative"
+        className="royal-card bg-white dark:bg-[#0E1524] max-w-md w-full rounded-3xl p-6 sm:p-8 border border-stone-200 dark:border-slate-800 space-y-5 shadow-2xl relative"
       >
         <div className="flex items-center justify-between border-b border-stone-200/80 dark:border-slate-800 pb-4">
           <div className="flex items-center gap-3">

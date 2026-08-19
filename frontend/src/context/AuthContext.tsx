@@ -11,6 +11,7 @@ export interface UserProfile {
   first_login_complete: boolean;
   google_linked: boolean;
   totp_enabled?: boolean;
+  avatar?: string;
 }
 
 export interface LoginResult {
@@ -29,6 +30,8 @@ interface AuthContextType {
   loginWithGoogle: (code: string, state?: string) => Promise<UserProfile>;
   getGoogleLoginUrl: () => Promise<string>;
   completeFirstLoginReset: (email: string, currentPassword: string, newPassword: string) => Promise<void>;
+  updateUser: (updated: Partial<UserProfile>) => void;
+  refreshUserProfile: () => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -171,6 +174,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(updatedProfile);
   };
 
+  const updateUser = (updated: Partial<UserProfile>) => {
+    setUser((prev) => (prev ? { ...prev, ...updated } : null));
+  };
+
+  const refreshUserProfile = async () => {
+    const activeToken = token || (typeof window !== "undefined" ? localStorage.getItem("beacon_auth_token") : null);
+    if (activeToken) {
+      await fetchUserProfile(activeToken);
+    }
+  };
+
   const logout = async () => {
     try {
       await fetch(`${API_BASE}/logout`, { method: "POST" });
@@ -195,6 +209,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         loginWithGoogle,
         getGoogleLoginUrl,
         completeFirstLoginReset,
+        updateUser,
+        refreshUserProfile,
         logout,
       }}
     >

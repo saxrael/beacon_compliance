@@ -114,21 +114,39 @@ class BeaconLangfuseTracer:
         sanitized_meta = sanitize_telemetry_payload(metadata or {})
 
         try:
-            trace = self.langfuse_client.trace(
-                name=f"beacon_{name }",
-                metadata=sanitized_meta,
-            )
-            trace.generation(
-                name=name,
-                model=model,
-                input=[
-                    {"role": "system", "content": sanitized_sys},
-                    {"role": "user", "content": sanitized_user},
-                ],
-                output=sanitized_output,
-                usage={"input": input_tokens, "output": output_tokens},
-            )
-            self.langfuse_client.flush()
+            if hasattr(self.langfuse_client, "start_observation"):
+                self.langfuse_client.start_observation(
+                    name=f"beacon_{name }",
+                    as_type="generation",
+                    model=model,
+                    input=[
+                        {"role": "system", "content": sanitized_sys},
+                        {"role": "user", "content": sanitized_user},
+                    ],
+                    output=sanitized_output,
+                    usage_details={"input": input_tokens, "output": output_tokens}
+                    if (input_tokens or output_tokens)
+                    else None,
+                    metadata=sanitized_meta,
+                )
+            elif hasattr(self.langfuse_client, "trace"):
+                trace = self.langfuse_client.trace(
+                    name=f"beacon_{name }",
+                    metadata=sanitized_meta,
+                )
+                if hasattr(trace, "generation"):
+                    trace.generation(
+                        name=name,
+                        model=model,
+                        input=[
+                            {"role": "system", "content": sanitized_sys},
+                            {"role": "user", "content": sanitized_user},
+                        ],
+                        output=sanitized_output,
+                        usage={"input": input_tokens, "output": output_tokens},
+                    )
+            if hasattr(self.langfuse_client, "flush"):
+                self.langfuse_client.flush()
         except Exception as exc:
             logger.error("Error logging generation trace to Langfuse: %s", exc)
 
@@ -149,12 +167,21 @@ def observe_pii_guarded(name: str | None = None) -> Callable[..., Any]:
 
             if default_tracer.is_enabled() and default_tracer.langfuse_client:
                 try:
-                    default_tracer.langfuse_client.trace(
-                        name=f"func_{tracer_name }",
-                        input=sanitized_kwargs,
-                        output=sanitized_result,
-                    )
-                    default_tracer.langfuse_client.flush()
+                    if hasattr(default_tracer.langfuse_client, "start_observation"):
+                        default_tracer.langfuse_client.start_observation(
+                            name=f"func_{tracer_name }",
+                            as_type="span",
+                            input=sanitized_kwargs,
+                            output=sanitized_result,
+                        )
+                    elif hasattr(default_tracer.langfuse_client, "trace"):
+                        default_tracer.langfuse_client.trace(
+                            name=f"func_{tracer_name }",
+                            input=sanitized_kwargs,
+                            output=sanitized_result,
+                        )
+                    if hasattr(default_tracer.langfuse_client, "flush"):
+                        default_tracer.langfuse_client.flush()
                 except Exception as exc:
                     logger.debug("Failed to record trace for function %s: %s", tracer_name, exc)
             return result

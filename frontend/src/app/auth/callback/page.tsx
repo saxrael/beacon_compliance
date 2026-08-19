@@ -64,7 +64,7 @@ function CallbackHandler() {
   }, [searchParams, loginWithGoogle, router]);
 
   return (
-    <div className="min-h-screen bg-[#FBF9F5] dark:bg-[#0B0F19] relative overflow-hidden flex flex-col justify-center items-center p-4 sm:p-6 text-slate-900 dark:text-slate-100 transition-colors duration-300">
+    <div className="min-h-screen bg-[#FBF9F5] dark:bg-[#070A11] relative overflow-hidden flex flex-col justify-center items-center p-4 sm:p-6 text-slate-900 dark:text-slate-100 transition-colors duration-300">
       <div className="fixed top-0 left-0 right-0 h-1.5 gold-ribbon z-50" />
 
       <div className="absolute top-1/4 -left-32 w-96 h-96 bg-red-500/5 dark:bg-red-600/10 rounded-full blur-3xl pointer-events-none" />
@@ -74,19 +74,19 @@ function CallbackHandler() {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={springs.gentle}
-        className="max-w-md w-full royal-card bg-white dark:bg-[#111827] p-8 sm:p-10 rounded-3xl border border-stone-200 dark:border-slate-800 shadow-xl relative z-10 space-y-6 text-center"
+        className="max-w-md w-full royal-card bg-white dark:bg-[#0E1524] p-8 sm:p-10 rounded-3xl border border-stone-200 dark:border-slate-800 shadow-xl relative z-10 space-y-6 text-center"
       >
-        <div className="space-y-2.5">
-          <div className="inline-flex items-center justify-center p-3 rounded-2xl bg-stone-50/80 dark:bg-slate-900 border border-stone-200 dark:border-slate-800 shadow-sm mb-1">
+        <div className="space-y-2">
+          <div className="flex justify-center mb-1">
             <img
               src="/assets/logo.png"
               alt="Potter's House Crest"
-              className="h-12 w-auto object-contain dark:hidden"
+              className="h-16 w-auto object-contain dark:hidden drop-shadow-xs"
             />
             <img
               src="/assets/logo_dark.png"
               alt="Potter's House Crest"
-              className="h-12 w-auto object-contain hidden dark:block"
+              className="h-16 w-auto object-contain hidden dark:block drop-shadow-xs"
             />
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white font-serif">

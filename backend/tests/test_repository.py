@@ -116,3 +116,95 @@ def test_get_transactions_for_run():
     assert txns[0]["txn_id"] == "txn_999"
     assert txns[0]["description"] == "Sunday Collection"
     assert txns[0]["amount_pence"] == 50000
+
+
+def test_chat_message_persistence_and_pagination():
+    d1 = D1DatabaseClient(db_path=":memory:")
+    repo = ComplianceRepository(db_client=d1)
+
+    d1.execute(
+        "INSERT INTO users (user_id, email, password_hash, name, role) VALUES (?, ?, ?, ?, ?)",
+        ("usr_001", "trustee@pottershouse.org.uk", "hash", "Pastor John", "Trustee"),
+    )
+
+    for i in range(60):
+        repo.save_chat_message(
+            message_id=f"msg_{i:03d}",
+            user_id="usr_001",
+            run_id="run_chat_test",
+            role="user" if i % 2 == 0 else "assistant",
+            content=f"Message turn number {i}",
+            created_at=f"2026-08-19T01:{i:02d}:00Z",
+        )
+
+    res = repo.get_chat_history(user_id="usr_001", run_id="run_chat_test", limit=50, offset=0)
+    assert res["total_count"] == 60
+    assert len(res["messages"]) == 50
+    assert res["has_more"] is True
+    assert res["messages"][0]["message_id"] == "msg_010"
+    assert res["messages"][-1]["message_id"] == "msg_059"
+
+    older_res = repo.get_chat_history(
+        user_id="usr_001", run_id="run_chat_test", limit=50, offset=50
+    )
+    assert len(older_res["messages"]) == 10
+    assert older_res["has_more"] is False
+    assert older_res["messages"][0]["message_id"] == "msg_000"
+    assert older_res["messages"][-1]["message_id"] == "msg_009"
+
+
+def test_cognitive_memory_facts_and_summaries():
+    d1 = D1DatabaseClient(db_path=":memory:")
+    repo = ComplianceRepository(db_client=d1)
+
+    repo.save_memory_summary(
+        user_id="usr_001",
+        run_id="run_001",
+        summary_text="Trustee prefers detailed breakdown of mission fund grants.",
+        updated_at="2026-08-19T02:00:00Z",
+    )
+    summary = repo.get_memory_summary("usr_001", "run_001")
+    assert summary == "Trustee prefers detailed breakdown of mission fund grants."
+
+    repo.save_memory_fact(
+        fact_id="fact_001",
+        user_id="usr_001",
+        fact_text="Potter's House UK operates a community outreach program in Dunbar.",
+        source_type="conversation",
+        created_at="2026-08-19T02:00:00Z",
+    )
+    facts = repo.get_memory_facts("usr_001")
+    assert len(facts) == 1
+    assert facts[0]["fact_id"] == "fact_001"
+    assert "Dunbar" in facts[0]["fact_text"]
+
+
+def test_user_profile_crud():
+    d1 = D1DatabaseClient(db_path=":memory:")
+    repo = ComplianceRepository(db_client=d1)
+
+    d1.execute(
+        "INSERT INTO users (user_id, email, password_hash, name, role) VALUES (?, ?, ?, ?, ?)",
+        ("usr_002", "chair@pottershouse.org.uk", "hash", "Original Name", "Chair"),
+    )
+
+    profile = repo.get_user_profile("usr_002")
+    assert profile is not None
+    assert profile["name"] == "Original Name"
+
+    updated = repo.update_user_profile(
+        "usr_002",
+        name="Updated Chair Name",
+        email="new_chair@pottershouse.org.uk",
+        avatar="data:image/jpeg;base64,/9j/4AAQSkZJRg==",
+    )
+    assert updated["name"] == "Updated Chair Name"
+    assert updated["email"] == "new_chair@pottershouse.org.uk"
+    assert updated["avatar"] == "data:image/jpeg;base64,/9j/4AAQSkZJRg=="
+
+    cleared = repo.update_user_profile(
+        "usr_002",
+        avatar="",
+    )
+    assert cleared["avatar"] == ""
+    assert cleared["name"] == "Updated Chair Name"

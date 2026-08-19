@@ -72,7 +72,7 @@ export const DeliverableDownloadGrid: React.FC<DeliverableGridProps> = ({
   };
 
   return (
-    <div className="space-y-5">
+    <div className="tour-deliverables-grid space-y-5">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-stone-200/80 dark:border-slate-800 pb-3.5">
         <div>
           <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100 font-serif flex items-center gap-2.5">

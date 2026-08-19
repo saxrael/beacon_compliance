@@ -32,6 +32,64 @@ class PasswordChangeRequest(BaseModel):
     totp_code: str | None = None
 
 
+class ProfileUpdateRequest(BaseModel):
+    name: str | None = None
+    email: str | None = None
+    avatar: str | None = None
+
+
+class ProfileResponse(BaseModel):
+    user_id: str
+    name: str
+    email: str
+    role: str
+    avatar: str | None = None
+
+
+@router.get("/profile", response_model=ProfileResponse)
+async def get_profile(
+    current_user: TrusteeUser = Depends(get_current_trustee),
+    db: D1DatabaseClient = Depends(get_d1_db),
+) -> ProfileResponse:
+    from backend.src.db.repository import ComplianceRepository
+
+    repo = ComplianceRepository(db_client=db)
+    user = repo.get_user_profile(current_user.user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found.")
+    return ProfileResponse(
+        user_id=user["user_id"],
+        name=user["name"],
+        email=user["email"],
+        role=user["role"],
+        avatar=user.get("avatar"),
+    )
+
+
+@router.post("/profile/update", response_model=ProfileResponse)
+async def update_profile(
+    req: ProfileUpdateRequest,
+    current_user: TrusteeUser = Depends(get_current_trustee),
+    db: D1DatabaseClient = Depends(get_d1_db),
+) -> ProfileResponse:
+    from backend.src.db.repository import ComplianceRepository
+
+    repo = ComplianceRepository(db_client=db)
+    updated = repo.update_user_profile(
+        current_user.user_id,
+        name=req.name,
+        email=req.email,
+        avatar=req.avatar,
+    )
+    return ProfileResponse(
+        user_id=updated["user_id"],
+        name=updated["name"],
+        email=updated["email"],
+        role=updated["role"],
+        avatar=updated.get("avatar"),
+    )
+
+
 @router.post("/2fa/generate", response_model=Generate2FAResponse)
 async def generate_2fa(
     current_user: TrusteeUser = Depends(get_current_trustee),

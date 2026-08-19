@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { ThemeProvider } from "@/context/ThemeContext";
+import { Providers } from "./providers";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -26,8 +26,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="light" suppressHydrationWarning>
-      <body className={`${inter.className} bg-[#F8F7F4] dark:bg-[#090D16] text-slate-900 dark:text-slate-100 antialiased min-h-screen transition-colors duration-300`}>
-        <ThemeProvider>{children}</ThemeProvider>
+      <body className={`${inter.className} bg-[#F8F7F4] dark:bg-[#070A11] text-slate-900 dark:text-slate-100 antialiased min-h-screen transition-colors duration-300`}>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

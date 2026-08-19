@@ -1,20 +1,43 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { X, Shield, Lock, Key, Copy, Check, ShieldAlert, ShieldCheck, Mail, User, Settings, QrCode, Smartphone, Info, ArrowRight } from "lucide-react";
+import { X, Shield, Lock, Key, Copy, Check, ShieldAlert, ShieldCheck, Mail, User, Settings, QrCode, Smartphone, Info, ArrowRight, Camera, UploadCloud, Save, Crop, Trash2 } from "lucide-react";
 import QRCode from "react-qr-code";
 import { API_BASE_URL } from "@/config";
 import { motion, AnimatePresence } from "framer-motion";
 import { springs } from "@/lib/motion-tokens";
+import { ClientPortal } from "./ClientPortal";
+import { AvatarCropModal } from "./AvatarCropModal";
+
+export const getInitials = (name?: string): string => {
+  if (!name) return "T";
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+};
 
 interface AccountSettingsModalProps {
   onClose: () => void;
 }
 
 export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ onClose }) => {
-  const { user, token } = useAuth();
+  const { user, token, updateUser } = useAuth();
   const [activeTab, setActiveTab] = useState<"profile" | "security">("profile");
+
+  const [profileName, setProfileName] = useState(user?.name || "");
+  const [profileEmail, setProfileEmail] = useState(user?.email || "");
+  const [profileAvatar, setProfileAvatar] = useState(user?.avatar || "");
+  const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
+  const [savingProfile, setSavingProfile] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      setProfileName(user.name || "");
+      setProfileEmail(user.email || "");
+      setProfileAvatar(user.avatar || "");
+    }
+  }, [user]);
 
   const [setup2FA, setSetup2FA] = useState(false);
   const [setupMode, setSetupMode] = useState<"qr" | "manual">("qr");
@@ -32,6 +55,64 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ onCl
 
   const formatSecretInGroups = (secret: string) => {
     return secret.match(/.{1,4}/g)?.join(" ") || secret;
+  };
+
+  const handleAvatarFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        setErrorMsg("Image size exceeds 5MB limit.");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (typeof reader.result === "string") {
+          setCropImageSrc(reader.result);
+        }
+      };
+      reader.readAsDataURL(file);
+      e.target.value = "";
+    }
+  };
+
+  const handleCropComplete = (croppedDataUrl: string) => {
+    setProfileAvatar(croppedDataUrl);
+    setCropImageSrc(null);
+    setSuccessMsg("Photo cropped. Click 'Save Profile Changes' to persist.");
+  };
+
+  const handleSaveProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingProfile(true);
+    setErrorMsg(null);
+    setSuccessMsg(null);
+    try {
+      const activeToken = token || (typeof window !== "undefined" ? localStorage.getItem("beacon_auth_token") : null);
+      const res = await fetch(`${API_BASE_URL}/api/settings/profile/update`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${activeToken}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          name: profileName,
+          email: profileEmail,
+          avatar: profileAvatar
+        })
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.detail || "Failed to update profile.");
+      }
+      const updated = await res.json();
+      updateUser({ name: updated.name, email: updated.email, avatar: updated.avatar });
+      setSuccessMsg("Trustee profile updated successfully.");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to update profile.";
+      setErrorMsg(msg);
+    } finally {
+      setSavingProfile(false);
+    }
   };
 
   const handleGenerate2FA = async () => {
@@ -150,126 +231,219 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ onCl
   };
 
   return (
-    <div 
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/65 backdrop-blur-sm p-4 overflow-y-auto"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="settings-modal-title"
-    >
-      <motion.div 
-        initial={{ opacity: 0, scale: 0.95, y: 12 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 12 }}
-        transition={springs.gentle}
-        className="royal-card bg-white dark:bg-[#0B0F19] border border-stone-200 dark:border-slate-800 shadow-2xl rounded-3xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh] my-auto"
+    <ClientPortal>
+      <div 
+        className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/65 backdrop-blur-sm p-4 overflow-y-auto"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="settings-modal-title"
       >
-        {/* Top Gold Ribbon */}
-        <div className="h-1 gold-ribbon w-full" />
-        
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-stone-200/80 dark:border-slate-800 bg-stone-50/60 dark:bg-slate-900/40">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-amber-500/10 border border-amber-500/30 rounded-2xl text-amber-700 dark:text-amber-400 shadow-xs">
-              <Settings className="h-5 w-5" />
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95, y: 12 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.95, y: 12 }}
+          transition={springs.gentle}
+          className="royal-card bg-white dark:bg-[#0E1524] border border-stone-200 dark:border-slate-800 shadow-2xl rounded-3xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh] my-auto"
+        >
+          {/* Top Gold Ribbon */}
+          <div className="h-1 gold-ribbon w-full" />
+          
+          {/* Header */}
+          <div className="flex items-center justify-between px-6 py-4 border-b border-stone-200/80 dark:border-slate-800 bg-stone-50/60 dark:bg-slate-900/40">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-amber-500/10 border border-amber-500/30 rounded-2xl text-amber-700 dark:text-amber-400 shadow-xs">
+                <Settings className="h-5 w-5" />
+              </div>
+              <div>
+                <h2 id="settings-modal-title" className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-50 font-serif">
+                  Trustee Account & Security
+                </h2>
+                <p className="text-xs text-stone-600 dark:text-slate-400">
+                  Potter&apos;s House Christian Mission UK (SC054652)
+                </p>
+              </div>
             </div>
-            <div>
-              <h2 id="settings-modal-title" className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-50 font-serif">
-                Trustee Account & Security
-              </h2>
-              <p className="text-xs text-stone-600 dark:text-slate-400">
-                Potter&apos;s House Christian Mission UK (SC054652)
-              </p>
-            </div>
+            <button 
+              onClick={onClose} 
+              className="p-1.5 text-stone-400 hover:text-stone-700 dark:hover:text-slate-200 hover:bg-stone-200/60 dark:hover:bg-slate-800 rounded-xl transition-colors"
+              aria-label="Close Settings"
+            >
+              <X className="h-5 w-5" />
+            </button>
           </div>
-          <button 
-            onClick={onClose} 
-            className="p-1.5 text-stone-400 hover:text-stone-700 dark:hover:text-slate-200 hover:bg-stone-200/60 dark:hover:bg-slate-800 rounded-xl transition-colors"
-            aria-label="Close Settings"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
 
-        {/* Tab Switcher */}
-        <div className="flex border-b border-stone-200/80 dark:border-slate-800 px-6 bg-stone-50/30 dark:bg-slate-900/20">
-          <button 
-            onClick={() => { setActiveTab("profile"); setErrorMsg(null); setSuccessMsg(null); }}
-            className={`px-4 py-3 text-xs sm:text-sm font-bold border-b-2 transition-all font-serif ${
-              activeTab === "profile" 
-                ? "border-red-600 text-red-700 dark:text-amber-400" 
-                : "border-transparent text-stone-500 hover:text-stone-800 dark:hover:text-slate-300"
-            }`}
-          >
-            Trustee Profile
-          </button>
-          <button 
-            onClick={() => { setActiveTab("security"); setErrorMsg(null); setSuccessMsg(null); }}
-            className={`px-4 py-3 text-xs sm:text-sm font-bold border-b-2 transition-all font-serif flex items-center gap-1.5 ${
-              activeTab === "security" 
-                ? "border-red-600 text-red-700 dark:text-amber-400" 
-                : "border-transparent text-stone-500 hover:text-stone-800 dark:hover:text-slate-300"
-            }`}
-          >
-            <Shield className="h-3.5 w-3.5" />
-            <span>2-Step Verification & Password</span>
-          </button>
-        </div>
+          {/* Tab Switcher */}
+          <div className="flex border-b border-stone-200/80 dark:border-slate-800 px-6 bg-stone-50/30 dark:bg-slate-900/20">
+            <button 
+              onClick={() => { setActiveTab("profile"); setErrorMsg(null); setSuccessMsg(null); }}
+              className={`px-4 py-3 text-xs sm:text-sm font-bold border-b-2 transition-all font-serif ${
+                activeTab === "profile" 
+                  ? "border-red-600 text-red-700 dark:text-amber-400" 
+                  : "border-transparent text-stone-500 hover:text-stone-800 dark:hover:text-slate-300"
+              }`}
+            >
+              Trustee Profile
+            </button>
+            <button 
+              onClick={() => { setActiveTab("security"); setErrorMsg(null); setSuccessMsg(null); }}
+              className={`px-4 py-3 text-xs sm:text-sm font-bold border-b-2 transition-all font-serif flex items-center gap-1.5 ${
+                activeTab === "security" 
+                  ? "border-red-600 text-red-700 dark:text-amber-400" 
+                  : "border-transparent text-stone-500 hover:text-stone-800 dark:hover:text-slate-300"
+              }`}
+            >
+              <Shield className="h-3.5 w-3.5" />
+              <span>2-Step Verification & Password</span>
+            </button>
+          </div>
 
-        {/* Body Content */}
-        <div className="p-6 overflow-y-auto flex-1 space-y-5">
-          {errorMsg && (
-            <div className="p-3.5 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-500/30 text-red-700 dark:text-red-300 text-xs rounded-2xl flex items-start gap-2.5 shadow-xs">
-              <ShieldAlert className="h-4 w-4 shrink-0 mt-0.5 text-red-600 dark:text-red-400" />
-              <span className="font-medium">{errorMsg}</span>
-            </div>
-          )}
-
-          {successMsg && (
-            <div className="p-3.5 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-500/30 text-emerald-800 dark:text-emerald-300 text-xs rounded-2xl flex items-start gap-2.5 shadow-xs">
-              <ShieldCheck className="h-4 w-4 shrink-0 mt-0.5 text-emerald-600 dark:text-emerald-400" />
-              <span className="font-medium">{successMsg}</span>
-            </div>
-          )}
-
-          {activeTab === "profile" && (
-            <div className="space-y-5">
-              <div className="flex items-center gap-4 p-4 border border-stone-200 dark:border-slate-800 rounded-2xl bg-stone-50/60 dark:bg-slate-900/40">
-                <div className="h-14 w-14 bg-gradient-to-br from-red-600 to-amber-600 text-white rounded-2xl flex items-center justify-center text-xl font-bold font-serif shadow-xs">
-                  {user?.name?.charAt(0).toUpperCase() || "T"}
-                </div>
-                <div>
-                  <h3 className="font-bold text-slate-900 dark:text-slate-100 text-base font-serif">{user?.name || "Authorized Trustee"}</h3>
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className="bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-amber-300 border border-red-200 dark:border-red-500/30 text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider">
-                      {user?.role || "Trustee"}
-                    </span>
-                    <span className="text-xs text-stone-500 dark:text-slate-400 font-mono">SC054652</span>
-                  </div>
-                </div>
+          {/* Body Content */}
+          <div className="p-6 overflow-y-auto flex-1 space-y-5">
+            {errorMsg && (
+              <div className="p-3.5 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-500/30 text-red-700 dark:text-red-300 text-xs rounded-2xl flex items-start gap-2.5 shadow-xs">
+                <ShieldAlert className="h-4 w-4 shrink-0 mt-0.5 text-red-600 dark:text-red-400" />
+                <span className="font-medium">{errorMsg}</span>
               </div>
+            )}
 
-              <div className="space-y-3.5">
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-stone-600 dark:text-slate-400 flex items-center gap-1.5">
-                    <Mail className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
-                    <span>Registered Trustee Email</span>
-                  </label>
-                  <div className="px-3.5 py-2.5 bg-stone-100/80 dark:bg-slate-900 border border-stone-200 dark:border-slate-800 rounded-xl text-slate-800 dark:text-slate-200 text-xs font-mono">
-                    {user?.email}
-                  </div>
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-stone-600 dark:text-slate-400 flex items-center gap-1.5">
-                    <User className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
-                    <span>Trustee Full Name</span>
-                  </label>
-                  <div className="px-3.5 py-2.5 bg-stone-100/80 dark:bg-slate-900 border border-stone-200 dark:border-slate-800 rounded-xl text-slate-800 dark:text-slate-200 text-xs">
-                    {user?.name}
-                  </div>
-                </div>
+            {successMsg && (
+              <div className="p-3.5 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-500/30 text-emerald-800 dark:text-emerald-300 text-xs rounded-2xl flex items-start gap-2.5 shadow-xs">
+                <ShieldCheck className="h-4 w-4 shrink-0 mt-0.5 text-emerald-600 dark:text-emerald-400" />
+                <span className="font-medium">{successMsg}</span>
               </div>
-            </div>
-          )}
+            )}
+
+            {activeTab === "profile" && (
+              <form onSubmit={handleSaveProfile} className="space-y-5">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4 p-4 border border-stone-200 dark:border-slate-800 rounded-2xl bg-stone-50/60 dark:bg-slate-900/40">
+                  <div className="relative group self-start sm:self-auto">
+                    {profileAvatar ? (
+                      <img
+                        src={profileAvatar}
+                        alt="Profile Avatar"
+                        className="h-16 w-16 rounded-full object-cover border-2 border-amber-500/60 shadow-md ring-2 ring-amber-500/20"
+                      />
+                    ) : (
+                      <div className="h-16 w-16 bg-gradient-to-br from-red-700 via-red-600 to-amber-600 text-white rounded-full flex items-center justify-center text-xl font-bold font-serif shadow-md border-2 border-amber-500/40 ring-2 ring-amber-500/20">
+                        {getInitials(profileName || user?.name)}
+                      </div>
+                    )}
+                    <label className="absolute inset-0 bg-slate-950/60 rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer shadow-inner">
+                      <Camera className="h-5 w-5 text-amber-300" />
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleAvatarFileChange}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-bold text-slate-900 dark:text-slate-100 text-base font-serif">
+                      {profileName || user?.name || "Authorized Trustee"}
+                    </h3>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-amber-300 border border-red-200 dark:border-red-500/30 text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                        {user?.role || "Trustee"}
+                      </span>
+                      <span className="text-xs text-stone-500 dark:text-slate-400 font-mono">SC054652</span>
+                    </div>
+
+                    <div className="flex items-center gap-2 mt-3 flex-wrap">
+                      <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-semibold bg-stone-200/80 hover:bg-stone-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-stone-800 dark:text-slate-200 transition-colors shadow-xs">
+                        <Camera className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+                        <span>Upload Photo</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleAvatarFileChange}
+                          className="hidden"
+                        />
+                      </label>
+
+                      {profileAvatar && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => setCropImageSrc(profileAvatar)}
+                            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-semibold bg-amber-500/10 hover:bg-amber-500/20 text-amber-800 dark:text-amber-300 border border-amber-500/30 transition-colors"
+                          >
+                            <Crop className="h-3.5 w-3.5" />
+                            <span>Adjust Crop</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => setProfileAvatar("")}
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-semibold text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                            <span>Remove</span>
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-stone-700 dark:text-slate-300 flex items-center gap-1.5">
+                      <User className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+                      <span>Trustee Full Name</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={profileName}
+                      onChange={(e) => setProfileName(e.target.value)}
+                      className="w-full bg-white dark:bg-slate-900 border border-stone-300 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-amber-500 shadow-xs"
+                      placeholder="e.g. Pastor John Doe"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-stone-700 dark:text-slate-300 flex items-center gap-1.5">
+                      <Mail className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+                      <span>Registered Trustee Email</span>
+                    </label>
+                    <input
+                      type="email"
+                      required
+                      value={profileEmail}
+                      onChange={(e) => setProfileEmail(e.target.value)}
+                      className="w-full bg-white dark:bg-slate-900 border border-stone-300 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-xs font-mono text-slate-800 dark:text-slate-200 focus:outline-none focus:border-amber-500 shadow-xs"
+                      placeholder="trustee@pottershouse.org.uk"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-stone-700 dark:text-slate-300 flex items-center gap-1.5">
+                      <UploadCloud className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+                      <span>Profile Picture URL (or upload above)</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={profileAvatar}
+                      onChange={(e) => setProfileAvatar(e.target.value)}
+                      className="w-full bg-white dark:bg-slate-900 border border-stone-300 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-xs font-mono text-slate-800 dark:text-slate-200 focus:outline-none focus:border-amber-500 shadow-xs"
+                      placeholder="https://example.com/avatar.jpg or data:image/..."
+                    />
+                  </div>
+
+                  <div className="pt-2 flex justify-end">
+                    <button
+                      type="submit"
+                      disabled={savingProfile}
+                      className="royal-btn-gold font-bold px-5 py-2.5 rounded-xl text-xs transition-all shadow-xs disabled:opacity-50 flex items-center gap-2 active:scale-[0.98]"
+                    >
+                      <Save className="h-4 w-4" />
+                      <span>{savingProfile ? "Saving Profile..." : "Save Profile Changes"}</span>
+                    </button>
+                  </div>
+                </div>
+              </form>
+            )}
 
           {activeTab === "security" && (
             <div className="space-y-6">
@@ -529,5 +703,16 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ onCl
         </div>
       </motion.div>
     </div>
+
+    <AnimatePresence>
+      {cropImageSrc && (
+        <AvatarCropModal
+          imageSrc={cropImageSrc}
+          onCrop={handleCropComplete}
+          onClose={() => setCropImageSrc(null)}
+        />
+      )}
+    </AnimatePresence>
+    </ClientPortal>
   );
 };

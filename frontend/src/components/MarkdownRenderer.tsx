@@ -25,9 +25,9 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, cla
       elements.push(
         <ListTag
           key={key}
-          className={`my-2 pl-4 space-y-1 ${
+          className={`my-2 pl-4 space-y-1.5 ${
             isOrderedList ? "list-decimal" : "list-disc"
-          } text-slate-200`}
+          } text-slate-800 dark:text-slate-200`}
         >
           {listItems.map((item, i) => (
             <li key={i} className="text-xs leading-relaxed">
@@ -45,9 +45,9 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, cla
       if (line.startsWith("```")) {
         if (inCodeBlock) {
           elements.push(
-            <div key={lineKey} className="my-2 rounded-lg bg-slate-950 p-3 border border-slate-800 font-mono text-[11px] overflow-x-auto text-amber-300">
+            <div key={lineKey} className="my-2 rounded-xl bg-slate-900 dark:bg-slate-950 p-3 border border-slate-700 dark:border-slate-800 font-mono text-[11px] overflow-x-auto text-amber-300 shadow-xs">
               {codeLanguage && (
-                <div className="text-[9px] uppercase tracking-wider text-slate-500 font-bold mb-1 border-b border-slate-900 pb-1">
+                <div className="text-[9px] uppercase tracking-wider text-slate-400 font-bold mb-1 border-b border-slate-800 pb-1">
                   {codeLanguage}
                 </div>
               )}
@@ -73,7 +73,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, cla
       if (line.startsWith("# ")) {
         flushList(`list-${lineKey}`);
         elements.push(
-          <h1 key={lineKey} className="text-base font-bold text-amber-400 mt-3 mb-1">
+          <h1 key={lineKey} className="text-base font-bold text-amber-800 dark:text-amber-400 mt-3 mb-1 font-serif">
             {renderFormattedInlineText(line.substring(2))}
           </h1>
         );
@@ -83,7 +83,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, cla
       if (line.startsWith("## ")) {
         flushList(`list-${lineKey}`);
         elements.push(
-          <h2 key={lineKey} className="text-sm font-bold text-slate-100 mt-2.5 mb-1 border-b border-slate-800 pb-0.5">
+          <h2 key={lineKey} className="text-sm font-bold text-slate-900 dark:text-slate-100 mt-2.5 mb-1 border-b border-stone-200 dark:border-slate-800 pb-1 font-serif">
             {renderFormattedInlineText(line.substring(3))}
           </h2>
         );
@@ -93,7 +93,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, cla
       if (line.startsWith("### ")) {
         flushList(`list-${lineKey}`);
         elements.push(
-          <h3 key={lineKey} className="text-xs font-bold text-amber-300 mt-2 mb-1">
+          <h3 key={lineKey} className="text-xs font-bold text-amber-800 dark:text-amber-300 mt-2 mb-1 font-serif">
             {renderFormattedInlineText(line.substring(4))}
           </h3>
         );
@@ -123,7 +123,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, cla
       if (line.startsWith("> ")) {
         flushList(`list-${lineKey}`);
         elements.push(
-          <blockquote key={lineKey} className="my-2 border-l-2 border-amber-500/80 bg-slate-900/60 pl-3 py-1 italic text-slate-300 text-xs rounded-r">
+          <blockquote key={lineKey} className="my-2 border-l-2 border-amber-500 bg-amber-50/70 dark:bg-slate-900/60 pl-3 py-1.5 italic text-slate-800 dark:text-slate-300 text-xs rounded-r">
             {renderFormattedInlineText(line.substring(2))}
           </blockquote>
         );
@@ -138,7 +138,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, cla
 
       flushList(`list-${lineKey}`);
       elements.push(
-        <p key={lineKey} className="text-xs leading-relaxed my-1">
+        <p key={lineKey} className="text-xs leading-relaxed my-1 text-slate-800 dark:text-slate-200">
           {renderFormattedInlineText(line)}
         </p>
       );
@@ -178,19 +178,19 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, cla
 
       if (firstMatch.type === "bold") {
         tokens.push(
-          <strong key={`b-${keyIdx++}`} className="font-semibold text-slate-50">
+          <strong key={`b-${keyIdx++}`} className="font-bold text-slate-950 dark:text-white">
             {firstMatch.match[1]}
           </strong>
         );
       } else if (firstMatch.type === "code") {
         tokens.push(
-          <code key={`c-${keyIdx++}`} className="bg-slate-950 text-amber-300 px-1 py-0.5 rounded text-[11px] font-mono border border-slate-800">
+          <code key={`c-${keyIdx++}`} className="bg-stone-100 dark:bg-slate-950 text-amber-900 dark:text-amber-300 px-1.5 py-0.5 rounded text-[11px] font-mono border border-stone-200 dark:border-slate-800 font-semibold">
             {firstMatch.match[1]}
           </code>
         );
       } else if (firstMatch.type === "italic") {
         tokens.push(
-          <em key={`i-${keyIdx++}`} className="italic text-slate-300">
+          <em key={`i-${keyIdx++}`} className="italic text-slate-700 dark:text-slate-300">
             {firstMatch.match[1]}
           </em>
         );

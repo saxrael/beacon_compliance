@@ -8,6 +8,7 @@ behind clean domain methods.
 import hashlib
 import hmac
 import json
+from datetime import UTC
 from typing import Any
 
 from backend.src.db.d1_client import D1DatabaseClient
@@ -179,3 +180,234 @@ class ComplianceRepository:
             (run_id,),
         )
         return [dict(r) for r in rows]
+
+    def get_chair_user(self) -> dict[str, Any] | None:
+        """Fetch designated Chair user profile from D1 users table."""
+        row = self.db.fetchone(
+            "SELECT user_id, name, email, role FROM users WHERE role = 'Chair' LIMIT 1"
+        )
+        return dict(row) if row else None
+
+    def get_signing_chair_name(self, run_id: str | None = None) -> str:
+        """Resolve real name of the Chair with guaranteed safe institutional fallback.
+
+        Resolution order:
+        1. Approved Chair from approvals JOIN users for run_id (if signed)
+        2. Designated Chair from users table (role = 'Chair')
+        3. Fallback safely to 'Chair of the Board of Trustees'
+        """
+        if run_id:
+            row = self.db.fetchone(
+                "SELECT u.name FROM approvals a "
+                "JOIN users u ON a.trustee_id = u.user_id "
+                "WHERE a.run_id = ? AND a.role = 'Chair' "
+                "ORDER BY a.approved_at DESC LIMIT 1",
+                (run_id,),
+            )
+            if row and row.get("name"):
+                sanitized = _sanitize_chair_name(row["name"])
+                if sanitized != "Chair of the Board of Trustees":
+                    return sanitized
+
+        chair = self.get_chair_user()
+        if chair and chair.get("name"):
+            sanitized = _sanitize_chair_name(chair["name"])
+            if sanitized != "Chair of the Board of Trustees":
+                return sanitized
+
+        return "Chair of the Board of Trustees"
+
+    def save_chat_message(
+        self,
+        message_id: str,
+        *,
+        user_id: str,
+        run_id: str | None = None,
+        role: str,
+        content: str,
+        thinking: str | None = None,
+        tool_calls: list[dict[str, Any]] | None = None,
+        sources: list[str] | None = None,
+        created_at: str | None = None,
+    ) -> dict[str, Any]:
+        """Persist a conversation turn to D1 chat_messages table."""
+        from datetime import datetime
+
+        ts = created_at or datetime.now(UTC).isoformat()
+        tool_calls_json = json.dumps(tool_calls) if tool_calls else None
+        sources_json = json.dumps(sources) if sources else None
+
+        self.db.execute(
+            "INSERT INTO chat_messages (message_id, user_id, run_id, role, content, thinking, tool_calls_json, sources_json, created_at) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (
+                message_id,
+                user_id,
+                run_id,
+                role,
+                content,
+                thinking,
+                tool_calls_json,
+                sources_json,
+                ts,
+            ),
+        )
+        return {
+            "message_id": message_id,
+            "user_id": user_id,
+            "run_id": run_id,
+            "role": role,
+            "content": content,
+            "thinking": thinking,
+            "tool_calls": tool_calls or [],
+            "sources": sources or [],
+            "created_at": ts,
+        }
+
+    def get_chat_history(
+        self,
+        *,
+        user_id: str | None = None,
+        run_id: str | None = None,
+        limit: int = 50,
+        before_timestamp: str | None = None,
+        offset: int = 0,
+    ) -> dict[str, Any]:
+        """Fetch chat history with 50-turn pagination and scroll-up older history support."""
+        conditions = []
+        params: list[Any] = []
+
+        if user_id:
+            conditions.append("user_id = ?")
+            params.append(user_id)
+        if run_id:
+            conditions.append("run_id = ?")
+            params.append(run_id)
+        if before_timestamp:
+            conditions.append("created_at < ?")
+            params.append(before_timestamp)
+
+        where_clause = f"WHERE {' AND '.join(conditions)}" if conditions else ""
+
+        count_row = self.db.fetchone(
+            f"SELECT COUNT(*) as total FROM chat_messages {where_clause}", tuple(params)
+        )
+        total_count = count_row["total"] if count_row else 0
+
+        query = f"SELECT message_id, user_id, run_id, role, content, thinking, tool_calls_json, sources_json, created_at FROM chat_messages {where_clause} ORDER BY created_at DESC LIMIT ? OFFSET ?"
+        query_params = [*params, limit, offset]
+
+        rows = self.db.fetchall(query, tuple(query_params))
+
+        messages = []
+        for r in rows:
+            messages.append(
+                {
+                    "message_id": r["message_id"],
+                    "user_id": r["user_id"],
+                    "run_id": r["run_id"],
+                    "role": r["role"],
+                    "content": r["content"],
+                    "thinking": r.get("thinking"),
+                    "tool_calls": json.loads(r["tool_calls_json"])
+                    if r.get("tool_calls_json")
+                    else [],
+                    "sources": json.loads(r["sources_json"]) if r.get("sources_json") else [],
+                    "created_at": r["created_at"],
+                }
+            )
+
+        messages.reverse()
+        has_more = (offset + len(rows)) < total_count
+
+        return {
+            "messages": messages,
+            "total_count": total_count,
+            "has_more": has_more,
+            "next_cursor": messages[0]["created_at"] if messages and has_more else None,
+        }
+
+    def save_memory_summary(
+        self, user_id: str, run_id: str, summary_text: str, updated_at: str
+    ) -> None:
+        """Persist Tier 2 cognitive rolling summary to D1."""
+        self.db.execute(
+            "INSERT OR REPLACE INTO memory_summaries (user_id, run_id, summary_text, updated_at) "
+            "VALUES (?, ?, ?, ?)",
+            (user_id, run_id, summary_text, updated_at),
+        )
+
+    def get_memory_summary(self, user_id: str, run_id: str) -> str | None:
+        """Fetch Tier 2 cognitive rolling summary from D1."""
+        row = self.db.fetchone(
+            "SELECT summary_text FROM memory_summaries WHERE user_id = ? AND run_id = ?",
+            (user_id, run_id),
+        )
+        return row["summary_text"] if row else None
+
+    def save_memory_fact(
+        self, fact_id: str, user_id: str, fact_text: str, source_type: str, created_at: str
+    ) -> None:
+        """Persist Tier 3 semantic fact to D1."""
+        self.db.execute(
+            "INSERT OR REPLACE INTO memory_facts (fact_id, user_id, fact_text, source_type, created_at) "
+            "VALUES (?, ?, ?, ?, ?)",
+            (fact_id, user_id, fact_text, source_type, created_at),
+        )
+
+    def get_memory_facts(self, user_id: str) -> list[dict[str, Any]]:
+        """Fetch Tier 3 semantic facts for a user from D1."""
+        rows = self.db.fetchall(
+            "SELECT fact_id, user_id, fact_text, source_type, created_at FROM memory_facts WHERE user_id = ?",
+            (user_id,),
+        )
+        return [dict(r) for r in rows]
+
+    def update_user_profile(
+        self,
+        user_id: str,
+        *,
+        name: str | None = None,
+        email: str | None = None,
+        avatar: str | None = None,
+    ) -> dict[str, Any]:
+        """Update trustee profile fields in D1."""
+        updates = []
+        params = []
+        if name is not None:
+            updates.append("name = ?")
+            params.append(name.strip())
+        if email is not None:
+            updates.append("email = ?")
+            params.append(email.strip())
+        if avatar is not None:
+            updates.append("avatar = ?")
+            params.append(avatar.strip())
+
+        if updates:
+            params.append(user_id)
+            self.db.execute(
+                f"UPDATE users SET {', '.join(updates)} WHERE user_id = ?", tuple(params)
+            )
+
+        user = self.db.fetchone(
+            "SELECT user_id, email, name, role, avatar FROM users WHERE user_id = ?", (user_id,)
+        )
+        return dict(user) if user else {}
+
+    def get_user_profile(self, user_id: str) -> dict[str, Any] | None:
+        """Fetch trustee user profile from D1."""
+        row = self.db.fetchone(
+            "SELECT user_id, email, name, role, avatar FROM users WHERE user_id = ?", (user_id,)
+        )
+        return dict(row) if row else None
+
+
+def _sanitize_chair_name(name_candidate: Any) -> str:
+    """Safely sanitize a Chair name candidate, preventing None, null, undefined, or empty strings."""
+    if name_candidate is None:
+        return "Chair of the Board of Trustees"
+    candidate_str = str(name_candidate).strip()
+    if not candidate_str or candidate_str.lower() in ("none", "null", "undefined"):
+        return "Chair of the Board of Trustees"
+    return candidate_str

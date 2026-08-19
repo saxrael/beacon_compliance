@@ -12,9 +12,11 @@ from pydantic import BaseModel
 
 try:
     from presidio_analyzer import AnalyzerEngine
+    from presidio_analyzer.nlp_engine import NlpEngineProvider
     from presidio_anonymizer import AnonymizerEngine
 except Exception:
     AnalyzerEngine = None
+    NlpEngineProvider = None
     AnonymizerEngine = None
 
 
@@ -46,11 +48,25 @@ def _get_presidio_engines():
         _PRESIDIO_INITIALIZED = True
         try:
             if AnalyzerEngine is not None and AnonymizerEngine is not None:
-                _GLOBAL_ANALYZER = AnalyzerEngine()
+                if NlpEngineProvider is not None:
+                    nlp_configuration = {
+                        "nlp_engine_name": "spacy",
+                        "models": [{"lang_code": "en", "model_name": "en_core_web_sm"}],
+                    }
+                    provider = NlpEngineProvider(nlp_configuration=nlp_configuration)
+                    nlp_engine = provider.create_engine()
+                    _GLOBAL_ANALYZER = AnalyzerEngine(nlp_engine=nlp_engine)
+                else:
+                    _GLOBAL_ANALYZER = AnalyzerEngine()
                 _GLOBAL_ANONYMIZER = AnonymizerEngine()
         except Exception:
-            _GLOBAL_ANALYZER = None
-            _GLOBAL_ANONYMIZER = None
+            try:
+                if AnalyzerEngine is not None and AnonymizerEngine is not None:
+                    _GLOBAL_ANALYZER = AnalyzerEngine()
+                    _GLOBAL_ANONYMIZER = AnonymizerEngine()
+            except Exception:
+                _GLOBAL_ANALYZER = None
+                _GLOBAL_ANONYMIZER = None
     return _GLOBAL_ANALYZER, _GLOBAL_ANONYMIZER
 
 
@@ -87,7 +103,21 @@ class PIIRedactor:
         analyzer, anonymizer = _get_presidio_engines()
         if analyzer and anonymizer:
             try:
-                analyzer_results = analyzer.analyze(text=redacted, language="en")
+                analyzer_results = analyzer.analyze(
+                    text=redacted,
+                    language="en",
+                    entities=[
+                        "PERSON",
+                        "EMAIL_ADDRESS",
+                        "PHONE_NUMBER",
+                        "US_SSN",
+                        "UK_NHS",
+                        "IP_ADDRESS",
+                        "IBAN_CODE",
+                        "CREDIT_CARD",
+                        "CRYPTO",
+                    ],
+                )
                 if analyzer_results:
                     for res in analyzer_results:
                         if res.entity_type not in entities_found:

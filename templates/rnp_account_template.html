@@ -213,17 +213,6 @@
             font-variant-numeric: tabular-nums;
         }
 
-        .code-hash {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 11px;
-            background: #F1F5F9;
-            color: var(--color-slate-dark);
-            padding: 3px 8px;
-            border-radius: 3px;
-            border: 1px solid #CBD5E1;
-            word-break: break-all;
-        }
-
         .footer {
             margin-top: 40px;
             padding-top: 16px;
@@ -361,9 +350,26 @@
                 </tbody>
             </table>
 
+            <!-- Section 4: Statement of Balances Trustee Approval -->
+            <div class="section-header">
+                <h2 class="section-title">4. Statement of Balances Trustee Approval</h2>
+                <div class="section-line"></div>
+            </div>
+            <div style="margin-top: 14px; background: #FFFFFF; border: 1.5px solid var(--color-border); border-left: 5px solid var(--color-gold); border-radius: 6px; padding: 20px; page-break-inside: avoid;">
+                <p style="margin-bottom:14px; font-size:13px; color: var(--color-slate-dark); font-weight: 500;">
+                    We confirm that the Receipts and Payments Accounts and Statement of Balances set out on pages 1 to 3 have been approved by the Trustees of Potter's House Christian Mission UK (SCIO SC054652) and are signed on their behalf by:
+                </p>
+                <table class="financial-table" style="margin-top: 8px;">
+                    <tr><th style="width: 32%; text-align: left;">Signing Trustee Name</th><td style="text-align: left;"><strong>{{ signing_trustee_name }}</strong></td></tr>
+                    <tr><th style="width: 32%; text-align: left;">Designated Office / Role</th><td style="text-align: left;">{{ signing_trustee_role }}</td></tr>
+                    <tr><th style="width: 32%; text-align: left;">Date of Approval</th><td style="text-align: left;">{{ approval_date }}</td></tr>
+                    <tr><th style="width: 32%; text-align: left;">Document Reference</th><td style="text-align: left;"><strong>Doc Ref: {{ doc_ref }}</strong></td></tr>
+                </table>
+            </div>
+
             <div class="footer">
-                <div>Beacon Compliance OS — Statutory Accounts (Deliverable 3)</div>
-                <div>Document Content Hash: <span class="code-hash">{{ content_hash }}</span></div>
+                <div>Potter's House Christian Mission UK (SCIO SC054652)</div>
+                <div>Receipts & Payments Accounts • Year Ended 31 Dec {{ financial_year }}</div>
             </div>
         </div>
     </div>

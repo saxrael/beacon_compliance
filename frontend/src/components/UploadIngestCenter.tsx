@@ -93,7 +93,7 @@ export const UploadIngestCenter: React.FC<UploadIngestProps> = ({ onIngestSucces
   };
 
   return (
-    <div className="royal-card rounded-3xl p-6 sm:p-7 border border-stone-200 dark:border-slate-800 space-y-6">
+    <div className="tour-upload-center royal-card rounded-3xl p-6 sm:p-7 border border-stone-200 dark:border-slate-800 space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-stone-200/80 dark:border-slate-800/80 pb-4">
         <div>
           <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100 font-serif flex items-center gap-2.5">

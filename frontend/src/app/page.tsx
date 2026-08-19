@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { AuthProvider, useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/context/AuthContext";
 import { LoginForm } from "@/components/LoginForm";
 import { FirstLoginResetModal } from "@/components/FirstLoginResetModal";
 import { Header } from "@/components/Header";
@@ -31,8 +31,8 @@ function DashboardContent() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-[#FBF9F5] dark:bg-[#0B0F19] flex items-center justify-center text-amber-800 dark:text-amber-400 font-mono text-sm">
-        <div className="flex items-center gap-3 p-6 rounded-3xl bg-white dark:bg-[#111827] border border-stone-200 dark:border-slate-800 shadow-xl">
+      <div className="min-h-screen bg-[#FBF9F5] dark:bg-[#070A11] flex items-center justify-center text-amber-800 dark:text-amber-400 font-mono text-sm">
+        <div className="flex items-center gap-3 p-6 rounded-3xl bg-white dark:bg-[#0E1524] border border-stone-200 dark:border-slate-800 shadow-xl">
           <div className="h-5 w-5 rounded-full border-2 border-amber-600 border-t-transparent animate-spin" />
           <span className="font-serif">Verifying trustee access...</span>
         </div>
@@ -50,7 +50,7 @@ function DashboardContent() {
   const trusteeRole = user.role ? (user.role.charAt(0).toUpperCase() + user.role.slice(1).toLowerCase()) : "Trustee";
 
   return (
-    <div className="min-h-screen bg-[#FBF9F5] dark:bg-[#0B0F19] text-slate-900 dark:text-slate-100 flex flex-col transition-colors duration-300">
+    <div className="min-h-screen bg-[#FBF9F5] dark:bg-[#070A11] text-slate-900 dark:text-slate-100 flex flex-col transition-colors duration-300">
       <Header onOpenAdminModal={() => setAdminModalOpen(true)} />
 
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8">
@@ -63,7 +63,7 @@ function DashboardContent() {
           {/* 1. Executive Filing Hero Banner */}
           <motion.div 
             variants={itemFadeUpVariants}
-            className="tour-dashboard-actions flex flex-col md:flex-row md:items-center justify-between gap-5 bg-white dark:bg-[#111827] p-6 sm:p-7 rounded-3xl border border-stone-200/90 dark:border-slate-800 shadow-xs royal-card"
+            className="tour-pipeline-runner flex flex-col md:flex-row md:items-center justify-between gap-5 bg-white dark:bg-[#0E1524] p-6 sm:p-7 rounded-3xl border border-stone-200/90 dark:border-slate-800/80 shadow-xs royal-card"
           >
             <div className="space-y-1.5">
               <div className="flex items-center gap-2.5 flex-wrap">
@@ -119,10 +119,10 @@ function DashboardContent() {
               </div>
             ) : (
               <FinancialSummaryCards
-                grossReceipts={rnp.gross_receipts_decimal || "15000.00"}
-                grossPayments={rnp.gross_payments_decimal || "9500.00"}
-                netMovement={rnp.net_movement_decimal || "5500.00"}
-                reconciled={balances.reconciled ?? true}
+                grossReceipts={rnp.gross_receipts_decimal || "0.00"}
+                grossPayments={rnp.gross_payments_decimal || "0.00"}
+                netMovement={rnp.net_movement_decimal || "0.00"}
+                reconciled={balances.reconciled ?? Boolean(pipelineResult)}
                 thresholdBreached={pipelineResult?.income_threshold_breach ?? false}
               />
             )}
@@ -131,40 +131,7 @@ function DashboardContent() {
           {/* 4. Statutory Deliverables & Trustee Sign-off Center */}
           <motion.div variants={itemFadeUpVariants}>
             <DeliverableDownloadGrid
-              deliverables={
-                deliverables.length > 0
-                  ? deliverables
-                  : [
-                      {
-                        deliverable_id: "d1",
-                        type: "OAR",
-                        charity_number: "SC054652",
-                        status: "ready_for_review",
-                        content_hash: "a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f90",
-                      },
-                      {
-                        deliverable_id: "d2",
-                        type: "TAR",
-                        charity_number: "SC054652",
-                        status: "ready_for_review",
-                        content_hash: "b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f90a1",
-                      },
-                      {
-                        deliverable_id: "d3",
-                        type: "RP",
-                        charity_number: "SC054652",
-                        status: "ready_for_review",
-                        content_hash: "c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2",
-                      },
-                      {
-                        deliverable_id: "d4",
-                        type: "IE",
-                        charity_number: "SC054652",
-                        status: "ready_for_review",
-                        content_hash: "d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3",
-                      },
-                    ]
-              }
+              deliverables={deliverables}
               onOpenSignoff={(hash) => setActiveSignoffHash(hash)}
               signatures={signatures}
             />
@@ -195,17 +162,20 @@ function DashboardContent() {
         <ComplianceChatDrawer />
       </main>
 
-      <footer className="border-t border-stone-200/80 dark:border-slate-800/80 bg-white/80 dark:bg-[#0B0F19]/80 py-6 text-center text-xs font-medium text-stone-600 dark:text-slate-400 transition-colors duration-300">
-        Potter&apos;s House Christian Mission UK (SCIO, SC054652) • 5B Beachmont Court, Dunbar, Scotland, EH42 1YF
+      <footer className="border-t border-stone-200/80 dark:border-slate-800/80 bg-white/80 dark:bg-[#070A11]/90 py-6 text-center text-xs font-medium text-stone-600 dark:text-slate-400 transition-colors duration-300">
+        <div className="max-w-7xl mx-auto px-4 space-y-1">
+          <p className="font-semibold text-slate-800 dark:text-slate-200">
+            © 2026 Potter&apos;s House Christian Mission UK. Registered Scottish Charity (SCIO, SC054652).
+          </p>
+          <p className="text-[11px] text-stone-500 dark:text-slate-500">
+            Principal Office: 5B Beachmont Court, Dunbar, Scotland, EH42 1YF • Regulated by the Office of the Scottish Charity Regulator (OSCR)
+          </p>
+        </div>
       </footer>
     </div>
   );
 }
 
 export default function Home() {
-  return (
-    <AuthProvider>
-      <DashboardContent />
-    </AuthProvider>
-  );
+  return <DashboardContent />;
 }

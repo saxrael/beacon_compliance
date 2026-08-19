@@ -180,17 +180,6 @@
             display: inline-block;
         }
 
-        .code-hash {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 11px;
-            background: #F1F5F9;
-            color: var(--color-slate-dark);
-            padding: 3px 8px;
-            border-radius: 3px;
-            border: 1px solid #CBD5E1;
-            word-break: break-all;
-        }
-
         .footer {
             margin-top: 40px;
             padding-top: 16px;
@@ -258,17 +247,20 @@
 
             <!-- Section 3 -->
             <div class="section-header">
-                <h2 class="section-title">3. Content Verification & Sign-Off Status</h2>
+                <h2 class="section-title">3. Trustee Certification & Statutory Document Reference</h2>
                 <div class="section-line"></div>
             </div>
             <table class="data-table">
-                <tr><th>Document Content Hash (SHA-256)</th><td><span class="code-hash">{{ content_hash }}</span></td></tr>
+                <tr><th>Document Reference</th><td><strong>Doc Ref: {{ doc_ref }}</strong></td></tr>
+                <tr><th>Signing Trustee Name</th><td><strong>{{ signing_trustee_name }}</strong></td></tr>
+                <tr><th>Designated Office / Role</th><td>{{ signing_trustee_role }}</td></tr>
+                <tr><th>Date of Approval</th><td>{{ approval_date }}</td></tr>
                 <tr><th>Trustee Sign-off Status</th><td><span class="status-pill">{{ signoff_status }}</span></td></tr>
             </table>
 
             <div class="footer">
-                <div>Beacon Compliance OS — Pre-Population Sheet (Deliverable 1)</div>
-                <div>SC054652 — Dunbar, Scotland</div>
+                <div>Potter's House Christian Mission UK (SCIO SC054652)</div>
+                <div>Scottish Charity Regulator (OSCR) Statutory Return Data Sheet</div>
             </div>
         </div>
     </div>

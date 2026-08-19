@@ -1,75 +1,322 @@
-"use client";
+'use client';
 
-import React, { useState } from "react";
-import { Send, X, Sparkles, Scale, BookOpen, ShieldCheck, Landmark } from "lucide-react";
-import { MarkdownRenderer } from "./MarkdownRenderer";
-import { API_BASE_URL } from "@/config";
-import { useAuth } from "@/context/AuthContext";
-import { motion, AnimatePresence } from "framer-motion";
-import { springs } from "@/lib/motion-tokens";
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import {
+  Send,
+  X,
+  Sparkles,
+  ShieldCheck,
+  ChevronDown,
+  ChevronUp,
+  RotateCcw,
+  Bot,
+  Activity,
+  Lightbulb,
+} from 'lucide-react';
+import { MarkdownRenderer } from './MarkdownRenderer';
+import { API_BASE_URL } from '@/config';
+import { useAuth } from '@/context/AuthContext';
+import { motion, AnimatePresence } from 'framer-motion';
+import { springs } from '@/lib/motion-tokens';
+import { ClientPortal } from './ClientPortal';
+
+interface ChatTurn {
+  message_id?: string;
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+  thinking?: string | null;
+  tool_calls?: any[];
+  sources?: string[];
+  created_at?: string;
+  actions?: string[];
+}
+
+const DEFAULT_WELCOME_MESSAGE: ChatTurn = {
+  role: 'assistant',
+  content:
+    "Welcome to the **Beacon Compliance Advisor** for Potter's House Christian Mission UK (SC054652).\n\nI am here to assist charity trustees with:\n- **Scottish Charity Regulator (OSCR) Statutory Reporting** & filing timelines\n- **Receipts & Payments Accounts** classification\n- **Trustees' Annual Report (TAR)** narrative guidance\n- **Independent Examination (IE)** governance obligations\n\nHow may I support your statutory duties today?",
+  created_at: new Date().toISOString(),
+};
 
 export const ComplianceChatDrawer: React.FC = () => {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
-  const [input, setInput] = useState("");
-  const [messages, setMessages] = useState<Array<{ role: string; content: string }>>([
-    {
-      role: "assistant",
-      content:
-        "Welcome to the **Beacon Compliance Advisor** for Potter's House Christian Mission UK (SC054652).\n\nI am here to assist the charity trustees with:\n- **Scottish Charity Regulator (OSCR) Statutory Reporting** & filing timelines\n- **Receipts & Payments Accounts** classification\n- **Trustees' Annual Report (TAR)** narrative guidance\n- **Independent Examination (IE)** governance obligations\n\nHow may I support your statutory duties today?",
-    },
-  ]);
+  const [input, setInput] = useState('');
+  const [messages, setMessages] = useState<ChatTurn[]>([]);
   const [loading, setLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [currentThinking, setCurrentThinking] = useState<string>('');
+  const [currentActions, setCurrentActions] = useState<string[]>([]);
+  const [showThinking, setShowThinking] = useState<Record<number, boolean>>({});
+
+  const chatContainerRef = useRef<HTMLDivElement>(null);
+  const isAutoScrollEnabled = useRef<boolean>(true);
+
+  const fetchChatHistory = useCallback(
+    async (beforeTimestamp?: string, offset: number = 0) => {
+      try {
+        const activeToken =
+          token ||
+          (typeof window !== 'undefined'
+            ? localStorage.getItem('beacon_auth_token')
+            : null);
+        const headers: Record<string, string> = {};
+        if (activeToken) {
+          headers['Authorization'] = `Bearer ${activeToken}`;
+        }
+
+        const queryParams = new URLSearchParams({
+          limit: '50',
+          offset: String(offset),
+        });
+        if (beforeTimestamp) {
+          queryParams.append('before_timestamp', beforeTimestamp);
+        }
+
+        const res = await fetch(
+          `${API_BASE_URL}/api/chat/history?${queryParams.toString()}`,
+          {
+            headers,
+          }
+        );
+
+        if (res.ok) {
+          const data = await res.json();
+          const fetched: ChatTurn[] = data.messages || [];
+          setHasMore(data.has_more || false);
+
+          if (offset === 0) {
+            if (fetched.length > 0) {
+              setMessages(fetched);
+            } else {
+              setMessages([DEFAULT_WELCOME_MESSAGE]);
+            }
+          } else {
+            setMessages((prev) => [...fetched, ...prev]);
+          }
+        } else if (offset === 0) {
+          setMessages([DEFAULT_WELCOME_MESSAGE]);
+        }
+      } catch (err) {
+        console.error('Failed to load chat history:', err);
+        if (offset === 0) {
+          setMessages([DEFAULT_WELCOME_MESSAGE]);
+        }
+      }
+    },
+    [token]
+  );
+
+  useEffect(() => {
+    if (isOpen && messages.length === 0) {
+      fetchChatHistory();
+    }
+  }, [isOpen, fetchChatHistory, messages.length]);
+
+  const scrollToBottom = () => {
+    if (chatContainerRef.current && isAutoScrollEnabled.current) {
+      chatContainerRef.current.scrollTop =
+        chatContainerRef.current.scrollHeight;
+    }
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, currentThinking, currentActions]);
+
+  const handleScroll = () => {
+    if (!chatContainerRef.current) return;
+    const { scrollTop, scrollHeight, clientHeight } =
+      chatContainerRef.current;
+
+    isAutoScrollEnabled.current = scrollHeight - scrollTop - clientHeight < 50;
+
+    if (scrollTop === 0 && hasMore && !loadingMore && messages.length > 0) {
+      setLoadingMore(true);
+      const oldestTs = messages[0]?.created_at;
+      const prevHeight = scrollHeight;
+
+      fetchChatHistory(oldestTs, messages.length).finally(() => {
+        setLoadingMore(false);
+        setTimeout(() => {
+          if (chatContainerRef.current) {
+            chatContainerRef.current.scrollTop =
+              chatContainerRef.current.scrollHeight - prevHeight;
+          }
+        }, 50);
+      });
+    }
+  };
 
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || loading) return;
 
     const userText = input.trim();
-    setInput("");
-    setMessages((prev) => [...prev, { role: "user", content: userText }]);
+    setInput('');
+    const userTurn: ChatTurn = {
+      role: 'user',
+      content: userText,
+      created_at: new Date().toISOString(),
+    };
+    setMessages((prev) => [...prev, userTurn]);
     setLoading(true);
+    setCurrentThinking('');
+    setCurrentActions([]);
+    isAutoScrollEnabled.current = true;
 
     try {
-      const activeToken = token || (typeof window !== "undefined" ? localStorage.getItem("beacon_auth_token") : null);
-      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      const activeToken =
+        token ||
+        (typeof window !== 'undefined'
+          ? localStorage.getItem('beacon_auth_token')
+          : null);
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
       if (activeToken) {
-        headers["Authorization"] = `Bearer ${activeToken}`;
+        headers['Authorization'] = `Bearer ${activeToken}`;
       }
 
-      const res = await fetch(`${API_BASE_URL}/api/chat/message`, {
-        method: "POST",
+      const res = await fetch(`${API_BASE_URL}/api/chat/stream`, {
+        method: 'POST',
         headers,
-        body: JSON.stringify({ message: userText, run_id: "run_001" }),
+        body: JSON.stringify({ message: userText, run_id: 'run_001' }),
       });
 
-      if (res.ok) {
-        const data = await res.json();
-        setMessages((prev) => [...prev, { role: "assistant", content: data.message }]);
-      } else {
-        setMessages((prev) => [
-          ...prev,
-          { role: "assistant", content: "Apologies, unable to process compliance query at this time. Please try again shortly." },
-        ]);
+      if (!res.ok || !res.body) {
+        throw new Error('Failed to start streaming from chat endpoint.');
       }
-    } catch {
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder('utf-8');
+      let buffer = '';
+      let streamThinking = '';
+      let streamActions: string[] = [];
+      let streamContent = '';
+
+      const partialIndex = messages.length + 1;
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const events = buffer.split('\n\n');
+        buffer = events.pop() || '';
+
+        for (const evt of events) {
+          if (!evt.trim()) continue;
+          const lines = evt.split('\n');
+          let eventType = '';
+          let dataStr = '';
+
+          for (const line of lines) {
+            if (line.startsWith('event: ')) {
+              eventType = line.replace('event: ', '').trim();
+            } else if (line.startsWith('data: ')) {
+              dataStr = line.replace('data: ', '').trim();
+            }
+          }
+
+          if (dataStr) {
+            try {
+              const parsed = JSON.parse(dataStr);
+              if (eventType === 'thought') {
+                streamThinking += parsed.chunk || '';
+                setCurrentThinking(streamThinking);
+              } else if (eventType === 'action') {
+                streamActions = [...streamActions, parsed.detail || ''];
+                setCurrentActions(streamActions);
+              } else if (eventType === 'token') {
+                streamContent += parsed.chunk || '';
+                setMessages((prev) => {
+                  const updated = [...prev];
+                  const lastIdx = updated.length - 1;
+                  if (
+                    lastIdx >= 0 &&
+                    updated[lastIdx]?.role === 'assistant' &&
+                    lastIdx === partialIndex
+                  ) {
+                    updated[lastIdx] = {
+                      ...updated[lastIdx],
+                      content: streamContent,
+                      thinking: streamThinking,
+                      actions: streamActions,
+                    };
+                    return updated;
+                  } else {
+                    return [
+                      ...prev,
+                      {
+                        role: 'assistant',
+                        content: streamContent,
+                        thinking: streamThinking,
+                        actions: streamActions,
+                        created_at: new Date().toISOString(),
+                      },
+                    ];
+                  }
+                });
+              } else if (eventType === 'done') {
+                setMessages((prev) => {
+                  const updated = [...prev];
+                  const lastIdx = updated.length - 1;
+                  if (lastIdx >= 0 && updated[lastIdx]?.role === 'assistant') {
+                    updated[lastIdx] = {
+                      ...updated[lastIdx],
+                      message_id: parsed.message_id,
+                      content: parsed.full_message || streamContent,
+                      thinking: parsed.thinking || streamThinking,
+                      tool_calls: parsed.tool_calls || [],
+                      sources: parsed.sources || [],
+                      actions: streamActions,
+                    };
+                    return updated;
+                  }
+                  return prev;
+                });
+              }
+            } catch (err) {
+              console.error('Error parsing SSE packet:', err);
+            }
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Streaming failed, fallback message appended:', err);
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", content: "Unable to connect to the Compliance Advisor. Please check your connection and try again." },
+        {
+          role: 'assistant',
+          content:
+            'Apologies, unable to complete streaming response at this time. Please check your connection and try again.',
+          created_at: new Date().toISOString(),
+        },
       ]);
     } finally {
       setLoading(false);
+      setCurrentThinking('');
+      setCurrentActions([]);
     }
   };
 
   const quickPrompts = [
-    "What is the OSCR annual return deadline?",
-    "Explain Receipts & Payments reserve policy",
-    "What is required for Independent Examination?",
+    'What is the OSCR annual return deadline for SC054652?',
+    'Explain Receipts & Payments reserve policy under Scottish law',
+    'What are the requirements for Independent Examination sign-off?',
   ];
 
+  const toggleThinking = (idx: number) => {
+    setShowThinking((prev) => ({
+      ...prev,
+      [idx]: !prev[idx],
+    }));
+  };
+
   return (
-    <>
+    <ClientPortal>
       {!isOpen && (
         <motion.button
           onClick={() => setIsOpen(true)}
@@ -80,19 +327,23 @@ export const ComplianceChatDrawer: React.FC = () => {
           whileTap={{ scale: 0.95 }}
           aria-label="Open Beacon Statutory Intelligence Agent"
           title="Autonomous OSCR Compliance Sentinel"
-          className="fixed bottom-6 right-6 royal-btn-crimson p-2.5 sm:px-4 sm:py-3 rounded-2xl shadow-2xl z-40 flex items-center gap-3 border border-amber-500/40 group transition-all"
+          className="tour-chat-advisor fixed bottom-6 right-6 royal-btn-crimson p-2.5 sm:px-4 sm:py-3 rounded-2xl shadow-2xl z-40 flex items-center gap-3 border border-amber-500/40 group transition-all"
         >
-          <div className="relative h-9 w-9 rounded-xl bg-slate-950/40 border border-amber-400/40 p-1 flex items-center justify-center shrink-0">
+          <div className="relative h-10 w-10 flex items-center justify-center shrink-0">
             <img
               src="/assets/logo_mark.png"
               alt="Beacon Sentinel"
-              className="h-full w-full object-contain filter drop-shadow-xs"
+              className="h-full w-full object-contain filter drop-shadow-md"
             />
-            <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-amber-400 border-2 border-red-900 animate-pulse" />
+            <span className="absolute -top-0.5 -right-0.5 h-3 w-3 rounded-full bg-amber-400 border-2 border-red-900 animate-pulse shadow-xs" />
           </div>
           <div className="text-left hidden sm:block">
-            <span className="text-xs font-bold font-serif block leading-tight text-white">Statutory Intelligence</span>
-            <span className="text-[10px] text-amber-200 font-mono block leading-none opacity-90">OSCR Sentinel</span>
+            <span className="text-xs font-bold font-serif block leading-tight text-white">
+              Statutory Intelligence
+            </span>
+            <span className="text-[10px] text-amber-200 font-mono block leading-none opacity-90">
+              OSCR Sentinel
+            </span>
           </div>
         </motion.button>
       )}
@@ -111,22 +362,22 @@ export const ComplianceChatDrawer: React.FC = () => {
 
             {/* Slide-out Drawer */}
             <motion.div
-              initial={{ x: "100%" }}
+              initial={{ x: '100%' }}
               animate={{ x: 0 }}
-              exit={{ x: "100%" }}
+              exit={{ x: '100%' }}
               transition={springs.gentle}
-              className="fixed inset-y-0 right-0 w-full max-w-md bg-white dark:bg-[#0B0F19] border-l border-stone-200 dark:border-slate-800 shadow-2xl z-50 flex flex-col justify-between overflow-hidden"
+              className="fixed inset-y-0 right-0 w-full max-w-md bg-white dark:bg-[#070A11] border-l border-stone-200 dark:border-slate-800 shadow-2xl z-50 flex flex-col justify-between overflow-hidden"
             >
               {/* Header */}
-              <div className="p-4 sm:p-5 border-b border-stone-200 dark:border-slate-800 flex items-center justify-between bg-stone-50/80 dark:bg-slate-900/60 backdrop-blur-md">
+              <div className="p-4 sm:p-5 border-b border-stone-200 dark:border-slate-800 flex items-center justify-between bg-stone-50/90 dark:bg-[#0E1524]/90 backdrop-blur-md">
                 <div className="flex items-center gap-3">
-                  <div className="h-11 w-11 rounded-2xl bg-stone-100 dark:bg-slate-950 border border-amber-500/40 p-1.5 flex items-center justify-center shadow-xs shrink-0 relative">
+                  <div className="h-11 w-11 flex items-center justify-center shrink-0 relative">
                     <img
                       src="/assets/logo_mark.png"
                       alt="Potter's House Emblem"
-                      className="h-full w-full object-contain"
+                      className="h-full w-full object-contain drop-shadow-md"
                     />
-                    <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-emerald-500 border-2 border-white dark:border-slate-950" />
+                    <span className="absolute -top-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-500 border-2 border-white dark:border-[#070A11] shadow-xs" />
                   </div>
                   <div>
                     <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 font-serif flex items-center gap-1.5">
@@ -147,53 +398,165 @@ export const ComplianceChatDrawer: React.FC = () => {
                 </button>
               </div>
 
-              {/* Chat Body */}
-              <div className="flex-1 p-4 overflow-y-auto space-y-3.5 bg-stone-50/30 dark:bg-slate-950/30">
+              {/* Chat Body with Infinite Scroll-Up */}
+              <div
+                ref={chatContainerRef}
+                onScroll={handleScroll}
+                className="flex-1 p-4 overflow-y-auto space-y-3.5 bg-stone-50/40 dark:bg-[#070A11]/60"
+              >
+                {loadingMore && (
+                  <div className="text-center py-2">
+                    <span className="text-[11px] text-amber-700 dark:text-amber-400 font-mono flex items-center justify-center gap-1.5">
+                      <RotateCcw className="h-3 w-3 animate-spin" /> Loading
+                      earlier messages...
+                    </span>
+                  </div>
+                )}
+
+                {hasMore && !loadingMore && (
+                  <div className="text-center py-1">
+                    <button
+                      onClick={() =>
+                        fetchChatHistory(
+                          messages[0]?.created_at,
+                          messages.length
+                        )
+                      }
+                      className="text-[10px] text-stone-500 hover:text-amber-700 dark:hover:text-amber-400 underline font-mono"
+                    >
+                      Load older messages
+                    </button>
+                  </div>
+                )}
+
                 {messages.map((m, idx) => (
-                  <motion.div 
-                    key={idx} 
+                  <motion.div
+                    key={idx}
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={springs.gentle}
-                    className={`flex gap-2.5 ${m.role === "user" ? "justify-end" : "justify-start"}`}
+                    className={`flex flex-col ${
+                      m.role === 'user' ? 'items-end' : 'items-start'
+                    } gap-1.5`}
                   >
-                    {m.role === "assistant" && (
-                      <div className="h-7 w-7 rounded-lg bg-stone-100 dark:bg-slate-900 border border-stone-300/80 dark:border-slate-700 p-0.5 shrink-0 mt-0.5 flex items-center justify-center">
-                        <img
-                          src="/assets/logo_mark.png"
-                          alt="Advisor"
-                          className="h-full w-full object-contain"
-                        />
-                      </div>
-                    )}
                     <div
-                      className={`max-w-[84%] rounded-2xl p-3.5 text-xs leading-relaxed shadow-xs ${
-                        m.role === "user"
-                          ? "royal-btn-crimson text-white font-medium rounded-tr-xs"
-                          : "bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 border border-stone-200/80 dark:border-slate-800 rounded-tl-xs"
-                      }`}
+                      className={`flex gap-2.5 ${
+                        m.role === 'user' ? 'justify-end' : 'justify-start'
+                      } w-full`}
                     >
-                      {m.role === "assistant" ? (
-                        <MarkdownRenderer content={m.content} />
-                      ) : (
-                        m.content
+                      {m.role === 'assistant' && (
+                        <div className="h-7 w-7 shrink-0 mt-0.5 flex items-center justify-center">
+                          <img
+                            src="/assets/logo_mark.png"
+                            alt="Advisor"
+                            className="h-full w-full object-contain drop-shadow-xs"
+                          />
+                        </div>
                       )}
+                      <div
+                        className={`max-w-[86%] rounded-2xl p-3.5 text-xs leading-relaxed shadow-xs ${
+                          m.role === 'user'
+                            ? 'royal-btn-crimson text-white font-medium rounded-tr-xs'
+                            : 'bg-white dark:bg-[#0E1524] text-slate-800 dark:text-slate-200 border border-stone-200/80 dark:border-slate-800/80 rounded-tl-xs'
+                        }`}
+                      >
+                        {/* Expandable Thinking Process Block */}
+                        {m.thinking && (
+                          <div className="mb-2.5 border border-amber-500/20 dark:border-amber-500/30 rounded-xl overflow-hidden bg-amber-500/5">
+                            <button
+                              type="button"
+                              onClick={() => toggleThinking(idx)}
+                              className="w-full px-3 py-1.5 text-[11px] font-mono text-amber-800 dark:text-amber-300 font-semibold flex items-center justify-between hover:bg-amber-500/10 transition-colors"
+                            >
+                              <span className="flex items-center gap-1.5">
+                                <Lightbulb className="h-3.5 w-3.5 text-amber-600" />
+                                <span>Thinking Process</span>
+                              </span>
+                              {showThinking[idx] ? (
+                                <ChevronUp className="h-3.5 w-3.5" />
+                              ) : (
+                                <ChevronDown className="h-3.5 w-3.5" />
+                              )}
+                            </button>
+                            {showThinking[idx] && (
+                              <div className="p-2.5 text-[11px] font-mono text-stone-600 dark:text-slate-400 bg-stone-50/50 dark:bg-slate-900/50 border-t border-amber-500/20 leading-relaxed whitespace-pre-wrap">
+                                {m.thinking}
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Actions Executed */}
+                        {m.actions && m.actions.length > 0 && (
+                          <div className="mb-2 space-y-1">
+                            {m.actions.map((act, aIdx) => (
+                              <div
+                                key={aIdx}
+                                className="flex items-center gap-1.5 text-[10px] font-mono text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-lg"
+                              >
+                                <Activity className="h-3 w-3 shrink-0" />
+                                <span>{act}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {m.role === 'assistant' ? (
+                          <MarkdownRenderer content={m.content} />
+                        ) : (
+                          m.content
+                        )}
+                      </div>
                     </div>
                   </motion.div>
                 ))}
+
+                {/* Live Real-Time Thought and Action Stream during generation */}
                 {loading && (
-                  <div className="text-xs text-amber-800 dark:text-amber-400 italic flex items-center gap-2 p-2">
-                    <span className="h-2 w-2 rounded-full bg-amber-600 animate-pulse" />
-                    <span>Searching Scottish charity regulatory guidance...</span>
+                  <div className="space-y-2 p-2">
+                    {currentThinking && (
+                      <div className="p-3 bg-amber-500/5 border border-amber-500/30 rounded-2xl text-[11px] font-mono text-amber-800 dark:text-amber-300 animate-pulse flex items-start gap-2">
+                        <Lightbulb className="h-4 w-4 shrink-0 mt-0.5 text-amber-600" />
+                        <div className="space-y-1">
+                          <span className="font-bold block">Thinking...</span>
+                          <span className="text-stone-600 dark:text-slate-400 leading-relaxed">
+                            {currentThinking}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                    {currentActions.length > 0 && (
+                      <div className="space-y-1">
+                        {currentActions.map((act, i) => (
+                          <div
+                            key={i}
+                            className="flex items-center gap-1.5 text-[10px] font-mono text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-xl"
+                          >
+                            <Activity className="h-3 w-3 animate-spin shrink-0" />
+                            <span>{act}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {!currentThinking && currentActions.length === 0 && (
+                      <div className="text-xs text-amber-800 dark:text-amber-400 italic flex items-center gap-2 p-2">
+                        <span className="h-2 w-2 rounded-full bg-amber-600 animate-pulse" />
+                        <span>
+                          Connecting with Beacon Statutory Intelligence...
+                        </span>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
 
               {/* Quick Questions & Input Area */}
               <div className="p-3.5 border-t border-stone-200 dark:border-slate-800 bg-white dark:bg-[#0B0F19] space-y-3">
-                {messages.length === 1 && (
+                {messages.length <= 1 && (
                   <div className="space-y-1.5">
-                    <p className="text-[10px] uppercase font-bold text-stone-400 dark:text-slate-500 tracking-wider">Suggested Inquiries:</p>
+                    <p className="text-[10px] uppercase font-bold text-stone-400 dark:text-slate-500 tracking-wider">
+                      Suggested Inquiries:
+                    </p>
                     <div className="flex flex-col gap-1">
                       {quickPrompts.map((q, i) => (
                         <button
@@ -230,6 +593,6 @@ export const ComplianceChatDrawer: React.FC = () => {
           </>
         )}
       </AnimatePresence>
-    </>
+    </ClientPortal>
   );
 };
