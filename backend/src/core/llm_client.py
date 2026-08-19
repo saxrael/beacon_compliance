@@ -235,7 +235,20 @@ DO NOT output any monetary amount, numerical value, or currency field.
                     else:
                         text_stream.append(item)
 
-                yield from self.parse_streaming_chunks(text_stream)
+                accumulated_output = []
+                for event in self.parse_streaming_chunks(text_stream):
+                    if event.get("type") == "token":
+                        accumulated_output.append(event.get("chunk", ""))
+                    yield event
+
+                default_tracer.trace_llm_generation(
+                    name="gemma_compliance_chat",
+                    system_prompt=system_prompt,
+                    user_message=full_prompt,
+                    model="google/gemma-2-27b-it" if self.openrouter_key else "gemma2-9b-it",
+                    output_text="".join(accumulated_output),
+                    metadata={"tool_context_present": bool(tool_context), "stream": True},
+                )
                 return
             except Exception as err:
                 logger.warning(f"Compliance chat LLM streaming failed, using fallback: {err}")
