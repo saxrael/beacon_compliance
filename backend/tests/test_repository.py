@@ -245,3 +245,46 @@ def test_user_profile_migration_on_preexisting_table():
     fetched = repo.get_user_profile("usr_legacy")
     assert fetched is not None
     assert fetched["avatar"] == "data:image/jpeg;base64,mockavatarlegacy"
+
+
+def test_repository_embeddings_and_vector_facts_crud():
+    d1 = D1DatabaseClient(db_path=":memory:")
+    repo = ComplianceRepository(db_client=d1)
+
+    # 2048-dim vector test (NVIDIA Nemotron standard)
+    test_vec = [0.05 * (i % 20) for i in range(2048)]
+
+    # 1. Test save_embedding and get_embeddings
+    repo.save_embedding(
+        chunk_id="chunk_statutory_01",
+        source_type="kb",
+        source_id="oscr_scio_act_2005",
+        text="OSCR Section 66 specifies the general duties of charity trustees.",
+        embedding_vec=test_vec,
+        fts_indexed=1,
+    )
+
+    kb_embeddings = repo.get_embeddings(source_type="kb")
+    assert len(kb_embeddings) == 1
+    assert kb_embeddings[0]["chunk_id"] == "chunk_statutory_01"
+    assert len(kb_embeddings[0]["embedding_vec"]) == 2048
+    assert abs(kb_embeddings[0]["embedding_vec"][1] - 0.05) < 1e-5
+
+    # 2. Test save_memory_fact with vector embedding
+    repo.save_memory_fact(
+        fact_id="fact_vec_01",
+        user_id="usr_chair",
+        fact_text="Board approves expenditure over £500 by vote.",
+        source_type="conversation",
+        created_at="2026-08-19T03:00:00Z",
+        embedding_vec=test_vec,
+    )
+
+    facts = repo.get_memory_facts(user_id="usr_chair")
+    assert len(facts) == 1
+    assert facts[0]["fact_id"] == "fact_vec_01"
+    assert len(facts[0]["embedding_vec"]) == 2048
+
+    # 3. Test delete_embeddings
+    repo.delete_embeddings(source_type="kb", source_id="oscr_scio_act_2005")
+    assert len(repo.get_embeddings(source_type="kb")) == 0

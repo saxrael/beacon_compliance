@@ -84,10 +84,13 @@ def test_call_gemma_narrative_http_500_fallback(monkeypatch):
     monkeypatch.setenv("OPENROUTER_API_KEY", "mock_openrouter_key")
     client = LLMClient()
 
-    mock_resp = MagicMock()
-    mock_resp.status_code = 500
+    req = httpx.Request("POST", "https://openrouter.ai")
+    mock_resp = httpx.Response(500, request=req)
 
-    with patch("httpx.Client.post", return_value=mock_resp):
+    with patch(
+        "httpx.Client.post",
+        side_effect=httpx.HTTPStatusError("500 Server Error", request=req, response=mock_resp),
+    ):
         res = client.call_gemma_narrative("system prompt", {"test": "data"})
 
     assert res is None
@@ -198,10 +201,13 @@ def test_call_gemma_chat_http_500_fallback(monkeypatch):
     monkeypatch.setenv("OPENROUTER_API_KEY", "mock_or_key")
     client = LLMClient()
 
-    mock_resp = MagicMock()
-    mock_resp.status_code = 500
+    req = httpx.Request("POST", "https://openrouter.ai")
+    mock_resp = httpx.Response(500, request=req)
 
-    with patch("httpx.Client.post", return_value=mock_resp):
+    with patch(
+        "httpx.Client.post",
+        side_effect=httpx.HTTPStatusError("500 Server Error", request=req, response=mock_resp),
+    ):
         res = client.call_gemma_chat("System", "User")
 
     assert res is None

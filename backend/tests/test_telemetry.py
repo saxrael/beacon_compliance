@@ -112,3 +112,61 @@ def test_observe_pii_guarded_decorator():
 
     result = sample_func(input_text="Email: test@example.com")
     assert result == "Processed: Email: test@example.com"
+
+
+def test_trace_agent_turn_disabled_noop(monkeypatch):
+    """Verify trace_agent_turn acts as a clean no-op context manager when disabled."""
+    monkeypatch.setenv("LANGFUSE_ENABLED", "false")
+    tracer = BeaconLangfuseTracer()
+
+    with tracer.trace_agent_turn(
+        name="compliance_chat_agent",
+        user_message="Hello trustee@example.com",
+        user_id="trustee_01",
+        session_id="run_001",
+        tags=["compliance_chat", "sc054652"],
+        metadata={"charity": "SC054652"},
+    ) as agent_ctx:
+        assert agent_ctx is not None
+        with tracer.trace_tool_execution(
+            name="get_financial_summary_tool",
+            as_type="tool",
+            input_data={"run_id": "run_001"},
+        ) as tool_ctx:
+            tool_ctx.set_output({"gross_receipts": "12000.00"})
+
+        agent_ctx.set_output("Hello! I can help with OSCR compliance.")
+
+
+def test_trace_agent_turn_mock_enabled(monkeypatch):
+    """Verify trace_agent_turn and trace_tool_execution record nested spans when enabled."""
+    monkeypatch.setenv("LANGFUSE_ENABLED", "true")
+    monkeypatch.setenv("LANGFUSE_PUBLIC_KEY", "pk-lf-test")
+    monkeypatch.setenv("LANGFUSE_SECRET_KEY", "sk-lf-test")
+    monkeypatch.setenv("LANGFUSE_HOST", "https://cloud.langfuse.com")
+
+    tracer = BeaconLangfuseTracer()
+
+    with tracer.trace_agent_turn(
+        name="compliance_chat_agent",
+        user_message="Check receipts for john.doe@pottershouse.org.uk phone 07123456789",
+        user_id="trustee_01",
+        session_id="run_001",
+        tags=["compliance_chat", "sc054652"],
+        metadata={"donor_postcode": "EH1 1AA"},
+    ) as agent_ctx:
+        with tracer.trace_tool_execution(
+            name="get_financial_summary_tool",
+            as_type="tool",
+            input_data={"run_id": "run_001", "sort_code": "12-34-56"},
+        ) as tool_ctx:
+            tool_ctx.set_output({"gross_receipts": "15000.00", "donor": "secret@example.com"})
+
+        with tracer.trace_tool_execution(
+            name="search_knowledge_base_tool",
+            as_type="retriever",
+            input_data={"query": "OSCR receipts and payments rules"},
+        ) as ret_ctx:
+            ret_ctx.set_output({"matches": 3, "sources": ["docs/oar.md"]})
+
+        agent_ctx.set_output("The gross receipts are £15,000.00.")

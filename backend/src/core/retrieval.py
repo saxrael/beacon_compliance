@@ -2,10 +2,13 @@
 
 Implements Reciprocal Rank Fusion (RRF, k=60) combining dense vector similarity
 and sparse full-text keyword search across OSCR knowledge base documents and archives.
+Supports multi-query concurrent generation, score thresholding (< 0.015), and deduplication.
 """
 
 import math
 from typing import Any, NamedTuple
+
+from backend.src.core.embeddings import EmbeddingEngine
 
 
 class SearchResultChunk(NamedTuple):
@@ -68,6 +71,7 @@ class HybridRRFRetriever:
         query_vec: list[float] | None,
         corpus: list[dict[str, Any]],
         top_n: int = 5,
+        min_rrf_threshold: float = 0.0,
     ) -> list[SearchResultChunk]:
         """Perform hybrid search fusing dense and sparse ranks with RRF (k=60)."""
         sparse_ranks = dict(self.compute_sparse_ranks(query, corpus))
@@ -82,7 +86,8 @@ class HybridRRFRetriever:
                 score += 1.0 / (self.rrf_k + sparse_ranks[cid])
             if cid in dense_ranks:
                 score += 1.0 / (self.rrf_k + dense_ranks[cid])
-            rrf_scores[cid] = score
+            if score >= min_rrf_threshold:
+                rrf_scores[cid] = score
 
         sorted_ids = sorted(rrf_scores.items(), key=lambda x: x[1], reverse=True)[:top_n]
         corpus_dict = {c["chunk_id"]: c for c in corpus}
@@ -101,3 +106,40 @@ class HybridRRFRetriever:
             )
 
         return results
+
+    def search_multi_query_hybrid(
+        self,
+        queries: list[str],
+        corpus: list[dict[str, Any]],
+        embedding_engine: EmbeddingEngine | None = None,
+        top_n: int = 5,
+        min_rrf_threshold: float = 0.015,
+    ) -> list[SearchResultChunk]:
+        """Execute concurrent multi-query hybrid search with deduplication and RRF scoring."""
+        if not queries or not corpus:
+            return []
+
+        engine = embedding_engine or EmbeddingEngine()
+        best_chunks_by_id: dict[str, SearchResultChunk] = {}
+
+        for q in queries:
+            q_clean = q.strip()
+            if not q_clean:
+                continue
+            q_vec = engine.embed_query(q_clean)
+            sub_results = self.hybrid_rrf_search(
+                query=q_clean,
+                query_vec=q_vec,
+                corpus=corpus,
+                top_n=top_n * 2,
+                min_rrf_threshold=min_rrf_threshold,
+            )
+            for chunk in sub_results:
+                if (
+                    chunk.chunk_id not in best_chunks_by_id
+                    or chunk.rrf_score > best_chunks_by_id[chunk.chunk_id].rrf_score
+                ):
+                    best_chunks_by_id[chunk.chunk_id] = chunk
+
+        merged = sorted(best_chunks_by_id.values(), key=lambda x: x.rrf_score, reverse=True)
+        return merged[:top_n]

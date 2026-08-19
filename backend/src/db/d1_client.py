@@ -11,6 +11,8 @@ import sqlite3
 from pathlib import Path
 from typing import Any
 
+from backend.src.core.retry import db_retry
+
 D1_SCHEMA_SQL = """
 CREATE TABLE IF NOT EXISTS users (
     user_id TEXT PRIMARY KEY,
@@ -139,7 +141,8 @@ CREATE TABLE IF NOT EXISTS memory_facts (
     user_id TEXT NOT NULL,
     fact_text TEXT NOT NULL,
     source_type TEXT NOT NULL,
-    created_at TEXT NOT NULL
+    created_at TEXT NOT NULL,
+    embedding_blob BLOB
 );
 
 CREATE TABLE IF NOT EXISTS chat_messages (
@@ -226,20 +229,46 @@ class D1DatabaseClient:
                 )
             except sqlite3.OperationalError:
                 pass
+
+            # Migrate memory_facts table
+            try:
+                cursor_mf = self._conn.execute("PRAGMA table_info(memory_facts)")
+                existing_mf_cols = {
+                    row[1] if isinstance(row, tuple) else row["name"]
+                    for row in cursor_mf.fetchall()
+                }
+                if "embedding_blob" not in existing_mf_cols:
+                    self._conn.execute("ALTER TABLE memory_facts ADD COLUMN embedding_blob BLOB")
+            except sqlite3.OperationalError:
+                pass
+
+            # Ensure vector embedding indexes
+            try:
+                self._conn.execute(
+                    "CREATE INDEX IF NOT EXISTS idx_embeddings_source ON embeddings(source_type, source_id)"
+                )
+                self._conn.execute(
+                    "CREATE INDEX IF NOT EXISTS idx_memory_facts_user ON memory_facts(user_id, created_at)"
+                )
+            except sqlite3.OperationalError:
+                pass
         except Exception:
             pass
 
+    @db_retry
     def execute(self, sql: str, params: tuple[Any, ...] = ()) -> sqlite3.Cursor:
         """Execute a parameterized SQL query safely."""
         with self._conn:
             return self._conn.execute(sql, params)
 
+    @db_retry
     def fetchall(self, sql: str, params: tuple[Any, ...] = ()) -> list[dict[str, Any]]:
         """Fetch all results for a parameterized query as dictionaries."""
         cursor = self._conn.execute(sql, params)
         rows = cursor.fetchall()
         return [dict(row) for row in rows]
 
+    @db_retry
     def fetchone(self, sql: str, params: tuple[Any, ...] = ()) -> dict[str, Any] | None:
         """Fetch a single result row for a parameterized query."""
         cursor = self._conn.execute(sql, params)

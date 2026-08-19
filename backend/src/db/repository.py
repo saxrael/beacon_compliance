@@ -11,6 +11,7 @@ import json
 from datetime import UTC, datetime
 from typing import Any
 
+from backend.src.core.embeddings import deserialize_vector, serialize_vector
 from backend.src.db.d1_client import D1DatabaseClient
 from backend.src.db.r2_client import R2StorageClient
 
@@ -344,22 +345,98 @@ class ComplianceRepository:
         return row["summary_text"] if row else None
 
     def save_memory_fact(
-        self, fact_id: str, user_id: str, fact_text: str, source_type: str, created_at: str
+        self,
+        fact_id: str,
+        user_id: str,
+        fact_text: str,
+        source_type: str,
+        created_at: str,
+        embedding_vec: list[float] | None = None,
     ) -> None:
-        """Persist Tier 3 semantic fact to D1."""
-        self.db.execute(
-            "INSERT OR REPLACE INTO memory_facts (fact_id, user_id, fact_text, source_type, created_at) "
-            "VALUES (?, ?, ?, ?, ?)",
-            (fact_id, user_id, fact_text, source_type, created_at),
-        )
+        """Persist Tier 3 semantic fact and its vector embedding to D1."""
+        blob = serialize_vector(embedding_vec) if embedding_vec else None
+        try:
+            self.db.execute(
+                "INSERT OR REPLACE INTO memory_facts (fact_id, user_id, fact_text, source_type, created_at, embedding_blob) "
+                "VALUES (?, ?, ?, ?, ?, ?)",
+                (fact_id, user_id, fact_text, source_type, created_at, blob),
+            )
+        except Exception:
+            self.db.execute(
+                "INSERT OR REPLACE INTO memory_facts (fact_id, user_id, fact_text, source_type, created_at) "
+                "VALUES (?, ?, ?, ?, ?)",
+                (fact_id, user_id, fact_text, source_type, created_at),
+            )
 
     def get_memory_facts(self, user_id: str) -> list[dict[str, Any]]:
-        """Fetch Tier 3 semantic facts for a user from D1."""
-        rows = self.db.fetchall(
-            "SELECT fact_id, user_id, fact_text, source_type, created_at FROM memory_facts WHERE user_id = ?",
-            (user_id,),
+        """Fetch Tier 3 semantic facts and deserialize vector embeddings for a user from D1."""
+        try:
+            rows = self.db.fetchall(
+                "SELECT fact_id, user_id, fact_text, source_type, created_at, embedding_blob FROM memory_facts WHERE user_id = ?",
+                (user_id,),
+            )
+        except Exception:
+            rows = self.db.fetchall(
+                "SELECT fact_id, user_id, fact_text, source_type, created_at FROM memory_facts WHERE user_id = ?",
+                (user_id,),
+            )
+
+        facts = []
+        for r in rows:
+            fact_dict = dict(r)
+            if fact_dict.get("embedding_blob"):
+                fact_dict["embedding_vec"] = deserialize_vector(fact_dict["embedding_blob"])
+            facts.append(fact_dict)
+        return facts
+
+    def save_embedding(
+        self,
+        chunk_id: str,
+        source_type: str,
+        source_id: str,
+        text: str,
+        embedding_vec: list[float] | None = None,
+        fts_indexed: int = 0,
+    ) -> None:
+        """Persist document/knowledge chunk and its vector embedding to D1 embeddings table."""
+        blob = serialize_vector(embedding_vec) if embedding_vec else None
+        self.db.execute(
+            "INSERT OR REPLACE INTO embeddings (chunk_id, source_type, source_id, text, embedding_blob, fts_indexed) "
+            "VALUES (?, ?, ?, ?, ?, ?)",
+            (chunk_id, source_type, source_id, text, blob, fts_indexed),
         )
-        return [dict(r) for r in rows]
+
+    def get_embeddings(
+        self, source_type: str | None = None, source_id: str | None = None
+    ) -> list[dict[str, Any]]:
+        """Retrieve embeddings from D1 with deserialized float vector arrays."""
+        conditions = []
+        params = []
+        if source_type:
+            conditions.append("source_type = ?")
+            params.append(source_type)
+        if source_id:
+            conditions.append("source_id = ?")
+            params.append(source_id)
+
+        where_clause = f"WHERE {' AND '.join(conditions)}" if conditions else ""
+        query = f"SELECT chunk_id, source_type, source_id, text, embedding_blob, fts_indexed FROM embeddings {where_clause}"
+        rows = self.db.fetchall(query, tuple(params))
+
+        results = []
+        for r in rows:
+            item = dict(r)
+            blob = item.get("embedding_blob")
+            item["embedding_vec"] = deserialize_vector(blob) if blob else []
+            results.append(item)
+        return results
+
+    def delete_embeddings(self, source_type: str, source_id: str) -> None:
+        """Delete embeddings for a specific source from D1."""
+        self.db.execute(
+            "DELETE FROM embeddings WHERE source_type = ? AND source_id = ?",
+            (source_type, source_id),
+        )
 
     def update_user_profile(
         self,

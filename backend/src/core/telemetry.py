@@ -8,7 +8,8 @@ Enforces:
 
 import logging
 import os
-from collections.abc import Callable
+from collections.abc import Callable, Generator
+from contextlib import contextmanager
 from functools import wraps
 from typing import Any
 
@@ -17,9 +18,11 @@ from backend.src.core.pii_engine import default_redactor
 logger = logging.getLogger(__name__)
 
 try:
-    from langfuse import Langfuse
+    from langfuse import Langfuse, get_client, propagate_attributes
 except Exception:
     Langfuse = None
+    get_client = None
+    propagate_attributes = None
 
 try:
     from langfuse.langchain import CallbackHandler
@@ -43,6 +46,43 @@ def sanitize_telemetry_payload(data: Any) -> Any:
     elif isinstance(data, list):
         return [sanitize_telemetry_payload(item) for item in data]
     return data
+
+
+class TraceObservationContext:
+    """Wrapper around active or no-op Langfuse observation context."""
+
+    def __init__(self, observation_span: Any = None) -> None:
+        self.span = observation_span
+
+    def set_output(self, output: Any) -> None:
+        """Set output on the active span with mandatory PII scrubbing."""
+        if self.span is not None:
+            try:
+                sanitized = sanitize_telemetry_payload(output)
+                if hasattr(self.span, "update"):
+                    self.span.update(output=sanitized)
+            except Exception as exc:
+                logger.debug("Failed to set output on telemetry observation: %s", exc)
+
+    def set_input(self, input_data: Any) -> None:
+        """Set input on the active span with mandatory PII scrubbing."""
+        if self.span is not None:
+            try:
+                sanitized = sanitize_telemetry_payload(input_data)
+                if hasattr(self.span, "update"):
+                    self.span.update(input=sanitized)
+            except Exception as exc:
+                logger.debug("Failed to set input on telemetry observation: %s", exc)
+
+    def update(self, **kwargs: Any) -> None:
+        """Update active span attributes with mandatory PII scrubbing."""
+        if self.span is not None:
+            try:
+                sanitized_kwargs = sanitize_telemetry_payload(kwargs)
+                if hasattr(self.span, "update"):
+                    self.span.update(**sanitized_kwargs)
+            except Exception as exc:
+                logger.debug("Failed to update telemetry observation: %s", exc)
 
 
 class BeaconLangfuseTracer:
@@ -117,6 +157,102 @@ class BeaconLangfuseTracer:
             logger.warning("Failed to create Langchain CallbackHandler: %s", exc)
             return None
 
+    @contextmanager
+    def trace_agent_turn(
+        self,
+        name: str,
+        user_message: str,
+        user_id: str | None = None,
+        session_id: str | None = None,
+        tags: list[str] | None = None,
+        metadata: dict[str, Any] | None = None,
+    ) -> Generator[TraceObservationContext, None, None]:
+        """Context manager creating a top-level 'agent' observation with session/user propagation."""
+        if not self.is_enabled() or self.langfuse_client is None:
+            yield TraceObservationContext(None)
+            return
+
+        sanitized_msg = sanitize_telemetry_payload(user_message)
+        sanitized_meta = sanitize_telemetry_payload(metadata or {})
+        clean_tags = tags or ["compliance_agent", "oscr", "sc054652"]
+
+        try:
+            prop_cm = (
+                propagate_attributes(
+                    user_id=user_id,
+                    session_id=session_id,
+                    tags=clean_tags,
+                    trace_name=name,
+                )
+                if propagate_attributes is not None
+                else None
+            )
+
+            if prop_cm:
+                with prop_cm:
+                    if hasattr(self.langfuse_client, "start_as_current_observation"):
+                        with self.langfuse_client.start_as_current_observation(
+                            name=name,
+                            as_type="agent",
+                            input={"user_message": sanitized_msg},
+                            metadata=sanitized_meta,
+                        ) as agent_span:
+                            wrapper = TraceObservationContext(agent_span)
+                            yield wrapper
+                    else:
+                        yield TraceObservationContext(None)
+            elif hasattr(self.langfuse_client, "start_as_current_observation"):
+                with self.langfuse_client.start_as_current_observation(
+                    name=name,
+                    as_type="agent",
+                    input={"user_message": sanitized_msg},
+                    metadata=sanitized_meta,
+                ) as agent_span:
+                    wrapper = TraceObservationContext(agent_span)
+                    yield wrapper
+            else:
+                yield TraceObservationContext(None)
+        except Exception as exc:
+            logger.debug("Error in trace_agent_turn context: %s", exc)
+            yield TraceObservationContext(None)
+        finally:
+            if hasattr(self.langfuse_client, "flush"):
+                try:
+                    self.langfuse_client.flush()
+                except Exception:
+                    pass
+
+    @contextmanager
+    def trace_tool_execution(
+        self,
+        name: str,
+        as_type: str = "tool",
+        input_data: Any = None,
+        metadata: dict[str, Any] | None = None,
+    ) -> Generator[TraceObservationContext, None, None]:
+        """Context manager creating a nested 'tool' or 'retriever' observation."""
+        if not self.is_enabled() or self.langfuse_client is None:
+            yield TraceObservationContext(None)
+            return
+
+        sanitized_input = sanitize_telemetry_payload(input_data)
+        sanitized_meta = sanitize_telemetry_payload(metadata or {})
+
+        try:
+            if hasattr(self.langfuse_client, "start_as_current_observation"):
+                with self.langfuse_client.start_as_current_observation(
+                    name=name,
+                    as_type=as_type,
+                    input=sanitized_input,
+                    metadata=sanitized_meta,
+                ) as tool_span:
+                    yield TraceObservationContext(tool_span)
+            else:
+                yield TraceObservationContext(None)
+        except Exception as exc:
+            logger.debug("Error in trace_tool_execution context (%s): %s", name, exc)
+            yield TraceObservationContext(None)
+
     def trace_llm_generation(
         self,
         name: str,
@@ -141,7 +277,7 @@ class BeaconLangfuseTracer:
         try:
             if hasattr(self.langfuse_client, "start_observation"):
                 self.langfuse_client.start_observation(
-                    name=f"beacon_{name }",
+                    name=f"beacon_{name}",
                     as_type="generation",
                     model=model,
                     input=[
@@ -156,7 +292,7 @@ class BeaconLangfuseTracer:
                 )
             elif hasattr(self.langfuse_client, "trace"):
                 trace = self.langfuse_client.trace(
-                    name=f"beacon_{name }",
+                    name=f"beacon_{name}",
                     metadata=sanitized_meta,
                 )
                 if hasattr(trace, "generation"):

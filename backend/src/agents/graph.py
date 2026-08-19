@@ -82,9 +82,31 @@ class BeaconComplianceGraph:
     ) -> BeaconComplianceState:
         """Run compiled LangGraph StateGraph execution with optional telemetry callbacks."""
         run_config = config.copy() if config else {}
+        run_id = initial_state.get("run_id", "run_001")
+        accounting_period = initial_state.get("accounting_period", "2025-2026")
+
         if default_tracer.is_enabled():
             callback = default_tracer.get_langchain_callback()
             if callback:
                 existing_callbacks = run_config.get("callbacks", [])
                 run_config["callbacks"] = [*list(existing_callbacks), callback]
+                run_config.setdefault("run_name", "beacon_oscr_compliance_pipeline")
+                run_config.setdefault(
+                    "tags",
+                    [
+                        "pipeline",
+                        "oscr",
+                        "sc054652",
+                        f"period:{accounting_period}",
+                        f"run:{run_id}",
+                    ],
+                )
+                run_config.setdefault(
+                    "metadata",
+                    {
+                        "charity_number": "SC054652",
+                        "run_id": run_id,
+                        "accounting_period": accounting_period,
+                    },
+                )
         return self.app.invoke(initial_state, config=run_config if run_config else None)

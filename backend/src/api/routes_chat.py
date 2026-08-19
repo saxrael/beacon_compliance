@@ -1,5 +1,15 @@
+"""Interactive Compliance Chat API Endpoints (routes_chat.py).
+
+Enforces:
+- 4-Tier Memory Pipeline & Upfront Context Engineering (Zero Context Starvation)
+- Multi-Turn Conversation Continuity via Sliding Window
+- Background Cognitive Memory Processing (Tier 2 Summaries & Tier 3 Facts)
+- Real-time Server-Sent Events (SSE) Streaming with Thought & Action Lifecycle
+"""
+
 import asyncio
 import json
+import logging
 import uuid
 from collections.abc import AsyncGenerator
 from decimal import Decimal
@@ -10,12 +20,17 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
 from backend.src.agents.chat_agent import ComplianceChatAgent
+from backend.src.agents.cognitive_worker import CognitiveWorker
 from backend.src.api.auth import TrusteeUser, get_current_trustee
 from backend.src.api.dependencies import get_chat_agent, get_d1_db
+from backend.src.core.memory import MemoryFact, Tier1WorkingMemoryBuffer
 from backend.src.db.d1_client import D1DatabaseClient
 from backend.src.db.repository import ComplianceRepository
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter(prefix="/api/chat", tags=["Chat Assistant"])
+_background_tasks: set[asyncio.Task[Any]] = set()
 
 
 class ChatMessageRequest(BaseModel):
@@ -79,6 +94,48 @@ def _build_state_from_db(
     }
 
 
+def _trigger_background_cognitive_processing(
+    repo: ComplianceRepository,
+    user_id: str,
+    run_id: str,
+) -> None:
+    """Trigger asynchronous background cognitive memory worker to update Tier 2 and Tier 3 memory."""
+    try:
+        history_resp = repo.get_chat_history(user_id=user_id, run_id=run_id, limit=50)
+        all_turns = history_resp.get("messages", [])
+        if len(all_turns) <= 4:
+            return
+
+        buf = Tier1WorkingMemoryBuffer(window_size=50)
+        _, evicted = buf.process_turns(all_turns)
+        if not evicted:
+            evicted = all_turns[-6:]
+
+        existing_summary = repo.get_memory_summary(user_id, run_id)
+        raw_facts = repo.get_memory_facts(user_id)
+        existing_facts = [
+            MemoryFact(
+                fact_id=rf["fact_id"],
+                user_id=rf["user_id"],
+                fact_text=rf["fact_text"],
+                source_type=rf.get("source_type", "non_financial_convo"),
+                created_at=rf.get("created_at", ""),
+            )
+            for rf in raw_facts
+        ]
+
+        worker = CognitiveWorker(repository=repo)
+        worker.process_cognitive_turn(
+            user_id=user_id,
+            run_id=run_id,
+            evicted_messages=evicted,
+            existing_summary=existing_summary,
+            existing_facts=existing_facts,
+        )
+    except Exception as err:
+        logger.warning(f"Background cognitive worker execution failed: {err}")
+
+
 @router.get("/history")
 async def get_chat_history(
     *,
@@ -107,10 +164,24 @@ async def chat_message(
     agent: ComplianceChatAgent = Depends(get_chat_agent),
     db: D1DatabaseClient = Depends(get_d1_db),
 ) -> ChatMessageResponse:
-    """Process a single turn and persist both user query and assistant response in D1."""
+    """Process a single turn with rich upfront context engineering and persist both turns in D1."""
     repo = ComplianceRepository(db_client=db)
     state = _build_state_from_db(db, req.run_id, req.context_state)
 
+    # 1. Fetch Upfront Context Envelope Data
+    user_prof = repo.get_user_profile(current_user.user_id) or {
+        "name": current_user.name,
+        "role": current_user.role,
+        "email": current_user.email,
+    }
+    history_resp = repo.get_chat_history(user_id=current_user.user_id, run_id=req.run_id, limit=50)
+    history_turns = history_resp.get("messages", [])
+
+    tier2_summary = repo.get_memory_summary(current_user.user_id, req.run_id)
+    raw_facts = repo.get_memory_facts(current_user.user_id)
+    tier3_facts = [rf["fact_text"] for rf in raw_facts if rf.get("fact_text")]
+
+    # 2. Persist User Message
     user_msg_id = f"msg_{uuid.uuid4().hex[:12]}"
     repo.save_chat_message(
         message_id=user_msg_id,
@@ -120,10 +191,21 @@ async def chat_message(
         content=req.message,
     )
 
+    # 3. Execute Chat Agent Turn
     res = await asyncio.to_thread(
-        agent.process_message, req.message, state, None, current_user.user_id
+        agent.process_message,
+        req.message,
+        state,
+        None,
+        current_user.user_id,
+        req.run_id,
+        user_prof,
+        history_turns,
+        tier2_summary,
+        tier3_facts,
     )
 
+    # 4. Persist Assistant Message
     asst_msg_id = f"msg_{uuid.uuid4().hex[:12]}"
     repo.save_chat_message(
         message_id=asst_msg_id,
@@ -135,6 +217,15 @@ async def chat_message(
         tool_calls=res.tool_calls,
         sources=res.sources,
     )
+
+    # 5. Trigger Background Cognitive Memory Stager
+    bg_task = asyncio.create_task(
+        asyncio.to_thread(
+            _trigger_background_cognitive_processing, repo, current_user.user_id, req.run_id
+        )
+    )
+    _background_tasks.add(bg_task)
+    bg_task.add_done_callback(_background_tasks.discard)
 
     return ChatMessageResponse(
         message_id=asst_msg_id,
@@ -156,6 +247,20 @@ async def chat_stream(
     repo = ComplianceRepository(db_client=db)
     state = _build_state_from_db(db, req.run_id, req.context_state)
 
+    # 1. Fetch Upfront Context Envelope Data
+    user_prof = repo.get_user_profile(current_user.user_id) or {
+        "name": current_user.name,
+        "role": current_user.role,
+        "email": current_user.email,
+    }
+    history_resp = repo.get_chat_history(user_id=current_user.user_id, run_id=req.run_id, limit=50)
+    history_turns = history_resp.get("messages", [])
+
+    tier2_summary = repo.get_memory_summary(current_user.user_id, req.run_id)
+    raw_facts = repo.get_memory_facts(current_user.user_id)
+    tier3_facts = [rf["fact_text"] for rf in raw_facts if rf.get("fact_text")]
+
+    # 2. Persist User Message
     user_msg_id = f"msg_{uuid.uuid4().hex[:12]}"
     repo.save_chat_message(
         message_id=user_msg_id,
@@ -171,7 +276,17 @@ async def chat_stream(
         final_tool_calls = []
         final_sources = []
 
-        for event in agent.stream_message(req.message, state, None, current_user.user_id):
+        for event in agent.stream_message(
+            req.message,
+            state,
+            None,
+            current_user.user_id,
+            req.run_id,
+            user_prof,
+            history_turns,
+            tier2_summary,
+            tier3_facts,
+        ):
             ev_type = event.get("type")
             if ev_type == "thought":
                 chunk = event.get("chunk", "")
@@ -224,6 +339,18 @@ async def chat_stream(
                     }
                 )
                 yield f"event: done\ndata: {payload}\n\n"
+
+                # Trigger background cognitive worker
+                bg_stream_task = asyncio.create_task(
+                    asyncio.to_thread(
+                        _trigger_background_cognitive_processing,
+                        repo,
+                        current_user.user_id,
+                        req.run_id,
+                    )
+                )
+                _background_tasks.add(bg_stream_task)
+                bg_stream_task.add_done_callback(_background_tasks.discard)
             await asyncio.sleep(0.01)
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")

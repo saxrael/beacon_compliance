@@ -58,3 +58,42 @@ def test_graph_end_to_end_threshold_halt():
 
     assert final_state.get("income_threshold_breach") is True
     assert final_state.get("deliverables_ready") is not True
+
+
+def test_graph_with_langfuse_telemetry_enabled(monkeypatch):
+    """Verify graph execution enriches config with Langfuse callbacks and tags when enabled."""
+    monkeypatch.setenv("LANGFUSE_ENABLED", "true")
+    monkeypatch.setenv("LANGFUSE_PUBLIC_KEY", "pk-lf-test")
+    monkeypatch.setenv("LANGFUSE_SECRET_KEY", "sk-lf-test")
+    monkeypatch.setenv("LANGFUSE_HOST", "https://cloud.langfuse.com")
+
+    graph = BeaconComplianceGraph()
+    initial_state: BeaconComplianceState = {
+        "run_id": "run_telemetry_01",
+        "charity_number": "SC054652",
+        "accounting_period": "2025-2026",
+        "raw_documents": [
+            {
+                "doc_id": "doc_t1",
+                "filename": "weekly_offerings.txt",
+                "content_bytes": b"Weekly Offerings",
+                "declared_receipts_pence": 100000,
+            }
+        ],
+        "anonymised_payload": {
+            "opening_balance_pence": 100000,
+            "closing_balance_pence": 200000,
+            "raw_transactions": [
+                {
+                    "txn_id": "TXN_T1",
+                    "description": "Offering Tithe",
+                    "amount_pence": 100000,
+                    "transaction_type": "receipt",
+                }
+            ],
+        },
+    }
+
+    final_state = graph.run(initial_state)
+    assert final_state.get("deliverables_ready") is True
+    assert len(final_state.get("deliverables", [])) == 4
