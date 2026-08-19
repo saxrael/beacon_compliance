@@ -419,12 +419,9 @@ DO NOT output any monetary amount, numerical value, or currency field.
                     "stream": True,
                 }
                 url = OPENROUTER_API_URL if self.openrouter_key else GROQ_API_URL
-
                 raw_stream = self._fetch_remote_stream_chunks(url, headers, body)
-                text_stream = [item if isinstance(item, dict) else item for item in raw_stream]
-
                 accumulated_output = []
-                for event in self.parse_streaming_chunks(text_stream):
+                for event in self.parse_streaming_chunks(raw_stream):
                     if event.get("type") == "token":
                         accumulated_output.append(event.get("chunk", ""))
                     yield event
