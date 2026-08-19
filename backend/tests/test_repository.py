@@ -1,3 +1,5 @@
+import sqlite3
+
 from backend.src.db.d1_client import D1DatabaseClient
 from backend.src.db.r2_client import R2StorageClient
 from backend.src.db.repository import ComplianceRepository
@@ -211,8 +213,6 @@ def test_user_profile_crud():
 
 
 def test_user_profile_migration_on_preexisting_table():
-    import sqlite3
-
     conn = sqlite3.connect(":memory:")
     conn.row_factory = sqlite3.Row
     conn.execute(
