@@ -37,9 +37,13 @@ export function useComplianceOS() {
   const runCompliancePipeline = useCallback(async () => {
     setLoading(true);
     try {
+      const token = typeof window !== "undefined" ? localStorage.getItem("beacon_auth_token") : null;
       const res = await fetch(`${API_BASE_URL}/api/pipeline/run`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({ run_id: "run_001", opening_balance_pence: 500000, closing_balance_pence: 2000000 }),
       });
       if (res.ok) {

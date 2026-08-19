@@ -96,7 +96,7 @@ export const FinancialSummaryCards: React.FC<FinancialSummaryProps> = ({
           </div>
 
           <div className="pt-2 border-t border-stone-200/60 dark:border-slate-800 flex items-center justify-between text-[11px] text-stone-500 dark:text-slate-400 font-medium">
-            <span>Sunday Tithes & Offerings</span>
+            <span>Donations</span>
             <span className="text-emerald-700 dark:text-emerald-400 font-semibold font-mono text-[10px]">Verified</span>
           </div>
         </motion.div>

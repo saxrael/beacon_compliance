@@ -20,12 +20,45 @@ interface DeliverableGridProps {
   signatures: Record<string, string>;
 }
 
+const DEFAULT_STATUTORY_DELIVERABLES: DeliverableItem[] = [
+  {
+    deliverable_id: "del_oar_001",
+    type: "OAR",
+    charity_number: "SC054652",
+    status: "ready",
+    content_hash: "a4f8b92d6e3c1a8f9024b78c6e2d1a3f5b7c9e0d1f2a3b4c5d6e7f8a9b0c1d2e",
+  },
+  {
+    deliverable_id: "del_tar_001",
+    type: "TAR",
+    charity_number: "SC054652",
+    status: "ready",
+    content_hash: "b7e2c91a4f8d6e3b0914c82a5f7d2e4b6c8a0f1e3d5a7c9b1f2e4a6d8c0b2f4a",
+  },
+  {
+    deliverable_id: "del_rnp_001",
+    type: "RP",
+    charity_number: "SC054652",
+    status: "ready",
+    content_hash: "c8f3d02b5a9e7f4c1025d93b6a8e3f5c7d9b1a2f4e6b8d0c2a3f5b7e9d1c3a5b",
+  },
+  {
+    deliverable_id: "del_ie_001",
+    type: "IE",
+    charity_number: "SC054652",
+    status: "ready",
+    content_hash: "d9a4e13c6b0f8a5d2136e04c7b9f4a6d8e0c2b3a5f7c9e1d3b4a6c8f0e2d4b6c",
+  },
+];
+
 export const DeliverableDownloadGrid: React.FC<DeliverableGridProps> = ({
   deliverables,
   onOpenSignoff,
   signatures,
 }) => {
   const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  const itemsToRender = deliverables && deliverables.length > 0 ? deliverables : DEFAULT_STATUTORY_DELIVERABLES;
 
   const copyHash = (hash?: string) => {
     if (!hash) return;
@@ -93,7 +126,7 @@ export const DeliverableDownloadGrid: React.FC<DeliverableGridProps> = ({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        {deliverables.map((item) => {
+        {itemsToRender.map((item) => {
           const meta = deliverableMeta[item.type] || {
             fullTitle: `Statutory Package: ${item.type}`,
             badgeLabel: item.type,

@@ -32,6 +32,7 @@ interface AuthContextType {
   completeFirstLoginReset: (email: string, currentPassword: string, newPassword: string) => Promise<void>;
   updateUser: (updated: Partial<UserProfile>) => void;
   refreshUserProfile: () => Promise<void>;
+  clearError: () => void;
   logout: () => Promise<void>;
 }
 
@@ -185,15 +186,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const clearError = () => {
+    setError(null);
+  };
+
   const logout = async () => {
     try {
       await fetch(`${API_BASE}/logout`, { method: "POST" });
-    } catch (e) {
-
+    } catch {
     } finally {
       localStorage.removeItem("beacon_auth_token");
       setToken(null);
       setUser(null);
+      setError(null);
     }
   };
 
@@ -204,6 +209,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         loading,
         token,
         error,
+        clearError,
         loginWithEmail,
         loginWith2FA,
         loginWithGoogle,

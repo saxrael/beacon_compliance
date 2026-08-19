@@ -15,6 +15,7 @@ function CallbackHandler() {
   const [statusText, setStatusText] = useState("Verifying Google Trustee credentials...");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
+  const hasExecutedRef = React.useRef(false);
 
   useEffect(() => {
     const code = searchParams.get("code");
@@ -31,6 +32,11 @@ function CallbackHandler() {
       setErrorMessage("No authorization code was received from Google OAuth service.");
       return;
     }
+
+    if (hasExecutedRef.current) {
+      return;
+    }
+    hasExecutedRef.current = true;
 
     let isMounted = true;
 

@@ -7,7 +7,7 @@ import { motion } from "framer-motion";
 import { springs } from "@/lib/motion-tokens";
 
 export const LoginForm: React.FC = () => {
-  const { loginWithEmail, loginWith2FA, getGoogleLoginUrl, error: authError } = useAuth();
+  const { loginWithEmail, loginWith2FA, getGoogleLoginUrl, error: authError, clearError } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -19,14 +19,16 @@ export const LoginForm: React.FC = () => {
 
   useEffect(() => {
     setLoading(false);
+    clearError();
     const handlePageShow = (event: PageTransitionEvent) => {
       if (event.persisted) {
         setLoading(false);
+        clearError();
       }
     };
     window.addEventListener("pageshow", handlePageShow);
     return () => window.removeEventListener("pageshow", handlePageShow);
-  }, []);
+  }, [clearError]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
