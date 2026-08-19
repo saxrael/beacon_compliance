@@ -8,7 +8,7 @@ behind clean domain methods.
 import hashlib
 import hmac
 import json
-from datetime import UTC
+from datetime import UTC, datetime
 from typing import Any
 
 from backend.src.db.d1_client import D1DatabaseClient
@@ -231,8 +231,6 @@ class ComplianceRepository:
         created_at: str | None = None,
     ) -> dict[str, Any]:
         """Persist a conversation turn to D1 chat_messages table."""
-        from datetime import datetime
-
         ts = created_at or datetime.now(UTC).isoformat()
         tool_calls_json = json.dumps(tool_calls) if tool_calls else None
         sources_json = json.dumps(sources) if sources else None

@@ -80,6 +80,7 @@ def _build_state_from_db(
 
 @router.get("/history")
 async def get_chat_history(
+    *,
     run_id: str | None = Query(default=None),
     limit: int = Query(default=50, ge=1, le=100),
     before_timestamp: str | None = Query(default=None),

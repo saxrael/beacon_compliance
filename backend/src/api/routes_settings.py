@@ -11,6 +11,7 @@ import pyotp
 from backend.src.api.auth import TrusteeUser, get_current_trustee
 from backend.src.api.dependencies import get_d1_db
 from backend.src.db.d1_client import D1DatabaseClient
+from backend.src.db.repository import ComplianceRepository
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
@@ -51,8 +52,6 @@ async def get_profile(
     current_user: TrusteeUser = Depends(get_current_trustee),
     db: D1DatabaseClient = Depends(get_d1_db),
 ) -> ProfileResponse:
-    from backend.src.db.repository import ComplianceRepository
-
     repo = ComplianceRepository(db_client=db)
     user = repo.get_user_profile(current_user.user_id)
     if not user:
@@ -72,8 +71,6 @@ async def update_profile(
     current_user: TrusteeUser = Depends(get_current_trustee),
     db: D1DatabaseClient = Depends(get_d1_db),
 ) -> ProfileResponse:
-    from backend.src.db.repository import ComplianceRepository
-
     repo = ComplianceRepository(db_client=db)
     updated = repo.update_user_profile(
         current_user.user_id,
