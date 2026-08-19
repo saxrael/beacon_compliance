@@ -4,15 +4,16 @@
   <img src="assets/scio_header_banner.png" alt="Beacon Compliance OS - Potter's House Christian Mission UK Header Banner" width="100%" />
 </p>
 
-> **Beacon Compliance is an agentic OSCR-compliance webapp for Potter's House Christian Mission UK (SCIO, SC054652). It deterministically computes statutory accounts, drafts narrative reports, tracks filing deadlines, and provides an interactive chat assistant—all under 5 strict compliance red-lines.**
+> **Beacon Compliance OS is an agentic OSCR-compliance web application engineered specifically for Potter's House Christian Mission UK (SCIO, SC054652). It deterministically computes statutory accounts, synthesizes narrative reports under strict document contracts, tracks filing deadlines, provides real-time streaming compliance chat, and cryptographically signs submission packages—governed by 5 non-negotiable compliance red-lines.**
 
 ![Build Status](https://img.shields.io/badge/build-passing-brightgreen?style=flat-square)
-![Tests](https://img.shields.io/badge/pytest-104%2F104%20passed-success?style=flat-square)
+![Tests](https://img.shields.io/badge/pytest-166%2F166%20passed-success?style=flat-square)
 ![Preflight Audit](https://img.shields.io/badge/audit-100%25%20passed-success?style=flat-square)
 ![Boundary AST Check](https://img.shields.io/badge/boundary--ast-0%20violations-success?style=flat-square)
 ![Python](https://img.shields.io/badge/python-3.11%2B-blue?style=flat-square)
-![Next.js](https://img.shields.io/badge/next.js-16%2B-black?style=flat-square)
+![Next.js](https://img.shields.io/badge/next.js-15.5%2B-black?style=flat-square)
 ![TypeScript](https://img.shields.io/badge/typescript-5.0%2B-blue?style=flat-square)
+![Database](https://img.shields.io/badge/cloudflare-D1%20%7C%20R2-orange?style=flat-square)
 ![License](https://img.shields.io/badge/license-SCIO%20Internal-amber?style=flat-square)
 
 ---
@@ -21,72 +22,117 @@
 
 - [System Architecture & Core Principles](#system-architecture--core-principles)
 - [Key Features](#key-features)
+- [Master Agent Prompts Architecture](#master-agent-prompts-architecture)
+- [Option A Institutional Document Standards](#option-a-institutional-document-standards)
 - [Technology Stack](#technology-stack)
 - [Repository Structure](#repository-structure)
-- [Database & Data Isolation](#database--data-isolation)
+- [Database & Idempotent Migrations](#database--idempotent-migrations)
 - [Environment Configuration & Secrets](#environment-configuration--secrets)
 - [Local Quick Start & Verification](#local-quick-start--verification)
 - [Automated Testing & Pre-Flight Audits](#automated-testing--pre-flight-audits)
 - [CI/CD & Production Deployment](#cicd--production-deployment)
 - [Security & Compliance Red-Lines](#security--compliance-red-lines)
-- [License & Support](#license--support)
+- [License & Statutory Identity](#license--statutory-identity)
 
 ---
 
 ## 🏗️ System Architecture & Core Principles
 
-Beacon Compliance OS is a domain-specific compliance operating system built strictly to automate statutory reporting to the **Office of the Scottish Charity Regulator (OSCR)** for **Potter's House Christian Mission UK (SC054652)**.
+Beacon Compliance OS is built strictly to automate statutory reporting to the **Office of the Scottish Charity Regulator (OSCR)** under the *Charities and Trustee Investment (Scotland) Act 2005* and the *Charities Accounts (Scotland) Regulations 2006 (SSI 2006/218)*.
 
-The core compliance workflow is driven by an automated, idempotent **LangGraph state machine (`BeaconComplianceGraph`)** that governs data ingestion, transaction classification, narrative synthesis, deterministic arithmetic, hallucination auditing, and package assembly.
+The core compliance workflow is driven by an automated, idempotent **LangGraph state machine (`BeaconComplianceGraph`)** that coordinates data ingestion, multi-tier transaction classification, deterministic accounting arithmetic, narrative synthesis under document contracts, hallucination auditing, and final deliverable assembly.
 
 ### LangGraph Pipeline Topology
 
 ```mermaid
 graph TD
-    A[Raw Document / Bank Statement Ingest] -->|"Presidio + Regex Scrubbing"| B[Node 1: Ingest & PII Redactor]
-    B -->|"Ingest Income Check < £250k"| C[Node 1.5: 3-Tier Classifier]
-    C -->|"Tier 1: Rules / Tier 2: Trustee / Tier 2.5: Isolated LLM"| D[Node 3: Deterministic Calculator]
-    D -->|"Python Decimal Arithmetic"| E[Node 2: Gemma 4 26B Narrative Writer]
-    E -->|"Tokens & [FIGURE_INJECTED] Placeholders"| F[Node 4: Hallucination Auditor]
-    F -->|"Zero Discrepancy Gate"| G[Node 5: OSCR Package Assembler]
-    G -->|"HMAC-SHA256 Sign-off"| H[4 OSCR Submission Packages]
+    A["Raw Bank Statements / CSV / Invoices"] -->|"Presidio + UK Regex Scrubbing"| B["Node 1: Ingest Engine & PII Redactor"]
+    B -->|"Ingest-Layer Hard-Halt Check (£250k)"| C["Node 1.5: 3-Tier Classification Engine"]
+    C -->|"Tier 1: Deterministic YAML Rules"| D["Tier 2: Learned Trustee Rules"]
+    D -->|"Tier 2.5: Schema-Isolated LLM Suggestions"| E["Node 3: Deterministic Calculator Engine"]
+    E -->|"Python Decimal Integer Pence Matrix"| F["Node 2: Gemma 4 26B TAR Narrative Synthesizer"]
+    F -->|"4 Whitelisted Fields & Token Placeholders"| G["Node 4: Hallucination & Token Auditor"]
+    G -->|"Zero Discrepancy Gate"| H["Node 5: OSCR Statutory Deliverable Assembler"]
+    H -->|"HMAC-SHA256 Multi-Trustee Approval"| I["4 Submission-Ready OSCR Packages"]
 ```
 
 ### Deterministic vs. Probabilistic Boundary Matrix
 
-To guarantee strict compliance with Scottish charity law and eliminate LLM math hallucinations:
+To guarantee absolute compliance with Scottish charity law and eliminate LLM financial hallucinations:
 
-- **Deterministic Primitives (Python `Decimal`)**: Monetary totals, gross receipts, gross payments, fund balances, income threshold checks, SHA-256 content hashes, and per-trustee HMAC sign-offs.
-- **Probabilistic Assistance (Gemma 4 26B A4B & `openai/gpt-oss-20b`)**: Transaction categorization suggestions (strictly restricted to `{category, confidence, reasoning}`) and narrative synthesis for the 4 statutory Trustees' Annual Report (TAR) fields using `[FIGURE_INJECTED]` token placeholders.
+- **Deterministic Primitives (Python `Decimal`)**: Monetary arithmetic, gross receipts, gross payments, fund balances, statutory £250,000 threshold verification, SHA-256 deliverable content hashes, and per-trustee HMAC sign-offs.
+- **Probabilistic Assistance (Gemma 4 26B A4B & `openai/gpt-oss-20b`)**: Transaction categorization suggestions (strictly isolated to `{txn_id, category, confidence, reasoning}` with zero monetary fields) and narrative synthesis for the 4 statutory Trustees' Annual Report (TAR) fields using `[FIGURE_INJECTED:token_name]` placeholders.
 
 ---
 
 ## ⚡ Key Features
 
-- **5 Mandatory Compliance Red-Lines**: Hard security and regulatory boundaries built directly into code.
-- **4 OSCR Submission Packages (Publication-Grade Templates)**:
+- **5 Mandatory Compliance Red-Lines**: Hard architectural boundaries embedded directly into code.
+- **Option A Institutional OSCR Deliverables**:
   1. **Deliverable 1 (OAR)**: OSCR Online Annual Return Pre-Population Data Sheet.
-  2. **Deliverable 2 (TAR)**: Trustees' Annual Report with statutory narrative fields.
-  3. **Deliverable 3 (R&P)**: Receipts & Payments Accounts matrix and Statement of Balances reconciliation.
-  4. **Deliverable 4 (IE Pack)**: Independent Examiner Review Package with audit logs and SHA-256 verification hashes.
-- **Publication-Grade CSS & Print Architecture**: Embedded Google Fonts (`Cinzel`, `Inter`, `JetBrains Mono`), `@media print` A4 pagination controls, watermark seal (`trustee_seal.png`), and authentic header banner (`scio_header_banner.png`).
-- **Dynamic Dark/Light Theme System**: Seamless toggle between Light Mode and Dark Mode with adaptive brand tokens, CSS glassmorphism, and dynamic logo swapping (`logo.png` vs `logo_dark.png`).
-- **Langfuse Cloud LLM Observability**: PII-guarded generation tracing, latency monitoring, and token cost tracking (`backend/src/core/telemetry.py`).
-- **Per-Trustee HMAC Authentication**: Cryptographic sign-off using `hmac.new(trustee_secret, message, hashlib.sha256)` for Chair, Treasurer, and Secretary roles.
-- **Automated PII Scrubbing**: Structural Presidio + regex scrubber redacts sort codes, bank account numbers, emails, phone numbers, and postcodes prior to any LLM eligibility.
+  2. **Deliverable 2 (TAR)**: Trustees' Annual Report with 4 whitelisted narrative fields and clean statutory document references (`Doc Ref: SC054652-2026-TAR`).
+  3. **Deliverable 3 (R&P)**: Receipts & Payments Accounts matrix and Statement of Balances with formal Section 4 Trustee Approval blocks.
+  4. **Deliverable 4 (IE Pack)**: Independent Examiner Review Package with audit transmittal certificates and SHA-256 verification hashes.
+- **Master Agent Prompts Architecture**: Modular 7-Part XML system prompts with extensive Scottish statutory grounding and domain-split few-shot demonstrations across all agents and nodes.
+- **3-Tier Cognitive Memory Engine**: Long-term episodic memory persisted in Cloudflare D1 with strict **Non-Financial Cognitive Memory Exclusion** (PRD §7.9 / Red-Line 2).
+- **Real-Time SSE Compliance Chat Sentinel**: Server-Sent Events streaming (`POST /api/chat/stream`) emitting real-time reasoning thoughts, action execution badges, and token-by-token statutory guidance with infinite scroll-up pagination (50 turns).
+- **Interactive Circular Avatar Cropper**: Native HTML5 Canvas-backed circular cropping tool (`AvatarCropModal.tsx`) with drag-to-pan, zoom slider ($1.0\times$ to $3.0\times$), rule-of-thirds alignment grid, and compressed $256 \times 256\,\text{px}$ JPEG export.
+- **Publication-Grade Print Engine**: Embedded Google Fonts (`Cinzel`, `Inter`, `JetBrains Mono`), `@media print` A4 pagination controls, watermark seal (`trustee_seal.png`), and authentic charity letterhead banner (`scio_header_banner.png`).
+- **Dynamic Dark/Light Theme System**: Theme switching with CSS glassmorphism and dynamic logo swapping (`logo.png` vs `logo_dark.png`).
+- **Langfuse Cloud LLM Telemetry**: PII-guarded generation spans, latency tracing, and token cost observability (`backend/src/core/telemetry.py`).
+- **Cryptographic Multi-Trustee Sign-Off**: Role-restricted HMAC-SHA256 signatures generated with individual trustee credentials for Chair, Treasurer, and Secretary roles.
+
+---
+
+## 🧠 Master Agent Prompts Architecture
+
+System prompts across all nodes and conversational sentinels are organized into dedicated, modular packages under `backend/src/agents/prompts/` adhering strictly to the **7-Part XML Schema**:
+
+```
+backend/src/agents/prompts/
+├── __init__.py               # Package exports
+├── chat_prompts.py           # Senior Statutory Compliance Sentinel & OSCR Advisor (~1,200+ lines)
+├── writer_prompts.py         # Node 2 TAR Narrative Synthesizer (~800 lines)
+├── classifier_prompts.py     # Node 1 / Tier 2.5 Probabilistic Transaction Classifier (~800 lines)
+└── auditor_prompts.py        # Node 4 Hallucination & Token Placeholder Auditor (~800 lines)
+```
+
+### Prompt Engineering Highlights:
+- **`chat_prompts.py` (`CHAT_AGENT_SYSTEM_PROMPT`)**:
+  - Grounded in *2005 Act* (§§ 44, 45, 66), *2006 Regulations* (Reg 8 & Schedule 3), and SC054652 constitutional governance.
+  - Enforces the **THINK-PLAN-TOOL-SPEAK** cognitive operational loop.
+  - Equipped with deterministic tool contracts: `get_financial_summary()` and `search_knowledge_base(query)`.
+  - Includes **12 domain-split few-shot demonstrations** covering Financial Ledger, Filing Deadlines & Section 66 Duties, TAR Guidance & Reserves Policies, Independent Examination Eligibility, and Out-of-Scope Anti-Adversarial Defenses.
+- **`writer_prompts.py` (`NODE_2_TAR_WRITER_SYSTEM_PROMPT`)**:
+  - Restricts narrative output to exactly 4 `LLM_DRAFTED` fields: `governance_description`, `purposes_activities_narrative`, `achievements_connective_narrative`, and `principal_risks_narrative`.
+  - Connective narratives strictly use `[FIGURE_INJECTED:token_name]` placeholders with ZERO raw currency figures.
+- **`classifier_prompts.py` (`TIER_25_CLASSIFICATION_SYSTEM_PROMPT`)**:
+  - Enforces Rule 3 Schema Isolation: strictly outputs `{ "txn_id": str, "category": str, "confidence": float, "reasoning": str }` with zero monetary fields.
+- **`auditor_prompts.py` (`NODE_4_AUDITOR_SYSTEM_PROMPT`)**:
+  - Scans narrative drafts for raw currency figures (`£...`), validates token placeholder syntax, and verifies factual consistency against Node 3 accounting state.
+
+---
+
+## 🏛️ Option A Institutional Document Standards
+
+All 4 statutory document templates (`templates/`) follow the **Option A Institutional Standard** designed for formal submission to regulatory bodies and professional Independent Examiners:
+
+- **Clean Document Reference Codes**: Every deliverable displays a clean institutional reference (e.g., `Doc Ref: SC054652-2026-TAR`, `Doc Ref: SC054652-2026-RP`) rather than raw 64-character SHA-256 hash strings.
+- **Dynamic 3-Tier Chair Name Resolution**: Dynamically resolves the current Chair's name from live Cloudflare D1 approvals and user tables, falling back gracefully to `"Chair of the Board of Trustees"`.
+- **Cryptographic Backend Integrity**: While raw cryptographic hashes are removed from visual presentation bodies, 100% of underlying SHA-256 deliverable content hashes and HMAC-SHA256 trustee signatures remain recorded in Cloudflare D1 database ledgers for tamper-evident auditing.
 
 ---
 
 ## 🛠️ Technology Stack
 
-| Layer | Technologies | Purpose & Details |
-|---|---|---|
+| Layer | Technologies | Purpose & Architectural Role |
+| :--- | :--- | :--- |
 | **Backend Engine** | Python 3.11+, FastAPI, LangGraph, Pydantic v2 | REST API, state machine orchestration, deterministic Decimal accounting |
-| **Frontend UI** | Next.js 16+ (App Router), TypeScript, Tailwind CSS, Lucide Icons | Responsive trustee compliance dashboard with dynamic dark/light mode toggle |
-| **AI Models** | Gemma 4 26B A4B & `openai/gpt-oss-20b` (via Groq / OpenRouter) | Narrative synthesis and Tier 2.5 transaction categorization |
-| **Relational Database** | Cloudflare D1 (Serverless SQLite) | 14 relational tables (transactions, funds, audit logs, deliverables) |
-| **Object Storage** | Cloudflare R2 | Encrypted document and blob storage (AES-256-GCM) |
-| **Telemetry & Observability** | Langfuse Cloud (`https://cloud.langfuse.com`) | PII-guarded LLM tracing, latency tracking, and prompt monitoring |
+| **Frontend UI** | Next.js 15.5+ (App Router), TypeScript, Tailwind CSS, Framer Motion | Responsive trustee compliance dashboard with dark/light theme engine |
+| **AI Models** | Gemma 4 26B A4B & `openai/gpt-oss-20b` (via Groq / OpenRouter) | Narrative synthesis and Tier 2.5 transaction classification |
+| **Relational Database** | Cloudflare D1 (Serverless SQLite) | 15 relational tables (transactions, funds, memory facts, chat history, audit logs) |
+| **Object Storage** | Cloudflare R2 | AES-256-GCM encrypted document and artifact storage |
+| **LLM Observability** | Langfuse Cloud (`https://cloud.langfuse.com`) | PII-guarded generation spans, latency tracing, and cost monitoring |
 | **Production Server** | OCI Always-Free VM + Docker + Caddy Reverse Proxy | Dedicated backend compute with automated HTTPS via DuckDNS |
 
 ---
@@ -95,51 +141,54 @@ To guarantee strict compliance with Scottish charity law and eliminate LLM math 
 
 ```
 beacon_compliance/
-├── assets/                          # Primary brand graphics (logo.png, scio_header_banner.png, trustee_seal.png)
+├── assets/                          # Brand graphics (logo.png, scio_header_banner.png, trustee_seal.png)
 ├── backend/
-│   ├── pyproject.toml               # Python dependencies (fastapi, langgraph, langfuse, cryptography, uv)
+│   ├── pyproject.toml               # Python build config (FastAPI, LangGraph, Langfuse, Cryptography, uv)
 │   ├── src/
-│   │   ├── agents/                  # LangGraph nodes (ingest, classify, calculator, writer, auditor, assembler, graph)
-│   │   ├── api/                     # FastAPI endpoints (ingest, classify, pipeline, signoff, deliverables, chat)
-│   │   ├── core/                    # Security, PII scrubber, crypto, financial arithmetic, telemetry, retrieval
+│   │   ├── agents/                  # LangGraph nodes & Master Prompts package
+│   │   │   ├── prompts/             # Master 7-Part XML system prompts (chat, writer, classifier, auditor)
+│   │   │   ├── chat_agent.py        # Gemma 4 26B compliance assistant & SSE stream generator
+│   │   │   ├── graph.py             # LangGraph State Machine orchestrator
+│   │   │   ├── node_assembler.py    # Node 5 Deliverable Assembler & SHA-256 hasher
+│   │   │   ├── node_auditor.py      # Node 4 Hallucination & Token Auditor
+│   │   │   ├── node_calculator.py   # Node 3 Deterministic Decimal Accounting Engine
+│   │   │   ├── node_classify.py     # Node 1.5 3-Tier Classification Pipeline
+│   │   │   ├── node_ingest.py       # Node 1 Document Ingest & Income Check Engine
+│   │   │   └── node_writer.py       # Node 2 TAR Narrative Synthesis Engine
+│   │   ├── api/                     # FastAPI endpoints (ingest, classify, pipeline, signoff, deliverables, chat, settings)
+│   │   ├── core/                    # PII scrubber, crypto, financial arithmetic, memory, telemetry, retrieval
 │   │   └── db/                      # Cloudflare D1 and R2 client interfaces & repository facade
-│   └── tests/                       # Complete pytest test suite (104 unit & integration tests)
+│   └── tests/                       # 166 unit & integration tests (100% pass rate)
 ├── config/
 │   ├── charity_profile.yaml         # SC054652 profile & fund definitions
 │   └── fund_classifier.yaml        # Tier 1 deterministic classification matrix
 ├── docs/                            # Comprehensive specifications (PRD.md, TRD.md, security_doc.md, DEPLOYMENT.md)
-├── frontend/                        # Next.js 16+ Trustee Web Application
+├── frontend/                        # Next.js 15.5+ Trustee Web Application
 │   ├── design-system/MASTER.md      # Master design system specification
-│   ├── public/assets/               # Mirrored web assets (logo.png, scio_header_banner.png, favicon.ico)
-│   └── src/                         # Next.js app pages, components, context (ThemeContext), hooks
-├── migrations/                      # Cloudflare D1 SQL schema migrations (0001_initial_schema.sql)
+│   ├── public/assets/               # Mirrored web assets (logo.png, logo_dark.png, favicon.ico)
+│   └── src/
+│       ├── app/                     # Next.js App Router pages (Dashboard, Auth, Callback)
+│       ├── components/              # Interactive UI components (AvatarCropModal, ComplianceChatDrawer, Header, SidebarMenu)
+│       └── context/                 # React Contexts (AuthContext, ThemeContext)
+├── migrations/                      # Idempotent Cloudflare D1 SQL schema migrations (0001, 0002, 0003)
 ├── scripts/
-│   └── deploy_check.py              # Automated pre-flight production audit script
-├── templates/                       # OSCR Deliverable HTML document templates (OAR, TAR, R&P, IE Pack)
+│   ├── deploy_check.py              # Automated pre-flight production readiness audit script
+│   └── verify_financial_boundary.py # AST-based zero float financial boundary checker
+├── templates/                       # Option A OSCR Deliverable HTML document templates (OAR, TAR, R&P, IE Pack)
 └── wrangler.toml                    # Cloudflare D1 & R2 binding configuration
 ```
 
 ---
 
-## 🛢️ Database & Data Isolation
+## 🛢️ Database & Idempotent Migrations
 
 Beacon Compliance utilizes **Cloudflare D1** for relational data persistence and **Cloudflare R2** for encrypted blob storage.
 
-### Core Relational Tables (`migrations/0001_initial_schema.sql`)
+### Schema Migrations (`migrations/`)
 
-- `users`: Trustee accounts, role definitions, and password hashes.
-- `runs`: Pipeline execution runs and statutory year-end metadata.
-- `documents`: Raw and scrubbed document records with Cloudflare R2 object keys.
-- `transactions`: Ingested transaction records with scrubbed descriptions and integer pence representations (`amount_pence`).
-- `classification_rules`: Tier 1 pattern rules and Tier 2 trustee-learned classification mappings.
-- `financial_state`: Node 3 calculated Receipts & Payments totals per fund.
-- `deliverables`: Status tracking for the 4 OSCR packages.
-- `approvals`: Cryptographic HMAC signatures recorded per trustee role.
-- `audit_log`: End-to-end execution logs (`input_hash`, `output_hash`, node status).
-- `ie_deliveries`: Signed time-limited download URLs for Independent Examiners.
-- `notifications`: Critical alert dispatches.
-- `memory_summaries` & `memory_facts`: Cognitive memory Tiers 2 & 3 (non-financial facts ONLY).
-- `embeddings`: Vector embeddings for hybrid dense+sparse RRF retrieval.
+1. **`0001_initial_schema.sql`**: Creates the 14 core relational tables (`users`, `runs`, `documents`, `transactions`, `classification_rules`, `financial_state`, `deliverables`, `approvals`, `audit_log`, `ie_deliveries`, `notifications`, `memory_summaries`, `memory_facts`, `embeddings`).
+2. **`0002_add_2fa_and_oauth.sql`**: Appends columns for Google OAuth linking and TOTP 2-Step Verification (`google_id`, `totp_secret`, `totp_enabled`).
+3. **`0003_chat_messages_and_profiles.sql`**: Adds avatar support (`users.avatar`) and creates the `chat_messages` persistence table with composite indices for 50-turn pagination.
 
 ### Precision Monetary Storage
 Monetary figures are stored as 64-bit signed integers representing exact value in **pence** (e.g., `£150.25` is stored as `15025`). All domain calculations are executed using `decimal.Decimal`. Floating-point arithmetic for monetary values is strictly prohibited.
@@ -180,7 +229,7 @@ LANGFUSE_HOST=https://cloud.langfuse.com
 
 ### 1. Prerequisites
 - **Python**: Version `3.11` or higher (with `uv` package manager)
-- **Node.js**: Version `18` or higher (with `npm`)
+- **Node.js**: Version `20` or higher (with `npm`)
 
 ### 2. Backend Setup
 ```bash
@@ -190,7 +239,7 @@ cd backend
 # Create virtual environment and install dependencies using uv
 uv venv
 source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-uv pip install -e .
+uv pip install -e ".[dev]"
 ```
 
 ### 3. Frontend Setup
@@ -203,37 +252,36 @@ npm install
 ```
 
 ### 4. Running Locally
-In terminal 1 (Backend API):
+In Terminal 1 (FastAPI Backend):
 ```bash
 cd backend
 uvicorn src.api.main:app --reload --port 8000
 ```
 
-In terminal 2 (Frontend Dashboard):
+In Terminal 2 (Next.js Frontend):
 ```bash
 cd frontend
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser to access the Trustee Compliance Dashboard.
+Open [http://localhost:3000](http://localhost:3000) to access the Trustee Compliance Dashboard.
 
 ---
 
 ## 🧪 Automated Testing & Pre-Flight Audits
 
-### 1. Pytest Backend Test Suite
-Run the 104 unit & integration tests covering encryption, financial boundaries, PII scrubbing, node calculations, LangGraph pipeline execution, telemetry, authentication (Google OAuth, 2FA/TOTP), email service, and FastAPI routes:
+### 1. Pytest Backend Test Suite (166 Tests)
+Run the complete unit & integration test suite covering master prompts, cryptographic signatures, PII scrubbing, 3-tier classification, accounting arithmetic, LangGraph state machine, template rendering, and API routes:
 
 ```bash
-# From project root
-python -m pytest -v --tb=short
+python -m pytest backend/tests -v --tb=short
 ```
 
-### 2. AST Financial Boundary Check
+### 2. AST Financial Boundary Verification
 Verify zero AST violations of the 5 financial boundary rules across all Python modules:
 
 ```bash
-python .agent/.agents/skills/beacon-financial-boundary/scripts/verify_financial_boundary.py backend/src/
+python scripts/verify_financial_boundary.py backend/src/
 ```
 
 ### 3. Pre-Flight Production Readiness Audit
@@ -243,20 +291,27 @@ Run the automated pre-flight audit script to verify environment variables, secre
 python scripts/deploy_check.py
 ```
 
+### 4. Frontend Production Build Check
+Verify Next.js compilation, type-checking, and static generation:
+
+```bash
+cd frontend && npm run build
+```
+
 ---
 
 ## 🚢 CI/CD & Production Deployment
 
-### Backend API (OCI Always-Free VM + Docker + Caddy)
-The backend runs as a Docker container on a dedicated OCI Always-Free VM behind Caddy reverse proxy with automated HTTPS via DuckDNS (`https://beacon-compliance.duckdns.org`).
+### Backend API (OCI VM + Docker + Caddy)
+The backend container runs on an OCI compute instance behind a Caddy reverse proxy with automated HTTPS via DuckDNS (`https://beacon-compliance.duckdns.org`).
 
 ### Database & Storage (Cloudflare D1 & R2)
-Apply database migrations to production Cloudflare D1:
+Apply database migrations non-destructively to remote Cloudflare D1:
 ```bash
 npx wrangler d1 migrations apply beacon-compliance-d1 --remote
 ```
 
-### Frontend Web App (Vercel / Cloudflare Pages)
+### Frontend Web App (Vercel)
 Deploy the Next.js frontend to Vercel with environment variable `NEXT_PUBLIC_API_URL` pointing to your deployed backend API endpoint.
 
 ---
@@ -275,7 +330,7 @@ Deploy the Next.js frontend to Vercel with environment variable `NEXT_PUBLIC_API
 
 ---
 
-## 📄 License & Support
+## 📄 License & Statutory Identity
 
 **Potter's House Christian Mission UK**  
 Scottish Charitable Incorporated Organisation (SCIO) — SC054652  
