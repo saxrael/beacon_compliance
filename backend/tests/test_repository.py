@@ -245,4 +245,3 @@ def test_user_profile_migration_on_preexisting_table():
     fetched = repo.get_user_profile("usr_legacy")
     assert fetched is not None
     assert fetched["avatar"] == "data:image/jpeg;base64,mockavatarlegacy"
-

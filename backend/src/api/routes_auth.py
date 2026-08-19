@@ -50,6 +50,7 @@ class UserProfileResponse(BaseModel):
     role: str
     first_login_complete: bool
     google_linked: bool
+    avatar: str | None = None
 
 
 class AuthResponse(BaseModel):
@@ -187,6 +188,7 @@ async def google_oauth_callback(
         role=user_role,
         first_login_complete=first_complete,
         google_linked=True,
+        avatar=user.get("avatar"),
     )
 
     return AuthResponse(access_token=jwt_token, user=user_profile)
@@ -226,6 +228,7 @@ async def login_with_password(
         role=user_role,
         first_login_complete=first_complete,
         google_linked=bool(user.get("google_id")),
+        avatar=user.get("avatar"),
     )
 
     if user.get("totp_enabled"):
@@ -299,6 +302,7 @@ async def login_with_2fa(
         role=user_role,
         first_login_complete=bool(user.get("first_login_complete", 0)),
         google_linked=bool(user.get("google_id")),
+        avatar=user.get("avatar"),
     )
     return AuthResponse(access_token=jwt_token, user=user_profile)
 
@@ -346,6 +350,7 @@ async def first_login_password_reset(
         role=user["role"].title(),
         first_login_complete=True,
         google_linked=bool(user.get("google_id")),
+        avatar=user.get("avatar"),
     )
 
 
@@ -368,6 +373,7 @@ async def get_current_user_profile(
         role=user["role"].title(),
         first_login_complete=bool(user.get("first_login_complete", 0)),
         google_linked=bool(user.get("google_id")),
+        avatar=user.get("avatar"),
     )
 
 

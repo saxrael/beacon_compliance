@@ -178,8 +178,17 @@ async def chat_stream(
                 payload = json.dumps({"chunk": chunk})
                 yield f"event: thought\ndata: {payload}\n\n"
             elif ev_type == "action":
-                detail = event.get("detail", "")
-                payload = json.dumps({"detail": detail})
+                label = event.get("label") or event.get("detail", "")
+                status = event.get("status", "running")
+                action_id = event.get("action_id", "act_0")
+                payload = json.dumps(
+                    {
+                        "action_id": action_id,
+                        "label": label,
+                        "status": status,
+                        "detail": label,
+                    }
+                )
                 yield f"event: action\ndata: {payload}\n\n"
             elif ev_type == "token":
                 chunk = event.get("chunk", "")

@@ -151,18 +151,119 @@ DO NOT output any monetary amount, numerical value, or currency field.
 
         return None
 
-    def call_gemma_chat(
-        self, system_prompt: str, user_message: str, tool_context: str = ""
-    ) -> str | None:
-        """Call Gemma 4 26B A4B for compliance chat assistant turns."""
+    def parse_streaming_chunks(self, chunks_iterable: Any):
+        """Parse raw stream chunks, dynamically extracting <think> reasoning tokens from content tokens."""
+        in_think = False
+        buffer = ""
+
+        for raw_chunk in chunks_iterable:
+            if not raw_chunk:
+                continue
+            buffer += raw_chunk
+
+            while buffer:
+                tag = "</think>" if in_think else "<think>"
+                if tag in buffer:
+                    pre, post = buffer.split(tag, 1)
+                    if pre:
+                        yield {"type": "thought" if in_think else "token", "chunk": pre}
+                    in_think = not in_think
+                    buffer = post
+                elif "<" in buffer and tag.startswith(buffer[buffer.rfind("<") :]):
+                    break
+                else:
+                    yield {"type": "thought" if in_think else "token", "chunk": buffer}
+                    buffer = ""
+
+        if buffer:
+            yield {"type": "thought" if in_think else "token", "chunk": buffer}
+
+    def stream_gemma_chat(self, system_prompt: str, user_message: str, tool_context: str = ""):
+        """Stream Gemma 4 26B A4B compliance chat turns via true HTTP SSE streaming."""
+        full_prompt = (
+            f"{user_message}\n\nContext Tool Results:\n{tool_context}"
+            if tool_context
+            else user_message
+        )
+
         if self.openrouter_key or self.groq_key:
             try:
                 headers = {
                     "Content-Type": "application/json",
-                    "Authorization": f"Bearer {self .openrouter_key or self .groq_key }",
+                    "Authorization": f"Bearer {self.openrouter_key or self.groq_key}",
+                }
+                body = {
+                    "model": "google/gemma-2-27b-it" if self.openrouter_key else "gemma2-9b-it",
+                    "messages": [
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": full_prompt},
+                    ],
+                    "temperature": 0.3,
+                    "stream": True,
+                }
+                url = OPENROUTER_API_URL if self.openrouter_key else GROQ_API_URL
+
+                def raw_chunk_generator():
+                    with httpx.Client(timeout=30.0) as client:
+                        with client.stream("POST", url, headers=headers, json=body) as resp:
+                            for line in resp.iter_lines():
+                                if not line:
+                                    continue
+                                line_str = line.strip()
+                                if line_str.startswith("data: "):
+                                    data_part = line_str[6:].strip()
+                                    if data_part == "[DONE]":
+                                        break
+                                    try:
+                                        payload = json.loads(data_part)
+                                        delta = payload.get("choices", [{}])[0].get("delta", {})
+                                        reasoning = delta.get("reasoning") or delta.get("thought")
+                                        if reasoning:
+                                            yield {"type": "thought", "chunk": reasoning}
+                                        content = delta.get("content")
+                                        if content:
+                                            yield content
+                                    except Exception:
+                                        continue
+
+                raw_stream = raw_chunk_generator()
+                text_stream = []
+                for item in raw_stream:
+                    if isinstance(item, dict):
+                        yield item
+                    else:
+                        text_stream.append(item)
+
+                yield from self.parse_streaming_chunks(text_stream)
+                return
+            except Exception as err:
+                logger.warning(f"Compliance chat LLM streaming failed, using fallback: {err}")
+
+        if tool_context:
+            fallback_text = f"According to verified compliance records:\n\n{tool_context}"
+        else:
+            fallback_text = (
+                "I am your Beacon Compliance assistant for Potter's House Christian Mission UK (SCIO, SC054652). "
+                "How can I assist you with OSCR regulatory guidance, Receipts & Payments accounts, or Trustees' Annual Report drafting?"
+            )
+
+        words = fallback_text.split(" ")
+        for i, word in enumerate(words):
+            chunk = word if i == len(words) - 1 else word + " "
+            yield {"type": "token", "chunk": chunk}
+
+    def call_gemma_chat(
+        self, system_prompt: str, user_message: str, tool_context: str = ""
+    ) -> str | None:
+        """Call Gemma 4 26B A4B for synchronous compliance chat assistant turns."""
+        if self.openrouter_key or self.groq_key:
+            try:
+                headers = {
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {self.openrouter_key or self.groq_key}",
                 }
                 full_prompt = (
-                    f"{user_message }\n\nContext Tool Results:\n{tool_context }"
+                    f"{user_message}\n\nContext Tool Results:\n{tool_context}"
                     if tool_context
                     else user_message
                 )
@@ -192,6 +293,6 @@ DO NOT output any monetary amount, numerical value, or currency field.
                         )
                         return reply
             except Exception as err:
-                logger.warning(f"Compliance chat LLM call failed: {err }")
+                logger.warning(f"Compliance chat LLM call failed: {err}")
 
         return None

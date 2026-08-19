@@ -49,7 +49,22 @@ def test_chat_agent_out_of_scope_guardrail_refusal():
         assert len(res.tool_calls) == 0
 
 
-def test_chat_agent_stream_message():
+def test_chat_agent_stream_simple_greeting_has_no_fake_thinking_or_actions():
+    agent = ComplianceChatAgent()
+    events = list(agent.stream_message("Hello, good morning", state={}))
+    event_types = [e["type"] for e in events]
+
+    assert "thought" not in event_types
+    assert "action" not in event_types
+    assert "token" in event_types
+    assert "done" in event_types
+
+    done_event = next(e for e in events if e["type"] == "done")
+    assert not done_event.get("thinking")
+    assert not done_event.get("tool_calls")
+
+
+def test_chat_agent_stream_financial_query_emits_clean_action_lifecycle():
     agent = ComplianceChatAgent()
     state = {
         "receipts_payments": {
@@ -63,10 +78,59 @@ def test_chat_agent_stream_message():
 
     events = list(agent.stream_message("What were our total financial receipts?", state=state))
     event_types = [e["type"] for e in events]
-    assert "thought" in event_types
-    assert "action" in event_types
-    assert "token" in event_types
-    assert "done" in event_types
+
+    assert "thought" not in event_types
+
+    action_events = [e for e in events if e["type"] == "action"]
+    assert len(action_events) >= 1
+    assert any("Receipts & Payments" in a.get("label", a.get("detail", "")) for a in action_events)
 
     done_event = next(e for e in events if e["type"] == "done")
     assert "15000.00" in done_event["full_message"]
+    assert len(done_event.get("tool_calls", [])) == 1
+
+
+def test_chat_agent_stream_regulatory_query_emits_clean_action_lifecycle():
+    agent = ComplianceChatAgent()
+    kb_corpus = [{"chunk_id": "kb_01", "text": "OSCR requires annual filings within 9 months."}]
+
+    events = list(
+        agent.stream_message("What is the OSCR filing deadline?", state={}, kb_corpus=kb_corpus)
+    )
+    event_types = [e["type"] for e in events]
+
+    assert "thought" not in event_types
+
+    action_events = [e for e in events if e["type"] == "action"]
+    assert len(action_events) >= 1
+    assert any("OSCR" in a.get("label", a.get("detail", "")) for a in action_events)
+
+    done_event = next(e for e in events if e["type"] == "done")
+    assert len(done_event.get("sources", [])) > 0
+
+
+def test_llm_client_stream_parses_dynamic_think_tags():
+    from backend.src.core.llm_client import LLMClient
+
+    client = LLMClient()
+    mock_raw_stream = [
+        "<think>\n",
+        "Assessing compliance ",
+        "with SCIO provisions.\n",
+        "</think>\n",
+        "Under Scottish charity ",
+        "regulations, filings ",
+        "are due in 9 months.",
+    ]
+
+    parsed_events = list(client.parse_streaming_chunks(mock_raw_stream))
+    thought_chunks = [e["chunk"] for e in parsed_events if e["type"] == "thought"]
+    token_chunks = [e["chunk"] for e in parsed_events if e["type"] == "token"]
+
+    full_thought = "".join(thought_chunks)
+    full_tokens = "".join(token_chunks)
+
+    assert "Assessing compliance with SCIO provisions." in full_thought
+    assert "Under Scottish charity regulations" in full_tokens
+    assert "<think>" not in full_tokens
+    assert "</think>" not in full_tokens

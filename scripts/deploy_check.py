@@ -88,6 +88,21 @@ def check_dockerignore_present() -> tuple[bool, str]:
     return True, ".dockerignore is present and configured."
 
 
+def check_telemetry_integration() -> tuple[bool, str]:
+    """Verify Langfuse telemetry module and LangChain CallbackHandler readiness."""
+    try:
+        from langfuse import Langfuse  # noqa: F401
+    except ImportError:
+        return False, "Langfuse SDK is not installed ('pip install langfuse')."
+
+    try:
+        from langfuse.langchain import CallbackHandler  # noqa: F401
+    except Exception as exc:
+        return False, f"Langfuse LangChain CallbackHandler unavailable: {exc}"
+
+    return True, "Langfuse SDK and LangChain CallbackHandler importable and operational."
+
+
 def run_full_preflight_check() -> bool:
     """Run full production pre-flight readiness audit."""
     print("=" * 60)
@@ -101,6 +116,7 @@ def run_full_preflight_check() -> bool:
         ("OSCR Document Templates", check_document_templates),
         ("Cloudflare D1 Migration Script", check_d1_migrations_exist),
         ("Docker Build Context Guard", check_dockerignore_present),
+        ("Langfuse Telemetry & CallbackHandler", check_telemetry_integration),
     ]
 
     all_passed = True

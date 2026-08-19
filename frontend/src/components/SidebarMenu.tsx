@@ -46,13 +46,13 @@ export const SidebarMenu: React.FC<SidebarMenuProps> = ({
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={springs.gentle}
-              className="fixed inset-y-0 left-0 w-80 max-w-[85vw] bg-white dark:bg-[#070A11] border-r border-stone-200 dark:border-slate-800 z-50 shadow-2xl flex flex-col justify-between overflow-hidden"
+              className="fixed inset-y-0 left-0 w-80 max-w-[85vw] bg-white dark:bg-[#080C14] border-r border-stone-200 dark:border-slate-800/80 z-50 shadow-2xl flex flex-col justify-between overflow-hidden"
             >
               {/* Top Gold Ribbon Accent */}
               <div className="h-1.5 gold-ribbon w-full" />
               
               {/* Header with Crest Branding */}
-              <div className="p-5 border-b border-stone-200/80 dark:border-slate-800 flex items-center justify-between bg-stone-50/60 dark:bg-[#0E1524]/80">
+              <div className="p-5 border-b border-stone-200/80 dark:border-slate-800 flex items-center justify-between bg-stone-50/60 dark:bg-[#0E1626]/90">
                 <div className="flex items-center gap-3">
                   <img
                     src="/assets/logo_mark.png"
@@ -78,7 +78,7 @@ export const SidebarMenu: React.FC<SidebarMenuProps> = ({
               </div>
 
               {/* Trustee Profile Card */}
-              <div className="p-5 border-b border-stone-200/80 dark:border-slate-800 bg-stone-100/50 dark:bg-slate-900/30">
+              <div className="p-5 border-b border-stone-200/80 dark:border-slate-800 bg-stone-100/50 dark:bg-[#0D1525]/70">
                 <div className="flex items-center gap-3.5">
                   {user?.avatar ? (
                     <img
@@ -125,7 +125,7 @@ export const SidebarMenu: React.FC<SidebarMenuProps> = ({
                     onClose();
                     onOpenSettings();
                   }}
-                  className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-stone-100 dark:hover:bg-slate-800/80 transition-all hover:translate-x-1"
+                  className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-stone-100 dark:hover:bg-[#131E35] transition-all hover:translate-x-1"
                 >
                   <Settings className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0" />
                   <span>Account & Security Settings</span>
@@ -136,13 +136,13 @@ export const SidebarMenu: React.FC<SidebarMenuProps> = ({
                     onClose();
                     onStartTour();
                   }}
-                  className="tour-start-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-stone-100 dark:hover:bg-slate-800/80 transition-all hover:translate-x-1"
+                  className="tour-start-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-stone-100 dark:hover:bg-[#131E35] transition-all hover:translate-x-1"
                 >
                   <HelpCircle className="h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0" />
                   <span>Interactive Guided Tour</span>
                 </button>
 
-                <div className="h-px bg-stone-200/80 dark:bg-slate-800 my-3 mx-2" />
+                <div className="h-px bg-stone-200/80 dark:bg-slate-800/80 my-3 mx-2" />
                 
                 <div className="px-3 py-1.5">
                   <p className="text-[10px] font-bold text-stone-400 dark:text-slate-500 uppercase tracking-widest">
@@ -152,20 +152,20 @@ export const SidebarMenu: React.FC<SidebarMenuProps> = ({
 
                 <a 
                   href="mailto:system.admin@pottershouse.org.uk"
-                  className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-stone-100 dark:hover:bg-slate-800/80 transition-all hover:translate-x-1"
+                  className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-stone-100 dark:hover:bg-[#131E35] transition-all hover:translate-x-1"
                 >
                   <User className="h-4 w-4 text-stone-400 shrink-0" />
                   <span>Contact Charity Support</span>
                 </a>
 
-                <div className="mt-4 p-3.5 rounded-2xl bg-amber-500/5 border border-amber-500/20 text-[11px] text-stone-600 dark:text-slate-400 leading-relaxed">
+                <div className="mt-4 p-3.5 rounded-2xl bg-amber-500/5 dark:bg-amber-500/10 border border-amber-500/20 text-[11px] text-stone-600 dark:text-slate-300 leading-relaxed">
                   <p className="font-semibold text-amber-800 dark:text-amber-300 mb-0.5">Scottish Charity Governance Notice</p>
                   All account updates and official trustee approvals are securely and permanently recorded in the charity audit log.
                 </div>
               </div>
 
               {/* Footer Sign Out and Copyright */}
-              <div className="p-4 border-t border-stone-200/80 dark:border-slate-800 bg-stone-50/40 dark:bg-slate-900/40">
+              <div className="p-4 border-t border-stone-200/80 dark:border-slate-800/80 bg-stone-50/40 dark:bg-[#0A0F1B]">
                 <p className="text-[10px] text-center text-stone-400 dark:text-slate-500 mb-3 font-mono leading-tight">
                   © 2026 Potter&apos;s House Christian Mission UK (SCIO, SC054652)
                 </p>

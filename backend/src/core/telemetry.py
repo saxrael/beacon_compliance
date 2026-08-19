@@ -24,7 +24,10 @@ except Exception:
 try:
     from langfuse.langchain import CallbackHandler
 except Exception:
-    CallbackHandler = None
+    try:
+        from langfuse.callback import CallbackHandler
+    except Exception:
+        CallbackHandler = None
 
 
 def sanitize_telemetry_payload(data: Any) -> Any:
@@ -49,13 +52,25 @@ class BeaconLangfuseTracer:
         self.enabled = os.getenv("LANGFUSE_ENABLED", "false").lower() in ("true", "1", "yes")
         self.public_key = os.getenv("LANGFUSE_PUBLIC_KEY", "").strip()
         self.secret_key = os.getenv("LANGFUSE_SECRET_KEY", "").strip()
-        self.host = os.getenv("LANGFUSE_HOST", "https://cloud.langfuse.com").strip()
+        self.host = (
+            os.getenv("LANGFUSE_HOST")
+            or os.getenv("LANGFUSE_BASE_URL")
+            or "https://cloud.langfuse.com"
+        ).strip()
 
         self.langfuse_client: Any | None = None
 
         if self.enabled and self.public_key and self.secret_key:
+            # Sync environment variables so Langfuse get_client() and CallbackHandler discover credentials uniformly
+            os.environ["LANGFUSE_PUBLIC_KEY"] = self.public_key
+            os.environ["LANGFUSE_SECRET_KEY"] = self.secret_key
+            os.environ["LANGFUSE_HOST"] = self.host
+            os.environ["LANGFUSE_BASE_URL"] = self.host
+
             if Langfuse is None:
-                logger.warning("Langfuse module unavailable; telemetry disabled.")
+                logger.warning(
+                    "Langfuse module unavailable; telemetry disabled. Ensure 'langfuse' is installed."
+                )
                 self.enabled = False
             else:
                 try:
@@ -80,14 +95,24 @@ class BeaconLangfuseTracer:
         if not self.is_enabled():
             return None
         if CallbackHandler is None:
-            logger.warning("Langfuse CallbackHandler unavailable; ensure langfuse is installed.")
+            logger.warning(
+                "Langfuse CallbackHandler unavailable; ensure 'langfuse' and 'langchain' are installed."
+            )
             return None
         try:
-            return CallbackHandler(
-                public_key=self.public_key,
-                secret_key=self.secret_key,
-                host=self.host,
-            )
+            # Modern Langfuse CallbackHandler accepts public_key / reads config from env
+            return CallbackHandler(public_key=self.public_key)
+        except TypeError:
+            try:
+                # Fallback for legacy Langfuse v2 CallbackHandler
+                return CallbackHandler(
+                    public_key=self.public_key,
+                    secret_key=self.secret_key,
+                    host=self.host,
+                )
+            except Exception as exc:
+                logger.warning("Failed to create Langchain CallbackHandler: %s", exc)
+                return None
         except Exception as exc:
             logger.warning("Failed to create Langchain CallbackHandler: %s", exc)
             return None

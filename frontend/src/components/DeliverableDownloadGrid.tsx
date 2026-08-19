@@ -188,15 +188,15 @@ export const DeliverableDownloadGrid: React.FC<DeliverableGridProps> = ({
                 </div>
 
                 {/* Statutory Role Note */}
-                <div className="p-2.5 rounded-xl bg-stone-50 dark:bg-slate-950/60 border border-stone-200/80 dark:border-slate-800/80 text-[11px] text-stone-500 dark:text-slate-400 flex items-start gap-2">
+                <div className="p-2.5 rounded-xl bg-stone-50 dark:bg-[#0B111E]/90 border border-stone-200/80 dark:border-slate-800/80 text-[11px] text-stone-500 dark:text-slate-300 flex items-start gap-2">
                   <HelpCircle className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
                   <span>{meta.statutoryRole}</span>
                 </div>
 
                 {/* Verification Seal Fingerprint */}
-                <div className="flex items-center justify-between bg-stone-100/60 dark:bg-slate-950 p-2.5 rounded-2xl border border-stone-200 dark:border-slate-800 text-xs font-mono">
+                <div className="flex items-center justify-between bg-stone-100/60 dark:bg-[#080D18] p-2.5 rounded-2xl border border-stone-200 dark:border-amber-500/20 text-xs font-mono">
                   <div className="flex items-center gap-2 overflow-hidden">
-                    <span className="text-[10px] uppercase font-bold text-stone-500 dark:text-slate-500 shrink-0">Document Seal:</span>
+                    <span className="text-[10px] uppercase font-bold text-stone-500 dark:text-amber-400/80 shrink-0">Document Seal:</span>
                     <span className="truncate text-stone-700 dark:text-amber-300 text-[11px] font-semibold">
                       {hash ? `${hash.substring(0, 24)}...` : "Calculating..."}
                     </span>
@@ -204,7 +204,7 @@ export const DeliverableDownloadGrid: React.FC<DeliverableGridProps> = ({
                   <button
                     onClick={() => copyHash(hash)}
                     title="Copy document security verification seal"
-                    className="p-1 rounded-md text-stone-500 hover:text-stone-900 dark:hover:text-amber-300 hover:bg-stone-200 dark:hover:bg-slate-800 transition-colors"
+                    className="p-1 rounded-md text-stone-500 hover:text-stone-900 dark:hover:text-amber-300 hover:bg-stone-200 dark:hover:bg-slate-800/80 transition-colors"
                   >
                     {copiedId === hash ? (
                       <Check className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />

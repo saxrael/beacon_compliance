@@ -12,6 +12,9 @@ import {
   Bot,
   Activity,
   Lightbulb,
+  Brain,
+  CheckCircle2,
+  Loader2,
 } from 'lucide-react';
 import { MarkdownRenderer } from './MarkdownRenderer';
 import { API_BASE_URL } from '@/config';
@@ -19,6 +22,12 @@ import { useAuth } from '@/context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { springs } from '@/lib/motion-tokens';
 import { ClientPortal } from './ClientPortal';
+
+export interface ActionItem {
+  id: string;
+  label: string;
+  status: 'running' | 'completed' | 'failed';
+}
 
 interface ChatTurn {
   message_id?: string;
@@ -28,13 +37,13 @@ interface ChatTurn {
   tool_calls?: any[];
   sources?: string[];
   created_at?: string;
-  actions?: string[];
+  actions?: (string | ActionItem)[];
 }
 
 const DEFAULT_WELCOME_MESSAGE: ChatTurn = {
   role: 'assistant',
   content:
-    "Welcome to the **Beacon Compliance Advisor** for Potter's House Christian Mission UK (SC054652).\n\nI am here to assist charity trustees with:\n- **Scottish Charity Regulator (OSCR) Statutory Reporting** & filing timelines\n- **Receipts & Payments Accounts** classification\n- **Trustees' Annual Report (TAR)** narrative guidance\n- **Independent Examination (IE)** governance obligations\n\nHow may I support your statutory duties today?",
+    "Welcome to the **Beacon Compliance Advisor** for Potter's House Christian Mission UK (SCIO, SC054652).\n\nI am here to assist charity trustees with:\n- **Scottish Charity Regulator (OSCR) Statutory Reporting** & filing timelines\n- **Receipts & Payments Accounts** classification\n- **Trustees' Annual Report (TAR)** narrative guidance\n- **Independent Examination (IE)** governance obligations\n\nHow may I support your statutory duties today?",
   created_at: new Date().toISOString(),
 };
 
@@ -47,7 +56,7 @@ export const ComplianceChatDrawer: React.FC = () => {
   const [hasMore, setHasMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [currentThinking, setCurrentThinking] = useState<string>('');
-  const [currentActions, setCurrentActions] = useState<string[]>([]);
+  const [currentActions, setCurrentActions] = useState<ActionItem[]>([]);
   const [showThinking, setShowThinking] = useState<Record<number, boolean>>({});
 
   const chatContainerRef = useRef<HTMLDivElement>(null);
@@ -193,7 +202,7 @@ export const ComplianceChatDrawer: React.FC = () => {
       const decoder = new TextDecoder('utf-8');
       let buffer = '';
       let streamThinking = '';
-      let streamActions: string[] = [];
+      let streamActions: ActionItem[] = [];
       let streamContent = '';
 
       const partialIndex = messages.length + 1;
@@ -227,7 +236,33 @@ export const ComplianceChatDrawer: React.FC = () => {
                 streamThinking += parsed.chunk || '';
                 setCurrentThinking(streamThinking);
               } else if (eventType === 'action') {
-                streamActions = [...streamActions, parsed.detail || ''];
+                const actId =
+                  parsed.action_id ||
+                  parsed.label ||
+                  parsed.detail ||
+                  `act_${streamActions.length}`;
+                const actLabel =
+                  parsed.label || parsed.detail || 'Processing...';
+                const actStatus = (parsed.status || 'running') as
+                  | 'running'
+                  | 'completed'
+                  | 'failed';
+
+                const existingIdx = streamActions.findIndex(
+                  (a) => a.id === actId
+                );
+                if (existingIdx >= 0) {
+                  streamActions = streamActions.map((a, i) =>
+                    i === existingIdx
+                      ? { ...a, label: actLabel, status: actStatus }
+                      : a
+                  );
+                } else {
+                  streamActions = [
+                    ...streamActions,
+                    { id: actId, label: actLabel, status: actStatus },
+                  ];
+                }
                 setCurrentActions(streamActions);
               } else if (eventType === 'token') {
                 streamContent += parsed.chunk || '';
@@ -260,6 +295,9 @@ export const ComplianceChatDrawer: React.FC = () => {
                   }
                 });
               } else if (eventType === 'done') {
+                setCurrentThinking('');
+                setCurrentActions([]);
+                setShowThinking((prev) => ({ ...prev, [partialIndex]: false }));
                 setMessages((prev) => {
                   const updated = [...prev];
                   const lastIdx = updated.length - 1;
@@ -366,10 +404,10 @@ export const ComplianceChatDrawer: React.FC = () => {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={springs.gentle}
-              className="fixed inset-y-0 right-0 w-full max-w-md bg-white dark:bg-[#070A11] border-l border-stone-200 dark:border-slate-800 shadow-2xl z-50 flex flex-col justify-between overflow-hidden"
+              className="fixed inset-y-0 right-0 w-full max-w-md bg-white dark:bg-[#080C14] border-l border-stone-200 dark:border-slate-800/80 shadow-2xl z-50 flex flex-col justify-between overflow-hidden"
             >
               {/* Header */}
-              <div className="p-4 sm:p-5 border-b border-stone-200 dark:border-slate-800 flex items-center justify-between bg-stone-50/90 dark:bg-[#0E1524]/90 backdrop-blur-md">
+              <div className="p-4 sm:p-5 border-b border-stone-200 dark:border-slate-800/80 flex items-center justify-between bg-stone-50/90 dark:bg-[#0E1626]/95 backdrop-blur-md">
                 <div className="flex items-center gap-3">
                   <div className="h-11 w-11 flex items-center justify-center shrink-0 relative">
                     <img
@@ -377,7 +415,7 @@ export const ComplianceChatDrawer: React.FC = () => {
                       alt="Potter's House Emblem"
                       className="h-full w-full object-contain drop-shadow-md"
                     />
-                    <span className="absolute -top-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-500 border-2 border-white dark:border-[#070A11] shadow-xs" />
+                    <span className="absolute -top-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-500 border-2 border-white dark:border-[#080C14] shadow-xs" />
                   </div>
                   <div>
                     <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 font-serif flex items-center gap-1.5">
@@ -402,7 +440,7 @@ export const ComplianceChatDrawer: React.FC = () => {
               <div
                 ref={chatContainerRef}
                 onScroll={handleScroll}
-                className="flex-1 p-4 overflow-y-auto space-y-3.5 bg-stone-50/40 dark:bg-[#070A11]/60"
+                className="flex-1 p-4 overflow-y-auto space-y-3.5 bg-stone-50/40 dark:bg-[#080C14]"
               >
                 {loadingMore && (
                   <div className="text-center py-2">
@@ -457,20 +495,20 @@ export const ComplianceChatDrawer: React.FC = () => {
                         className={`max-w-[86%] rounded-2xl p-3.5 text-xs leading-relaxed shadow-xs ${
                           m.role === 'user'
                             ? 'royal-btn-crimson text-white font-medium rounded-tr-xs'
-                            : 'bg-white dark:bg-[#0E1524] text-slate-800 dark:text-slate-200 border border-stone-200/80 dark:border-slate-800/80 rounded-tl-xs'
+                            : 'bg-white dark:bg-[#0E1626] text-slate-800 dark:text-slate-200 border border-stone-200/80 dark:border-slate-800/80 rounded-tl-xs'
                         }`}
                       >
                         {/* Expandable Thinking Process Block */}
                         {m.thinking && (
-                          <div className="mb-2.5 border border-amber-500/20 dark:border-amber-500/30 rounded-xl overflow-hidden bg-amber-500/5">
+                          <div className="mb-2.5 border border-stone-200/80 dark:border-slate-800 rounded-xl overflow-hidden bg-stone-50/60 dark:bg-slate-900/60">
                             <button
                               type="button"
                               onClick={() => toggleThinking(idx)}
-                              className="w-full px-3 py-1.5 text-[11px] font-mono text-amber-800 dark:text-amber-300 font-semibold flex items-center justify-between hover:bg-amber-500/10 transition-colors"
+                              className="w-full px-3 py-1.5 text-[11px] font-mono text-stone-500 hover:text-stone-700 dark:text-slate-400 dark:hover:text-slate-200 font-medium flex items-center justify-between hover:bg-stone-100/60 dark:hover:bg-slate-800/60 transition-colors"
                             >
                               <span className="flex items-center gap-1.5">
-                                <Lightbulb className="h-3.5 w-3.5 text-amber-600" />
-                                <span>Thinking Process</span>
+                                <Brain className="h-3.5 w-3.5 text-stone-400 dark:text-slate-400" />
+                                <span>Thought process</span>
                               </span>
                               {showThinking[idx] ? (
                                 <ChevronUp className="h-3.5 w-3.5" />
@@ -479,7 +517,7 @@ export const ComplianceChatDrawer: React.FC = () => {
                               )}
                             </button>
                             {showThinking[idx] && (
-                              <div className="p-2.5 text-[11px] font-mono text-stone-600 dark:text-slate-400 bg-stone-50/50 dark:bg-slate-900/50 border-t border-amber-500/20 leading-relaxed whitespace-pre-wrap">
+                              <div className="p-2.5 text-[11px] font-mono text-stone-600 dark:text-slate-400 bg-stone-100/40 dark:bg-[#0A101D] border-t border-stone-200/60 dark:border-slate-800 leading-relaxed whitespace-pre-wrap">
                                 {m.thinking}
                               </div>
                             )}
@@ -489,15 +527,27 @@ export const ComplianceChatDrawer: React.FC = () => {
                         {/* Actions Executed */}
                         {m.actions && m.actions.length > 0 && (
                           <div className="mb-2 space-y-1">
-                            {m.actions.map((act, aIdx) => (
-                              <div
-                                key={aIdx}
-                                className="flex items-center gap-1.5 text-[10px] font-mono text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-lg"
-                              >
-                                <Activity className="h-3 w-3 shrink-0" />
-                                <span>{act}</span>
-                              </div>
-                            ))}
+                            {m.actions.map((act, aIdx) => {
+                              const label =
+                                typeof act === 'string' ? act : act.label;
+                              const status =
+                                typeof act === 'string'
+                                  ? 'completed'
+                                  : act.status;
+                              return (
+                                <div
+                                  key={aIdx}
+                                  className="flex items-center gap-1.5 text-[10px] font-mono text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-lg w-fit"
+                                >
+                                  {status === 'running' ? (
+                                    <Loader2 className="h-3 w-3 animate-spin shrink-0 text-emerald-600" />
+                                  ) : (
+                                    <CheckCircle2 className="h-3 w-3 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                                  )}
+                                  <span>{label}</span>
+                                </div>
+                              );
+                            })}
                           </div>
                         )}
 
@@ -515,11 +565,13 @@ export const ComplianceChatDrawer: React.FC = () => {
                 {loading && (
                   <div className="space-y-2 p-2">
                     {currentThinking && (
-                      <div className="p-3 bg-amber-500/5 border border-amber-500/30 rounded-2xl text-[11px] font-mono text-amber-800 dark:text-amber-300 animate-pulse flex items-start gap-2">
-                        <Lightbulb className="h-4 w-4 shrink-0 mt-0.5 text-amber-600" />
-                        <div className="space-y-1">
-                          <span className="font-bold block">Thinking...</span>
-                          <span className="text-stone-600 dark:text-slate-400 leading-relaxed">
+                      <div className="p-3 bg-stone-50/80 dark:bg-slate-900/80 border border-stone-200 dark:border-slate-800 rounded-2xl text-[11px] font-mono text-stone-700 dark:text-slate-300 flex items-start gap-2">
+                        <Brain className="h-4 w-4 shrink-0 mt-0.5 text-stone-400 dark:text-slate-400 animate-pulse" />
+                        <div className="space-y-1 w-full">
+                          <span className="font-semibold text-[10px] text-stone-400 dark:text-slate-400 uppercase tracking-wider block">
+                            Thinking...
+                          </span>
+                          <span className="text-stone-600 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">
                             {currentThinking}
                           </span>
                         </div>
@@ -530,20 +582,16 @@ export const ComplianceChatDrawer: React.FC = () => {
                         {currentActions.map((act, i) => (
                           <div
                             key={i}
-                            className="flex items-center gap-1.5 text-[10px] font-mono text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-xl"
+                            className="flex items-center gap-1.5 text-[10px] font-mono text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-xl w-fit"
                           >
-                            <Activity className="h-3 w-3 animate-spin shrink-0" />
-                            <span>{act}</span>
+                            {act.status === 'running' ? (
+                              <Loader2 className="h-3 w-3 animate-spin shrink-0 text-emerald-600" />
+                            ) : (
+                              <CheckCircle2 className="h-3 w-3 shrink-0 text-emerald-600" />
+                            )}
+                            <span>{act.label}</span>
                           </div>
                         ))}
-                      </div>
-                    )}
-                    {!currentThinking && currentActions.length === 0 && (
-                      <div className="text-xs text-amber-800 dark:text-amber-400 italic flex items-center gap-2 p-2">
-                        <span className="h-2 w-2 rounded-full bg-amber-600 animate-pulse" />
-                        <span>
-                          Connecting with Beacon Statutory Intelligence...
-                        </span>
                       </div>
                     )}
                   </div>
@@ -551,10 +599,10 @@ export const ComplianceChatDrawer: React.FC = () => {
               </div>
 
               {/* Quick Questions & Input Area */}
-              <div className="p-3.5 border-t border-stone-200 dark:border-slate-800 bg-white dark:bg-[#0B0F19] space-y-3">
+              <div className="p-3.5 border-t border-stone-200 dark:border-slate-800/80 bg-white dark:bg-[#0E1626] space-y-3">
                 {messages.length <= 1 && (
                   <div className="space-y-1.5">
-                    <p className="text-[10px] uppercase font-bold text-stone-400 dark:text-slate-500 tracking-wider">
+                    <p className="text-[10px] uppercase font-bold text-stone-400 dark:text-slate-400 tracking-wider">
                       Suggested Inquiries:
                     </p>
                     <div className="flex flex-col gap-1">
@@ -563,7 +611,7 @@ export const ComplianceChatDrawer: React.FC = () => {
                           key={i}
                           type="button"
                           onClick={() => setInput(q)}
-                          className="text-left text-[11px] p-2 rounded-xl bg-stone-100 dark:bg-slate-900 hover:bg-amber-500/10 hover:text-amber-700 dark:hover:text-amber-400 border border-stone-200 dark:border-slate-800 transition-colors text-slate-700 dark:text-slate-300"
+                          className="text-left text-[11px] p-2 rounded-xl bg-stone-100 dark:bg-[#111A2E] hover:bg-amber-500/10 hover:text-amber-700 dark:hover:text-amber-300 border border-stone-200 dark:border-slate-700/80 transition-colors text-slate-700 dark:text-slate-200"
                         >
                           {q}
                         </button>
@@ -578,7 +626,7 @@ export const ComplianceChatDrawer: React.FC = () => {
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     placeholder="Ask about filing deadlines, annual accounts, trustee reports..."
-                    className="flex-1 bg-stone-50 dark:bg-slate-900 border border-stone-300 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-slate-100 placeholder:text-stone-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 shadow-xs"
+                    className="flex-1 bg-stone-50 dark:bg-[#111A2E] border border-stone-300 dark:border-slate-700/80 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-slate-100 placeholder:text-stone-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 shadow-xs"
                   />
                   <button
                     type="submit"

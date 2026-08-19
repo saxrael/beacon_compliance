@@ -197,4 +197,18 @@ def test_get_and_update_profile_success(tmp_path, monkeypatch):
     assert user_in_db["name"] == "Updated Trustee Name"
     assert user_in_db["email"] == "updated.trustee@pottershouse.org.uk"
     assert user_in_db["avatar"] == "data:image/png;base64,mockavatarstring123"
+
+    me_res = client.get("/api/auth/me")
+    assert me_res.status_code == 200
+    me_data = me_res.json()
+    assert me_data["avatar"] == "data:image/png;base64,mockavatarstring123"
+
+    login_res = client.post(
+        "/api/auth/login",
+        json={"email": "updated.trustee@pottershouse.org.uk", "password": "CurrentPassword123!"},
+    )
+    assert login_res.status_code == 200
+    login_data = login_res.json()
+    assert login_data["user"]["avatar"] == "data:image/png;base64,mockavatarstring123"
+
     db.close()

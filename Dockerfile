@@ -23,7 +23,7 @@ RUN pip install --no-cache-dir --upgrade pip && \
 RUN python -m spacy download en_core_web_sm || true
 
 # Verify critical dependencies installed
-RUN python -c "from langfuse import Langfuse; print('langfuse OK')"
+RUN python -c "from langfuse import Langfuse; from langfuse.langchain import CallbackHandler; print('Langfuse & CallbackHandler OK')"
 
 # Stage 2: Final Production Runtime Image
 FROM python:3.11-slim AS production
@@ -45,8 +45,8 @@ COPY --from=builder --chown=appuser:appgroup /app /app
 
 RUN mkdir -p /app/data && chown -R appuser:appgroup /app/data
 
-# Verify langfuse is importable in production stage
-RUN python -c "from langfuse import Langfuse; print('langfuse production OK')"
+# Verify langfuse and langchain CallbackHandler are importable in production stage
+RUN python -c "from langfuse import Langfuse; from langfuse.langchain import CallbackHandler; print('Langfuse & CallbackHandler production OK')"
 
 USER appuser
 

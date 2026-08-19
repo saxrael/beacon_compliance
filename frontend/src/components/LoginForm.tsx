@@ -69,7 +69,7 @@ export const LoginForm: React.FC = () => {
   const activeError = localError || authError;
 
   return (
-    <div className="min-h-screen bg-[#FBF9F5] dark:bg-[#070A11] relative overflow-hidden flex flex-col justify-center items-center p-4 sm:p-6 text-slate-900 dark:text-slate-100 transition-colors duration-300">
+    <div className="min-h-screen bg-[#FBF9F5] dark:bg-[#080C14] relative overflow-hidden flex flex-col justify-center items-center p-4 sm:p-6 text-slate-900 dark:text-slate-100 transition-colors duration-300">
       <div className="fixed top-0 left-0 right-0 h-1.5 gold-ribbon z-50" />
 
       <div className="absolute top-1/4 -left-32 w-96 h-96 bg-red-500/5 dark:bg-red-600/10 rounded-full blur-3xl pointer-events-none" />
@@ -79,7 +79,7 @@ export const LoginForm: React.FC = () => {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={springs.gentle}
-        className="max-w-md w-full royal-card bg-white dark:bg-[#0E1524] p-8 sm:p-10 rounded-3xl border border-stone-200 dark:border-slate-800 shadow-xl relative z-10 space-y-6"
+        className="max-w-md w-full royal-card bg-white dark:bg-[#0E1626] p-8 sm:p-10 rounded-3xl border border-stone-200 dark:border-slate-800/80 shadow-xl relative z-10 space-y-6"
       >
         <div className="text-center space-y-2">
           <div className="flex justify-center mb-1">
@@ -120,7 +120,7 @@ export const LoginForm: React.FC = () => {
           type="button"
           onClick={handleGoogleSignIn}
           disabled={loading}
-          className="w-full py-3 px-4 bg-white dark:bg-slate-800 hover:bg-stone-50 dark:hover:bg-slate-700 active:bg-stone-100 text-slate-800 dark:text-slate-100 rounded-xl font-semibold text-xs sm:text-sm flex items-center justify-center gap-3 border border-stone-300 dark:border-slate-700 shadow-xs transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50"
+          className="w-full py-3 px-4 bg-white dark:bg-[#111A2E] hover:bg-stone-50 dark:hover:bg-[#15223C] active:bg-stone-100 text-slate-800 dark:text-slate-100 rounded-xl font-semibold text-xs sm:text-sm flex items-center justify-center gap-3 border border-stone-300 dark:border-slate-700/80 shadow-xs transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50"
         >
           <svg className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" viewBox="0 0 24 24">
             <path

@@ -31,8 +31,8 @@ function DashboardContent() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-[#FBF9F5] dark:bg-[#070A11] flex items-center justify-center text-amber-800 dark:text-amber-400 font-mono text-sm">
-        <div className="flex items-center gap-3 p-6 rounded-3xl bg-white dark:bg-[#0E1524] border border-stone-200 dark:border-slate-800 shadow-xl">
+      <div className="min-h-screen bg-[#FBF9F5] dark:bg-[#080C14] flex items-center justify-center text-amber-800 dark:text-amber-400 font-mono text-sm">
+        <div className="flex items-center gap-3 p-6 rounded-3xl bg-white dark:bg-[#0E1626] border border-stone-200 dark:border-slate-800 shadow-xl">
           <div className="h-5 w-5 rounded-full border-2 border-amber-600 border-t-transparent animate-spin" />
           <span className="font-serif">Verifying trustee access...</span>
         </div>
@@ -50,7 +50,7 @@ function DashboardContent() {
   const trusteeRole = user.role ? (user.role.charAt(0).toUpperCase() + user.role.slice(1).toLowerCase()) : "Trustee";
 
   return (
-    <div className="min-h-screen bg-[#FBF9F5] dark:bg-[#070A11] text-slate-900 dark:text-slate-100 flex flex-col transition-colors duration-300">
+    <div className="min-h-screen bg-[#FBF9F5] dark:bg-[#080C14] text-slate-900 dark:text-slate-100 flex flex-col transition-colors duration-300">
       <Header onOpenAdminModal={() => setAdminModalOpen(true)} />
 
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8">
@@ -63,7 +63,7 @@ function DashboardContent() {
           {/* 1. Executive Filing Hero Banner */}
           <motion.div 
             variants={itemFadeUpVariants}
-            className="tour-pipeline-runner flex flex-col md:flex-row md:items-center justify-between gap-5 bg-white dark:bg-[#0E1524] p-6 sm:p-7 rounded-3xl border border-stone-200/90 dark:border-slate-800/80 shadow-xs royal-card"
+            className="tour-pipeline-runner flex flex-col md:flex-row md:items-center justify-between gap-5 bg-white dark:bg-[#0E1626] p-6 sm:p-7 rounded-3xl border border-stone-200/90 dark:border-slate-800/80 shadow-xs royal-card"
           >
             <div className="space-y-1.5">
               <div className="flex items-center gap-2.5 flex-wrap">

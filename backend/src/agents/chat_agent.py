@@ -144,7 +144,7 @@ class ComplianceChatAgent:
                 message=refusal,
                 tool_calls=[],
                 sources=[],
-                thinking="Evaluated query domain. Query is outside OSCR statutory compliance scope.",
+                thinking=None,
             )
 
         tool_calls = []
@@ -153,7 +153,6 @@ class ComplianceChatAgent:
 
         llm_client = LLMClient()
         tool_context = ""
-        thinking_notes = []
 
         if any(
             kw in lower_msg
@@ -168,9 +167,6 @@ class ComplianceChatAgent:
                 "figures",
             )
         ):
-            thinking_notes.append(
-                "Detected financial inquiry. Invoking deterministic Node 3 financial state tool (Red-Line 2)."
-            )
             fin_summary = self.get_financial_summary_tool(state)
             tool_calls.append({"tool": "get_financial_summary", "output": fin_summary})
             tool_context = (
@@ -194,9 +190,6 @@ class ComplianceChatAgent:
                 "act",
             )
         ):
-            thinking_notes.append(
-                "Detected regulatory guidance inquiry. Querying OSCR hybrid knowledge base and cognitive facts."
-            )
             search_results = self.search_knowledge_base_tool(
                 user_message, kb_corpus or [], user_id=user_id
             )
@@ -225,13 +218,8 @@ class ComplianceChatAgent:
                 "How can I assist you with OSCR regulatory guidance, Receipts & Payments reconciliation, or Trustees' Annual Report drafting?"
             )
 
-        thinking_text = (
-            " ".join(thinking_notes)
-            if thinking_notes
-            else "Synthesizing OSCR statutory compliance guidance for SC054652."
-        )
         return ChatAgentResponse(
-            message=response_text, tool_calls=tool_calls, sources=sources, thinking=thinking_text
+            message=response_text, tool_calls=tool_calls, sources=sources, thinking=None
         )
 
     def stream_message(
@@ -243,14 +231,6 @@ class ComplianceChatAgent:
     ):
         """Yield structured SSE-ready dicts for real-time thought, action, and token streaming."""
         if self.is_out_of_scope(user_message):
-            yield {
-                "type": "thought",
-                "chunk": "Evaluating inquiry scope against Scottish charity regulatory mandate...",
-            }
-            yield {
-                "type": "thought",
-                "chunk": " Query falls outside statutory charity governance. Generating polite boundary notice.",
-            }
             refusal = (
                 "I am specialized exclusively in OSCR regulatory compliance and financial reporting "
                 "for Potter's House Christian Mission UK (SCIO, SC054652). I can only assist with statutory compliance, "
@@ -258,18 +238,19 @@ class ComplianceChatAgent:
             )
             for token in refusal.split(" "):
                 yield {"type": "token", "chunk": token + " "}
-            yield {"type": "done", "full_message": refusal, "tool_calls": [], "sources": []}
+            yield {
+                "type": "done",
+                "full_message": refusal,
+                "thinking": None,
+                "tool_calls": [],
+                "sources": [],
+            }
             return
 
         lower_msg = user_message.lower()
         tool_calls = []
         sources = []
         tool_context = ""
-
-        yield {
-            "type": "thought",
-            "chunk": "Analyzing inquiry under Charities and Trustee Investment (Scotland) Act 2005 and SCIO SC054652 profile...",
-        }
 
         if any(
             kw in lower_msg
@@ -285,12 +266,10 @@ class ComplianceChatAgent:
             )
         ):
             yield {
-                "type": "thought",
-                "chunk": " Financial metric requested. Applying Red-Line 2 (Zero LLM Financial Arithmetic).",
-            }
-            yield {
                 "type": "action",
-                "detail": "Consulting verified 2026 Receipts & Payments schedule in Cloudflare D1...",
+                "action_id": "act_fin_01",
+                "label": "Checking verified Receipts & Payments schedule",
+                "status": "running",
             }
             fin_summary = self.get_financial_summary_tool(state)
             tool_calls.append({"tool": "get_financial_summary", "output": fin_summary})
@@ -301,6 +280,12 @@ class ComplianceChatAgent:
                 f"- Net Movement: £{fin_summary['net_movement']}\n"
                 f"- Reconciled: {fin_summary['reconciled']}"
             )
+            yield {
+                "type": "action",
+                "action_id": "act_fin_01",
+                "label": "Reviewed Receipts & Payments schedule",
+                "status": "completed",
+            }
         elif any(
             kw in lower_msg
             for kw in (
@@ -316,12 +301,10 @@ class ComplianceChatAgent:
             )
         ):
             yield {
-                "type": "thought",
-                "chunk": " Statutory/regulatory question identified. Searching OSCR guidance knowledge base and trustee facts.",
-            }
-            yield {
                 "type": "action",
-                "detail": "Performing Reciprocal Rank Fusion search across OSCR Guidance & Scottish Charity Regulations...",
+                "action_id": "act_kb_01",
+                "label": "Searching OSCR guidance knowledge base",
+                "status": "running",
             }
             search_results = self.search_knowledge_base_tool(
                 user_message, kb_corpus or [], user_id=user_id
@@ -334,37 +317,38 @@ class ComplianceChatAgent:
             )
             sources = search_results.get("sources", [])
             tool_context = search_results.get("formatted_context", "")
-
-        yield {
-            "type": "thought",
-            "chunk": " Formatting statutory answer with verifiable compliance citations.",
-        }
+            yield {
+                "type": "action",
+                "action_id": "act_kb_01",
+                "label": "Reviewed OSCR Scottish charity guidance",
+                "status": "completed",
+            }
 
         llm_client = LLMClient()
-        llm_response = llm_client.call_gemma_chat(
+        accumulated_tokens = []
+        accumulated_thoughts = []
+
+        for stream_event in llm_client.stream_gemma_chat(
             system_prompt=CHAT_AGENT_SYSTEM_PROMPT,
             user_message=user_message,
             tool_context=tool_context,
-        )
+        ):
+            ev_type = stream_event.get("type")
+            chunk = stream_event.get("chunk", "")
+            if ev_type == "thought":
+                accumulated_thoughts.append(chunk)
+                yield stream_event
+            elif ev_type == "token":
+                accumulated_tokens.append(chunk)
+                yield stream_event
 
-        if llm_response:
-            full_text = llm_response
-        elif tool_context:
-            full_text = f"According to verified compliance records:\n\n{tool_context}"
-        else:
-            full_text = (
-                "I am your Beacon Compliance assistant for Potter's House Christian Mission UK (SCIO, SC054652). "
-                "How can I assist you with OSCR regulatory guidance or financial statement review?"
-            )
-
-        words = full_text.split(" ")
-        for i, word in enumerate(words):
-            chunk = word if i == len(words) - 1 else word + " "
-            yield {"type": "token", "chunk": chunk}
+        full_message = "".join(accumulated_tokens).strip()
+        full_thinking = "".join(accumulated_thoughts).strip() if accumulated_thoughts else None
 
         yield {
             "type": "done",
-            "full_message": full_text,
+            "full_message": full_message,
+            "thinking": full_thinking,
             "tool_calls": tool_calls,
             "sources": sources,
         }

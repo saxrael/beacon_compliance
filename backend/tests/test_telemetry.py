@@ -70,9 +70,37 @@ def test_beacon_langfuse_tracer_mock_enabled(monkeypatch):
     monkeypatch.setenv("LANGFUSE_ENABLED", "true")
     monkeypatch.setenv("LANGFUSE_PUBLIC_KEY", "pk-lf-test")
     monkeypatch.setenv("LANGFUSE_SECRET_KEY", "sk-lf-test")
+    monkeypatch.setenv("LANGFUSE_HOST", "https://cloud.langfuse.com")
 
     tracer = BeaconLangfuseTracer()
-    assert isinstance(tracer.enabled, bool)
+    assert tracer.enabled is True
+    assert tracer.is_enabled() is True
+
+    callback = tracer.get_langchain_callback()
+    assert callback is not None
+
+    # Test trace generation with PII redaction
+    tracer.trace_llm_generation(
+        name="test_gen",
+        system_prompt="System instructions",
+        user_message="User john.doe@example.com",
+        model="google/gemma-2-27b-it",
+        output_text="Synthesized output for trustee@pottershouse.org.uk",
+        input_tokens=10,
+        output_tokens=20,
+        metadata={"run_type": "test_narration"},
+    )
+
+
+def test_beacon_langfuse_tracer_missing_keys(monkeypatch):
+    """Verify tracer disabled when enabled=True but keys are missing."""
+    monkeypatch.setenv("LANGFUSE_ENABLED", "true")
+    monkeypatch.setenv("LANGFUSE_PUBLIC_KEY", "")
+    monkeypatch.setenv("LANGFUSE_SECRET_KEY", "")
+
+    tracer = BeaconLangfuseTracer()
+    assert tracer.is_enabled() is False
+    assert tracer.get_langchain_callback() is None
 
 
 def test_observe_pii_guarded_decorator():

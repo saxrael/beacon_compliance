@@ -142,7 +142,7 @@ export const FinancialSummaryCards: React.FC<FinancialSummaryProps> = ({
           initial="initial"
           whileHover="hover"
           whileTap="tap"
-          className="royal-card rounded-3xl p-5 sm:p-6 flex flex-col justify-between space-y-3"
+          className="royal-card dark:bg-gradient-to-br dark:from-[#0E1626] dark:to-[#18233C] dark:border-amber-500/30 rounded-3xl p-5 sm:p-6 flex flex-col justify-between space-y-3"
         >
           <div className="flex items-center justify-between text-stone-600 dark:text-slate-400 text-xs font-semibold">
             <div>
@@ -177,7 +177,7 @@ export const FinancialSummaryCards: React.FC<FinancialSummaryProps> = ({
           initial="initial"
           whileHover="hover"
           whileTap="tap"
-          className="royal-card rounded-3xl p-5 sm:p-6 flex flex-col justify-between space-y-3"
+          className="royal-card dark:bg-gradient-to-br dark:from-[#0E1626] dark:to-[#0F2424] dark:border-emerald-500/30 rounded-3xl p-5 sm:p-6 flex flex-col justify-between space-y-3"
         >
           <div className="flex items-center justify-between text-stone-600 dark:text-slate-400 text-xs font-semibold">
             <div>

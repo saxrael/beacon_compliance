@@ -22,19 +22,19 @@
   }
 
   .dark {
-    --background: #070A11;
-    --foreground: #F1F5F9;
-    --card: #0E1524;
+    --background: #080C14;
+    --foreground: #F8FAFC;
+    --card: #0E1626;
     --card-foreground: #F8FAFC;
-    --card-border: rgba(255, 255, 255, 0.08);
-    --brand-crimson: #EF4444;
-    --brand-crimson-dark: #DC2626;
-    --brand-crimson-deep: #990C1F;
+    --card-border: rgba(245, 158, 11, 0.14);
+    --brand-crimson: #F43F5E;
+    --brand-crimson-dark: #E11D48;
+    --brand-crimson-deep: #9F1239;
     --brand-gold: #F59E0B;
     --brand-gold-light: #FBBF24;
     --brand-gold-dark: #D97706;
     --muted: #94A3B8;
-    --muted-bg: #141C30;
+    --muted-bg: #111A2E;
   }
 }
 
@@ -69,9 +69,9 @@ h1, h2, h3, .font-serif-brand {
 }
 
 .dark .royal-card {
-  background-color: #0E1524;
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  box-shadow: 0 10px 32px -8px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.04);
+  background-color: #0E1626;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 12px 36px -8px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .royal-card:hover {
@@ -79,8 +79,9 @@ h1, h2, h3, .font-serif-brand {
 }
 
 .dark .royal-card:hover {
-  background-color: #121A2C;
-  box-shadow: 0 16px 40px -8px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(245, 158, 11, 0.22);
+  background-color: #121C30;
+  border-color: rgba(245, 158, 11, 0.25);
+  box-shadow: 0 16px 44px -8px rgba(0, 0, 0, 0.85), 0 0 20px -4px rgba(217, 119, 6, 0.15);
 }
 
 .royal-card-gold {
@@ -90,9 +91,9 @@ h1, h2, h3, .font-serif-brand {
 }
 
 .dark .royal-card-gold {
-  background: linear-gradient(135deg, rgba(14, 21, 36, 0.98) 0%, rgba(217, 119, 6, 0.15) 100%);
-  border: 1px solid rgba(245, 158, 11, 0.28);
-  box-shadow: 0 10px 30px -10px rgba(217, 119, 6, 0.2);
+  background: linear-gradient(135deg, #10192C 0%, #17233D 100%);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  box-shadow: 0 12px 36px -10px rgba(0, 0, 0, 0.8), 0 0 24px -6px rgba(245, 158, 11, 0.2);
 }
 
 .royal-card-crimson {
@@ -102,9 +103,15 @@ h1, h2, h3, .font-serif-brand {
 }
 
 .dark .royal-card-crimson {
-  background: linear-gradient(135deg, rgba(14, 21, 36, 0.98) 0%, rgba(214, 22, 47, 0.18) 100%);
-  border: 1px solid rgba(239, 68, 68, 0.28);
-  box-shadow: 0 10px 30px -10px rgba(214, 22, 47, 0.2);
+  background: linear-gradient(135deg, #121829 0%, #1F1522 100%);
+  border: 1px solid rgba(244, 63, 94, 0.35);
+  box-shadow: 0 12px 36px -10px rgba(0, 0, 0, 0.8), 0 0 24px -6px rgba(244, 63, 94, 0.2);
+}
+
+.dark .royal-card-emerald {
+  background: linear-gradient(135deg, #0F1A27 0%, #102425 100%);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  box-shadow: 0 12px 36px -10px rgba(0, 0, 0, 0.8), 0 0 24px -6px rgba(16, 185, 129, 0.2);
 }
 
 .royal-btn-crimson {
@@ -115,9 +122,19 @@ h1, h2, h3, .font-serif-brand {
   transition: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
 }
 
+.dark .royal-btn-crimson {
+  background: linear-gradient(135deg, #F43F5E 0%, #E11D48 50%, #BE123C 100%);
+  box-shadow: 0 4px 18px 0 rgba(244, 63, 94, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
 .royal-btn-crimson:hover {
   background: linear-gradient(135deg, #E01D36 0%, #C4132B 50%, #A80E23 100%);
   box-shadow: 0 6px 20px 0 rgba(214, 22, 47, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.dark .royal-btn-crimson:hover {
+  background: linear-gradient(135deg, #FB7185 0%, #F43F5E 50%, #E11D48 100%);
+  box-shadow: 0 6px 24px 0 rgba(244, 63, 94, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.35);
 }
 
 .royal-btn-gold {
@@ -128,13 +145,30 @@ h1, h2, h3, .font-serif-brand {
   transition: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
 }
 
+.dark .royal-btn-gold {
+  background: linear-gradient(135deg, #FBBF24 0%, #F59E0B 50%, #D97706 100%);
+  color: #0F172A;
+  font-weight: 700;
+  box-shadow: 0 4px 18px 0 rgba(245, 158, 11, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
 .royal-btn-gold:hover {
   background: linear-gradient(135deg, #FBBF24 0%, #E08408 50%, #C25B0B 100%);
   box-shadow: 0 6px 20px 0 rgba(217, 119, 6, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
+.dark .royal-btn-gold:hover {
+  background: linear-gradient(135deg, #FDE68A 0%, #FBBF24 50%, #F59E0B 100%);
+  box-shadow: 0 6px 24px 0 rgba(245, 158, 11, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
 .gold-ribbon {
   background: linear-gradient(90deg, #990C1F 0%, #D6162F 25%, #F59E0B 50%, #D6162F 75%, #990C1F 100%);
+}
+
+.dark .gold-ribbon {
+  background: linear-gradient(90deg, #E11D48 0%, #F59E0B 35%, #FBBF24 50%, #F59E0B 65%, #E11D48 100%);
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.4);
 }
 
 .glass-surface {
@@ -145,9 +179,9 @@ h1, h2, h3, .font-serif-brand {
 }
 
 .dark .glass-surface {
-  background: rgba(14, 21, 36, 0.9);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: rgba(14, 22, 38, 0.88);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
