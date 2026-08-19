@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [main]
 
+concurrency:
+  group: production-deployment
+  cancel-in-progress: true
+
 jobs:
   test-and-audit:
     name: Test & Pre-Flight Audit
@@ -129,6 +133,8 @@ jobs:
           username: ${{ secrets.OCI_USERNAME }}
           key: ${{ secrets.OCI_SSH_KEY }}
           port: ${{ secrets.OCI_SSH_PORT }}
+          command_timeout: "15m"
+          script_stop: true
           script: |
             mkdir -p ~/beacon_compliance
             cat > ~/beacon_compliance/.env <<'EOF'
