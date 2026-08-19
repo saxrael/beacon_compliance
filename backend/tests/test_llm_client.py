@@ -49,35 +49,14 @@ def test_call_gemma_narrative_openrouter_success(monkeypatch):
     assert res["governance_description"] == "SCIO governance model."
 
 
-def test_call_gemma_narrative_groq_success(monkeypatch):
+def test_call_gemma_narrative_no_openrouter_returns_none(monkeypatch):
     monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
     monkeypatch.setenv("GROQ_API_KEY", "mock_groq_key")
 
     client = LLMClient()
-    mock_resp_data = {
-        "choices": [
-            {
-                "message": {
-                    "content": json.dumps(
-                        {
-                            "governance_description": "Groq governance model.",
-                            "purposes_activities_narrative": "Activities.",
-                        }
-                    )
-                }
-            }
-        ]
-    }
-
-    mock_resp = MagicMock()
-    mock_resp.status_code = 200
-    mock_resp.json.return_value = mock_resp_data
-
-    with patch("httpx.Client.post", return_value=mock_resp):
-        res = client.call_gemma_narrative("system prompt", {"test": "data"})
-
-    assert res is not None
-    assert res["governance_description"] == "Groq governance model."
+    # Gemma is strictly OpenRouter-only, so without OpenRouter key it returns None
+    res = client.call_gemma_narrative("system prompt", {"test": "data"})
+    assert res is None
 
 
 def test_call_gemma_narrative_http_500_fallback(monkeypatch):
@@ -183,7 +162,7 @@ def test_call_gemma_chat_with_tool_context(monkeypatch):
 
 
 def test_call_gemma_chat_without_tool_context(monkeypatch):
-    monkeypatch.setenv("GROQ_API_KEY", "mock_groq_key")
+    monkeypatch.setenv("OPENROUTER_API_KEY", "mock_or_key")
     client = LLMClient()
 
     mock_resp_data = {"choices": [{"message": {"content": "Direct chat response"}}]}

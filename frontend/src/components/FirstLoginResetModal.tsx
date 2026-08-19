@@ -135,7 +135,7 @@ export const FirstLoginResetModal: React.FC = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white rounded-xl font-bold shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 text-sm disabled:opacity-50 mt-2"
+            className="w-full py-3 royal-btn-crimson font-bold rounded-xl shadow-md transition-all flex items-center justify-center gap-2 text-sm disabled:opacity-50 mt-2 active:scale-[0.98]"
           >
             <CheckCircle className="h-4 w-4" />
             <span>{loading ? "Updating Password..." : "Update Password & Enter Portal"}</span>

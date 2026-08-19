@@ -1,14 +1,15 @@
 """LLM Client Integration Module for Beacon Compliance (llm_client.py).
 
 Provides API interfaces for:
-1. Gemma 4 26B A4B (TAR narrative synthesis & interactive compliance chat)
-2. openai/gpt-oss-20b via Groq (Tier 2.5 transaction classification)
+1. Gemma 4 26B A4B via OpenRouter (TAR narrative synthesis, interactive compliance chat & memory Tiers 2/3)
+2. openai/gpt-oss-20b via Groq (Tier 2.5 transaction classification strictly)
    Contingency: llama-3.1-8b-instant via OpenRouter
 
 Enforces:
 - Red-Line 2 (Zero LLM Financial Arithmetic)
 - Rule 3 (Tier 2.5 schema isolation: {category, confidence, reasoning} ONLY)
 - Red-Line 4 (PII-scrubbed payloads only)
+- Strict Model Segregation (Gemma via OpenRouter, gpt-oss-20b via Groq; never used interchangeably)
 """
 
 import json
@@ -27,8 +28,7 @@ GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
 OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
 
 GEMMA_MODEL = os.environ.get("GEMMA_MODEL", "google/gemma-4-26b-a4b")
-GROQ_FALLBACK_MODEL = os.environ.get("GROQ_FALLBACK_MODEL", "llama-3.3-70b-versatile")
-GPT_OSS_MODEL = os.environ.get("GPT_OSS_MODEL", "llama-3.3-70b-versatile")
+GPT_OSS_MODEL = "openai/gpt-oss-20b"
 LLAMA_CONTINGENCY_MODEL = "meta-llama/llama-3.1-8b-instant"
 
 OPENROUTER_HEADERS_EXTRA = {
@@ -78,6 +78,9 @@ class LLMClient:
 
         Enforces Red-Line 2 placeholder tokens ([FIGURE_INJECTED:...]).
         """
+        if not self.openrouter_key:
+            return None
+
         payload_str = json.dumps(anonymised_payload, indent=2)
         user_prompt = (
             f"Synthesize TAR narrative prose for the 4 whitelisted fields based on this PII-scrubbed payload:\n"
@@ -86,63 +89,45 @@ class LLMClient:
             "'purposes_activities_narrative', 'achievements_connective_narrative', 'principal_risks_narrative'."
         )
 
-        endpoints = []
-        if self.openrouter_key:
-            endpoints.append(
-                (
-                    OPENROUTER_API_URL,
-                    {
-                        "Authorization": f"Bearer {self.openrouter_key}",
-                        "Content-Type": "application/json",
-                        **OPENROUTER_HEADERS_EXTRA,
-                    },
-                    GEMMA_MODEL,
-                )
-            )
-        if self.groq_key:
-            endpoints.append(
-                (
-                    GROQ_API_URL,
-                    {
-                        "Authorization": f"Bearer {self.groq_key}",
-                        "Content-Type": "application/json",
-                    },
-                    GROQ_FALLBACK_MODEL,
-                )
-            )
+        headers = {
+            "Authorization": f"Bearer {self.openrouter_key}",
+            "Content-Type": "application/json",
+            **OPENROUTER_HEADERS_EXTRA,
+        }
+        body = {
+            "model": GEMMA_MODEL,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
+            ],
+            "temperature": 0.2,
+        }
 
-        for url, headers, model_name in endpoints:
-            try:
-                body = {
-                    "model": model_name,
-                    "messages": [
-                        {"role": "system", "content": system_prompt},
-                        {"role": "user", "content": user_prompt},
-                    ],
-                    "temperature": 0.2,
-                }
-                data = _post_json(url, headers=headers, body=body, timeout=15.0)
-                content = data["choices"][0]["message"]["content"]
-                parsed = _parse_json_response(content)
-                if isinstance(parsed, dict) and "governance_description" in parsed:
-                    default_tracer.trace_llm_generation(
-                        name="gemma_narrative_synthesis",
-                        system_prompt=system_prompt,
-                        user_message=user_prompt,
-                        model=model_name,
-                        output_text=content,
-                        metadata={"run_type": "narration_synthesis"},
-                    )
-                    return parsed
-            except Exception as err:
-                logger.warning(f"LLM call for TAR narrative synthesis failed on {url}: {err}")
+        try:
+            data = _post_json(OPENROUTER_API_URL, headers=headers, body=body, timeout=15.0)
+            content = data["choices"][0]["message"]["content"]
+            parsed = _parse_json_response(content)
+            if isinstance(parsed, dict) and "governance_description" in parsed:
+                default_tracer.trace_llm_generation(
+                    name="gemma_narrative_synthesis",
+                    system_prompt=system_prompt,
+                    user_message=user_prompt,
+                    model=GEMMA_MODEL,
+                    output_text=content,
+                    metadata={"run_type": "narration_synthesis"},
+                )
+                return parsed
+        except Exception as err:
+            logger.warning(
+                f"LLM call for TAR narrative synthesis failed on {OPENROUTER_API_URL}: {err}"
+            )
 
         return None
 
     def call_tier25_classifier(
         self, description: str, transaction_type: str = "receipt"
     ) -> dict[str, Any] | None:
-        """Call openai/gpt-oss-20b via Groq for Tier 2.5 transaction classification.
+        """Call openai/gpt-oss-20b via Groq strictly for Tier 2.5 transaction classification.
 
         Contingency: llama-3.1-8b-instant via OpenRouter.
         Strictly enforces Rule 3: Output schema contains ONLY category, confidence, and reasoning.
@@ -258,6 +243,9 @@ DO NOT output any monetary amount, numerical value, or currency field.
 
     def call_cognitive_summary(self, old_summary: str, new_messages: str) -> str | None:
         """Call Gemma to compress evicted messages into an episodic narrative summary (<500 words)."""
+        if not self.openrouter_key:
+            return None
+
         system_prompt = (
             "You are a background compliance memory processor for Potter's House Christian Mission UK (SCIO, SC054652). "
             "Your job is to update an existing conversation summary with new dialogue messages. "
@@ -270,55 +258,34 @@ DO NOT output any monetary amount, numerical value, or currency field.
             f"<new_messages>\n{new_messages}\n</new_messages>\n\n"
             "Generate the updated summary directly with no introductory text."
         )
+        headers = {
+            "Authorization": f"Bearer {self.openrouter_key}",
+            "Content-Type": "application/json",
+            **OPENROUTER_HEADERS_EXTRA,
+        }
+        body = {
+            "model": GEMMA_MODEL,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
+            ],
+            "temperature": 0.2,
+        }
 
-        endpoints = []
-        if self.openrouter_key:
-            endpoints.append(
-                (
-                    OPENROUTER_API_URL,
-                    {
-                        "Authorization": f"Bearer {self.openrouter_key}",
-                        "Content-Type": "application/json",
-                        **OPENROUTER_HEADERS_EXTRA,
-                    },
-                    GEMMA_MODEL,
-                )
+        try:
+            data = _post_json(OPENROUTER_API_URL, headers=headers, body=body, timeout=15.0)
+            reply = data["choices"][0]["message"]["content"].strip()
+            default_tracer.trace_llm_generation(
+                name="cognitive_narrative_summary",
+                system_prompt=system_prompt,
+                user_message=user_prompt,
+                model=GEMMA_MODEL,
+                output_text=reply,
+                metadata={"run_type": "cognitive_summary"},
             )
-        if self.groq_key:
-            endpoints.append(
-                (
-                    GROQ_API_URL,
-                    {
-                        "Authorization": f"Bearer {self.groq_key}",
-                        "Content-Type": "application/json",
-                    },
-                    GROQ_FALLBACK_MODEL,
-                )
-            )
-
-        for url, headers, model_name in endpoints:
-            try:
-                body = {
-                    "model": model_name,
-                    "messages": [
-                        {"role": "system", "content": system_prompt},
-                        {"role": "user", "content": user_prompt},
-                    ],
-                    "temperature": 0.2,
-                }
-                data = _post_json(url, headers=headers, body=body, timeout=15.0)
-                reply = data["choices"][0]["message"]["content"].strip()
-                default_tracer.trace_llm_generation(
-                    name="cognitive_narrative_summary",
-                    system_prompt=system_prompt,
-                    user_message=user_prompt,
-                    model=model_name,
-                    output_text=reply,
-                    metadata={"run_type": "cognitive_summary"},
-                )
-                return reply
-            except Exception as err:
-                logger.warning(f"Cognitive summary LLM call failed on {url}: {err}")
+            return reply
+        except Exception as err:
+            logger.warning(f"Cognitive summary LLM call failed on {OPENROUTER_API_URL}: {err}")
 
         return None
 
@@ -326,6 +293,9 @@ DO NOT output any monetary amount, numerical value, or currency field.
         self, existing_facts: list[dict[str, Any]], new_messages: str
     ) -> list[dict[str, Any]] | None:
         """Call Gemma to extract permanent non-financial governance facts using Think-Plan-Execute."""
+        if not self.openrouter_key:
+            return None
+
         system_prompt = (
             "ROLE: Elite Cognitive Memory Extractor for Potter's House Christian Mission UK (SCIO, SC054652).\n"
             "Your objective is to build a permanent factual knowledge graph about trustee preferences, charity governance policies, non-financial operational precedents, and constitutional practices.\n"
@@ -351,58 +321,39 @@ DO NOT output any monetary amount, numerical value, or currency field.
             "Extract new or updated permanent governance facts following the Think-Plan-Execute protocol. "
             "Respond ONLY with a valid JSON object matching the schema."
         )
+        headers = {
+            "Authorization": f"Bearer {self.openrouter_key}",
+            "Content-Type": "application/json",
+            **OPENROUTER_HEADERS_EXTRA,
+        }
+        body = {
+            "model": GEMMA_MODEL,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
+            ],
+            "temperature": 0.1,
+        }
 
-        endpoints = []
-        if self.openrouter_key:
-            endpoints.append(
-                (
-                    OPENROUTER_API_URL,
-                    {
-                        "Authorization": f"Bearer {self.openrouter_key}",
-                        "Content-Type": "application/json",
-                        **OPENROUTER_HEADERS_EXTRA,
-                    },
-                    GEMMA_MODEL,
+        try:
+            data = _post_json(OPENROUTER_API_URL, headers=headers, body=body, timeout=15.0)
+            content = data["choices"][0]["message"]["content"]
+            parsed = _parse_json_response(content)
+            facts_list = parsed.get("facts", parsed) if isinstance(parsed, dict) else parsed
+            if isinstance(facts_list, list):
+                default_tracer.trace_llm_generation(
+                    name="cognitive_fact_extractor",
+                    system_prompt=system_prompt,
+                    user_message=user_prompt,
+                    model=GEMMA_MODEL,
+                    output_text=json.dumps(facts_list),
+                    metadata={"run_type": "cognitive_facts"},
                 )
+                return facts_list
+        except Exception as err:
+            logger.warning(
+                f"Cognitive fact extractor LLM call failed on {OPENROUTER_API_URL}: {err}"
             )
-        if self.groq_key:
-            endpoints.append(
-                (
-                    GROQ_API_URL,
-                    {
-                        "Authorization": f"Bearer {self.groq_key}",
-                        "Content-Type": "application/json",
-                    },
-                    GROQ_FALLBACK_MODEL,
-                )
-            )
-
-        for url, headers, model_name in endpoints:
-            try:
-                body = {
-                    "model": model_name,
-                    "messages": [
-                        {"role": "system", "content": system_prompt},
-                        {"role": "user", "content": user_prompt},
-                    ],
-                    "temperature": 0.1,
-                }
-                data = _post_json(url, headers=headers, body=body, timeout=15.0)
-                content = data["choices"][0]["message"]["content"]
-                parsed = _parse_json_response(content)
-                facts_list = parsed.get("facts", parsed) if isinstance(parsed, dict) else parsed
-                if isinstance(facts_list, list):
-                    default_tracer.trace_llm_generation(
-                        name="cognitive_fact_extractor",
-                        system_prompt=system_prompt,
-                        user_message=user_prompt,
-                        model=model_name,
-                        output_text=json.dumps(facts_list),
-                        metadata={"run_type": "cognitive_facts"},
-                    )
-                    return facts_list
-            except Exception as err:
-                logger.warning(f"Cognitive fact extractor LLM call failed on {url}: {err}")
 
         return None
 
@@ -459,40 +410,20 @@ DO NOT output any monetary amount, numerical value, or currency field.
             chat_messages.extend(messages_history)
         chat_messages.append({"role": "user", "content": full_prompt})
 
-        endpoints = []
         if self.openrouter_key:
-            endpoints.append(
-                (
-                    OPENROUTER_API_URL,
-                    {
-                        "Authorization": f"Bearer {self.openrouter_key}",
-                        "Content-Type": "application/json",
-                        **OPENROUTER_HEADERS_EXTRA,
-                    },
-                    GEMMA_MODEL,
-                )
-            )
-        if self.groq_key:
-            endpoints.append(
-                (
-                    GROQ_API_URL,
-                    {
-                        "Authorization": f"Bearer {self.groq_key}",
-                        "Content-Type": "application/json",
-                    },
-                    GROQ_FALLBACK_MODEL,
-                )
-            )
-
-        for url, headers, model_name in endpoints:
             try:
+                headers = {
+                    "Authorization": f"Bearer {self.openrouter_key}",
+                    "Content-Type": "application/json",
+                    **OPENROUTER_HEADERS_EXTRA,
+                }
                 body = {
-                    "model": model_name,
+                    "model": GEMMA_MODEL,
                     "messages": chat_messages,
                     "temperature": 0.3,
                     "stream": True,
                 }
-                raw_stream = self._fetch_remote_stream_chunks(url, headers, body)
+                raw_stream = self._fetch_remote_stream_chunks(OPENROUTER_API_URL, headers, body)
                 accumulated_output = []
                 streamed_any = False
                 for event in self.parse_streaming_chunks(raw_stream):
@@ -506,17 +437,19 @@ DO NOT output any monetary amount, numerical value, or currency field.
                         name="gemma_compliance_chat",
                         system_prompt=system_prompt,
                         user_message=full_prompt,
-                        model=model_name,
+                        model=GEMMA_MODEL,
                         output_text="".join(accumulated_output),
                         metadata={
                             "tool_context_present": bool(tool_context),
                             "stream": True,
-                            "provider_url": url,
+                            "provider_url": OPENROUTER_API_URL,
                         },
                     )
                     return
             except Exception as err:
-                logger.warning(f"Compliance chat LLM streaming failed on {url}: {err}")
+                logger.warning(
+                    f"Compliance chat LLM streaming failed on {OPENROUTER_API_URL}: {err}"
+                )
 
         if tool_context:
             fallback_text = f"According to verified compliance records:\n\n{tool_context}"
@@ -539,6 +472,9 @@ DO NOT output any monetary amount, numerical value, or currency field.
         messages_history: list[dict[str, str]] | None = None,
     ) -> str | None:
         """Call Gemma 4 26B A4B for synchronous compliance chat assistant turns."""
+        if not self.openrouter_key:
+            return None
+
         full_prompt = (
             f"{user_message}\n\nContext Tool Results:\n{tool_context}"
             if tool_context
@@ -549,50 +485,33 @@ DO NOT output any monetary amount, numerical value, or currency field.
             chat_messages.extend(messages_history)
         chat_messages.append({"role": "user", "content": full_prompt})
 
-        endpoints = []
-        if self.openrouter_key:
-            endpoints.append(
-                (
-                    OPENROUTER_API_URL,
-                    {
-                        "Authorization": f"Bearer {self.openrouter_key}",
-                        "Content-Type": "application/json",
-                        **OPENROUTER_HEADERS_EXTRA,
-                    },
-                    GEMMA_MODEL,
-                )
-            )
-        if self.groq_key:
-            endpoints.append(
-                (
-                    GROQ_API_URL,
-                    {
-                        "Authorization": f"Bearer {self.groq_key}",
-                        "Content-Type": "application/json",
-                    },
-                    GROQ_FALLBACK_MODEL,
-                )
-            )
+        headers = {
+            "Authorization": f"Bearer {self.openrouter_key}",
+            "Content-Type": "application/json",
+            **OPENROUTER_HEADERS_EXTRA,
+        }
+        body = {
+            "model": GEMMA_MODEL,
+            "messages": chat_messages,
+            "temperature": 0.3,
+        }
 
-        for url, headers, model_name in endpoints:
-            try:
-                body = {
-                    "model": model_name,
-                    "messages": chat_messages,
-                    "temperature": 0.3,
-                }
-                data = _post_json(url, headers=headers, body=body, timeout=12.0)
-                reply = data["choices"][0]["message"]["content"]
-                default_tracer.trace_llm_generation(
-                    name="gemma_compliance_chat",
-                    system_prompt=system_prompt,
-                    user_message=full_prompt,
-                    model=model_name,
-                    output_text=reply,
-                    metadata={"tool_context_present": bool(tool_context), "provider_url": url},
-                )
-                return reply
-            except Exception as err:
-                logger.warning(f"Compliance chat LLM call failed on {url}: {err}")
+        try:
+            data = _post_json(OPENROUTER_API_URL, headers=headers, body=body, timeout=12.0)
+            reply = data["choices"][0]["message"]["content"]
+            default_tracer.trace_llm_generation(
+                name="gemma_compliance_chat",
+                system_prompt=system_prompt,
+                user_message=full_prompt,
+                model=GEMMA_MODEL,
+                output_text=reply,
+                metadata={
+                    "tool_context_present": bool(tool_context),
+                    "provider_url": OPENROUTER_API_URL,
+                },
+            )
+            return reply
+        except Exception as err:
+            logger.warning(f"Compliance chat LLM call failed on {OPENROUTER_API_URL}: {err}")
 
         return None
