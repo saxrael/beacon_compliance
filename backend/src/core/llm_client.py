@@ -24,6 +24,9 @@ logger = logging.getLogger(__name__)
 
 GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
 OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
+GEMMA_MODEL = os.environ.get("GEMMA_MODEL", "google/gemma-4-26b-a4b")
+GPT_OSS_MODEL = "openai/gpt-oss-20b"
+LLAMA_CONTINGENCY_MODEL = "meta-llama/llama-3.1-8b-instant"
 
 
 class LLMClient:
@@ -41,16 +44,16 @@ class LLMClient:
         Enforces Red-Line 2 placeholder tokens ([FIGURE_INJECTED:...]).
         """
         payload_str = json.dumps(anonymised_payload, indent=2)
-        user_prompt = f"Synthesize TAR narrative prose for the 4 whitelisted fields based on this PII-scrubbed payload:\n{payload_str }"
+        user_prompt = f"Synthesize TAR narrative prose for the 4 whitelisted fields based on this PII-scrubbed payload:\n{payload_str}"
 
         if self.openrouter_key or self.groq_key:
             try:
                 headers = {
                     "Content-Type": "application/json",
-                    "Authorization": f"Bearer {self .openrouter_key or self .groq_key }",
+                    "Authorization": f"Bearer {self.openrouter_key or self.groq_key}",
                 }
                 body = {
-                    "model": "google/gemma-2-27b-it" if self.openrouter_key else "gemma2-9b-it",
+                    "model": GEMMA_MODEL,
                     "messages": [
                         {"role": "system", "content": system_prompt},
                         {"role": "user", "content": user_prompt},
@@ -70,15 +73,13 @@ class LLMClient:
                                 name="gemma_narrative_synthesis",
                                 system_prompt=system_prompt,
                                 user_message=user_prompt,
-                                model="google/gemma-2-27b-it"
-                                if self.openrouter_key
-                                else "gemma2-9b-it",
+                                model=GEMMA_MODEL,
                                 output_text=content,
                                 metadata={"run_type": "narration_synthesis"},
                             )
                             return parsed
             except Exception as err:
-                logger.warning(f"LLM call for TAR narrative synthesis failed: {err }")
+                logger.warning(f"LLM call for TAR narrative synthesis failed: {err}")
 
         return None
 
@@ -194,7 +195,7 @@ DO NOT output any monetary amount, numerical value, or currency field.
                     "Authorization": f"Bearer {self.openrouter_key or self.groq_key}",
                 }
                 body = {
-                    "model": "google/gemma-2-27b-it" if self.openrouter_key else "gemma2-9b-it",
+                    "model": GEMMA_MODEL,
                     "messages": [
                         {"role": "system", "content": system_prompt},
                         {"role": "user", "content": full_prompt},
@@ -245,7 +246,7 @@ DO NOT output any monetary amount, numerical value, or currency field.
                     name="gemma_compliance_chat",
                     system_prompt=system_prompt,
                     user_message=full_prompt,
-                    model="google/gemma-2-27b-it" if self.openrouter_key else "gemma2-9b-it",
+                    model=GEMMA_MODEL,
                     output_text="".join(accumulated_output),
                     metadata={"tool_context_present": bool(tool_context), "stream": True},
                 )
@@ -282,7 +283,7 @@ DO NOT output any monetary amount, numerical value, or currency field.
                     else user_message
                 )
                 body = {
-                    "model": "google/gemma-2-27b-it" if self.openrouter_key else "gemma2-9b-it",
+                    "model": GEMMA_MODEL,
                     "messages": [
                         {"role": "system", "content": system_prompt},
                         {"role": "user", "content": full_prompt},
@@ -299,9 +300,7 @@ DO NOT output any monetary amount, numerical value, or currency field.
                             name="gemma_compliance_chat",
                             system_prompt=system_prompt,
                             user_message=full_prompt,
-                            model="google/gemma-2-27b-it"
-                            if self.openrouter_key
-                            else "gemma2-9b-it",
+                            model=GEMMA_MODEL,
                             output_text=reply,
                             metadata={"tool_context_present": bool(tool_context)},
                         )
