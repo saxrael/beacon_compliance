@@ -1,10 +1,11 @@
 import pytest
+from cryptography.exceptions import InvalidTag
+
 from backend.src.core.crypto import (
     AESGCMCipher,
     generate_trustee_hmac,
     verify_trustee_hmac,
 )
-from cryptography.exceptions import InvalidTag
 
 
 def test_trustee_hmac_signoff_verification():

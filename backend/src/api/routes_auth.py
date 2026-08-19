@@ -18,6 +18,9 @@ try:
 except Exception:
     pyotp = None
 
+from fastapi import APIRouter, Depends, HTTPException, Response, status
+from pydantic import BaseModel, EmailStr
+
 from backend.src.api.auth import (
     TrusteeUser,
     create_jwt_token,
@@ -26,8 +29,6 @@ from backend.src.api.auth import (
 )
 from backend.src.api.dependencies import get_d1_db
 from backend.src.db.d1_client import D1DatabaseClient
-from fastapi import APIRouter, Depends, HTTPException, Response, status
-from pydantic import BaseModel, EmailStr
 
 router = APIRouter(prefix="/api/auth", tags=["Authentication"])
 

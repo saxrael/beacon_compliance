@@ -8,12 +8,13 @@ import hmac
 import os
 
 import pyotp
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
+
 from backend.src.api.auth import TrusteeUser, get_current_trustee
 from backend.src.api.dependencies import get_d1_db
 from backend.src.db.d1_client import D1DatabaseClient
 from backend.src.db.repository import ComplianceRepository
-from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
 
 router = APIRouter(prefix="/api/settings", tags=["Settings"])
 

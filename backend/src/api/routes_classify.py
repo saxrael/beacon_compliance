@@ -7,13 +7,14 @@ Enforces non-blocking execution, D1 relational queries, and dependency injection
 import asyncio
 from typing import Any
 
+from fastapi import APIRouter, Depends
+from pydantic import BaseModel
+
 from backend.src.agents.node_classify import run_node_classify
 from backend.src.agents.state import BeaconComplianceState
 from backend.src.api.auth import TrusteeUser, get_current_trustee
 from backend.src.api.dependencies import get_repository
 from backend.src.db.repository import ComplianceRepository
-from fastapi import APIRouter, Depends
-from pydantic import BaseModel
 
 router = APIRouter(prefix="/api/classify", tags=["Classification"])
 

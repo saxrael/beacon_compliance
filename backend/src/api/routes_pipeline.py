@@ -8,14 +8,15 @@ import asyncio
 import os
 from typing import Any
 
+from fastapi import APIRouter, Depends
+from pydantic import BaseModel, Field
+
 from backend.src.agents.graph import BeaconComplianceGraph
 from backend.src.agents.state import BeaconComplianceState
 from backend.src.api.auth import TrusteeUser, get_current_trustee
 from backend.src.api.dependencies import get_repository
 from backend.src.core.email_service import send_email
 from backend.src.db.repository import ComplianceRepository
-from fastapi import APIRouter, Depends
-from pydantic import BaseModel, Field
 
 router = APIRouter(prefix="/api/pipeline", tags=["Pipeline"])
 

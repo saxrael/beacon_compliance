@@ -6,13 +6,14 @@ Strictly enforces Red-Line 3 (Role-restricted Trustee Sign-off via HMAC-SHA256).
 import datetime
 import os
 
+from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel
+
 from backend.src.api.auth import TrusteeUser, get_current_trustee
 from backend.src.api.dependencies import get_repository
 from backend.src.core.crypto import generate_trustee_hmac, verify_trustee_hmac
 from backend.src.core.email_service import send_email
 from backend.src.db.repository import ComplianceRepository
-from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel
 
 router = APIRouter(prefix="/api/signoff", tags=["Sign-off"])
 

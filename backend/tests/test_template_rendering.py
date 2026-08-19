@@ -6,13 +6,14 @@ import re
 from pathlib import Path
 from typing import Any
 
+from fastapi.testclient import TestClient
+
 from backend.src.agents.node_assembler import _sanitize_chair_name, run_node_assembler
 from backend.src.agents.state import BeaconComplianceState
 from backend.src.api.auth import create_jwt_token
 from backend.src.api.main import app
 from backend.src.db.d1_client import D1DatabaseClient
 from backend.src.db.repository import ComplianceRepository
-from fastapi.testclient import TestClient
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 TEMPLATES_DIR = PROJECT_ROOT / "templates"

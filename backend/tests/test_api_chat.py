@@ -1,8 +1,9 @@
 """Unit tests for Chat API Endpoints (GET /api/chat/history, POST /api/chat/message, POST /api/chat/stream)."""
 
+from fastapi.testclient import TestClient
+
 from backend.src.api.auth import create_jwt_token
 from backend.src.api.main import app
-from fastapi.testclient import TestClient
 
 client = TestClient(app)
 

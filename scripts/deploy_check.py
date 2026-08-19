@@ -7,6 +7,7 @@ Validates:
 - OSCR Document Templates presence
 """
 
+import importlib
 import os
 import sys
 from pathlib import Path
@@ -91,12 +92,12 @@ def check_dockerignore_present() -> tuple[bool, str]:
 def check_telemetry_integration() -> tuple[bool, str]:
     """Verify Langfuse telemetry module and LangChain CallbackHandler readiness."""
     try:
-        from langfuse import Langfuse  # noqa: F401
+        importlib.import_module("langfuse")
     except ImportError:
         return False, "Langfuse SDK is not installed ('pip install langfuse')."
 
     try:
-        from langfuse.langchain import CallbackHandler  # noqa: F401
+        importlib.import_module("langfuse.langchain")
     except Exception as exc:
         return False, f"Langfuse LangChain CallbackHandler unavailable: {exc}"
 

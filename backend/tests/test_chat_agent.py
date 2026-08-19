@@ -1,6 +1,7 @@
 """Unit tests for Compliance Chat Assistant Agent (backend/src/agents/chat_agent.py)."""
 
 from backend.src.agents.chat_agent import ComplianceChatAgent
+from backend.src.core.llm_client import LLMClient
 
 
 def test_chat_agent_financial_query_uses_tool():
@@ -110,8 +111,6 @@ def test_chat_agent_stream_regulatory_query_emits_clean_action_lifecycle():
 
 
 def test_llm_client_stream_parses_dynamic_think_tags():
-    from backend.src.core.llm_client import LLMClient
-
     client = LLMClient()
     mock_raw_stream = [
         "<think>\n",

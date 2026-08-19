@@ -9,6 +9,8 @@ Uses genuine LangGraph StateGraph pipeline compilation with conditional edges.
 
 from typing import Any, Literal
 
+from langgraph.graph import END, START, StateGraph
+
 from backend.src.agents.node_assembler import run_node_assembler
 from backend.src.agents.node_auditor import run_node_auditor
 from backend.src.agents.node_calculator import run_node_calculator
@@ -17,7 +19,6 @@ from backend.src.agents.node_ingest import run_node_ingest
 from backend.src.agents.node_writer import run_node_writer
 from backend.src.agents.state import BeaconComplianceState
 from backend.src.core.telemetry import default_tracer
-from langgraph.graph import END, START, StateGraph
 
 
 def route_after_calculator(state: BeaconComplianceState) -> Literal["node_writer", "__end__"]:

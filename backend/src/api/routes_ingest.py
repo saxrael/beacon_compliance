@@ -5,11 +5,12 @@ Handles document upload, triggers Node 1 OCR extraction and PII scrubbing (Red-L
 
 from typing import Any
 
+from fastapi import APIRouter, Depends, File, UploadFile
+from pydantic import BaseModel
+
 from backend.src.agents.node_ingest import run_node_ingest
 from backend.src.agents.state import BeaconComplianceState
 from backend.src.api.auth import TrusteeUser, get_current_trustee
-from fastapi import APIRouter, Depends, File, UploadFile
-from pydantic import BaseModel
 
 router = APIRouter(prefix="/api/ingest", tags=["Ingestion"])
 

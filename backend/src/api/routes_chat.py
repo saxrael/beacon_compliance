@@ -5,14 +5,15 @@ from collections.abc import AsyncGenerator
 from decimal import Decimal
 from typing import Any
 
+from fastapi import APIRouter, Depends, Query
+from fastapi.responses import StreamingResponse
+from pydantic import BaseModel, Field
+
 from backend.src.agents.chat_agent import ComplianceChatAgent
 from backend.src.api.auth import TrusteeUser, get_current_trustee
 from backend.src.api.dependencies import get_chat_agent, get_d1_db
 from backend.src.db.d1_client import D1DatabaseClient
 from backend.src.db.repository import ComplianceRepository
-from fastapi import APIRouter, Depends, Query
-from fastapi.responses import StreamingResponse
-from pydantic import BaseModel, Field
 
 router = APIRouter(prefix="/api/chat", tags=["Chat Assistant"])
 

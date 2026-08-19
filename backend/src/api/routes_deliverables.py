@@ -8,13 +8,14 @@ import asyncio
 from decimal import Decimal
 from typing import Any
 
+from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel
+
 from backend.src.agents.node_assembler import run_node_assembler
 from backend.src.agents.state import BeaconComplianceState
 from backend.src.api.auth import TrusteeUser, get_current_trustee
 from backend.src.api.dependencies import get_repository
 from backend.src.db.repository import ComplianceRepository
-from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel
 
 router = APIRouter(prefix="/api/deliverables", tags=["Deliverables"])
 

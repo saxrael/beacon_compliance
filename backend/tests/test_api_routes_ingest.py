@@ -1,9 +1,10 @@
 import io
 
+from fastapi.testclient import TestClient
+
 from backend.src.api.auth import create_jwt_token
 from backend.src.api.main import app
 from backend.src.db.d1_client import D1DatabaseClient
-from fastapi.testclient import TestClient
 
 client = TestClient(app)
 

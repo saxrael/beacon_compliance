@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+
 from backend.src.agents.node_assembler import _sanitize_chair_name, run_node_assembler
 from backend.src.agents.state import BeaconComplianceState
 from backend.src.db.d1_client import D1DatabaseClient

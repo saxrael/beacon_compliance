@@ -6,6 +6,7 @@ Verifies Red-Line 2 and Rule 2 of beacon-financial-boundary.
 from decimal import Decimal
 
 import pytest
+
 from backend.src.core.financial import (
     TransactionRecord,
     calculate_fund_totals,

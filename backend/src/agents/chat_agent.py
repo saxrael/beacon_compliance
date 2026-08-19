@@ -9,10 +9,11 @@ Enforces:
 
 from typing import Any
 
+from pydantic import BaseModel, Field
+
 from backend.src.agents.prompts import CHAT_AGENT_SYSTEM_PROMPT
 from backend.src.core.knowledge_context import ComplianceKnowledgeContext
 from backend.src.core.llm_client import LLMClient
-from pydantic import BaseModel, Field
 
 
 class ChatMessage(BaseModel):

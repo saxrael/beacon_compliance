@@ -1,8 +1,9 @@
 """Unit tests for FastAPI REST API Endpoints (backend/tests/test_api_endpoints.py)."""
 
+from fastapi.testclient import TestClient
+
 from backend.src.api.auth import create_jwt_token
 from backend.src.api.main import app
-from fastapi.testclient import TestClient
 
 client = TestClient(app)
 

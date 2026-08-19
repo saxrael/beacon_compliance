@@ -17,6 +17,7 @@ import os
 from typing import Any
 
 import httpx
+
 from backend.src.core.telemetry import default_tracer
 
 logger = logging.getLogger(__name__)

@@ -6,6 +6,9 @@ Provides CORS middleware, API route registration, and health status endpoint.
 import os
 from typing import Any
 
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
 from backend.src.api.dependencies import get_d1_db
 from backend.src.api.rate_limiter import (
     RateLimitExceeded,
@@ -22,8 +25,6 @@ from backend.src.api.routes_ingest import router as ingest_router
 from backend.src.api.routes_pipeline import router as pipeline_router
 from backend.src.api.routes_settings import router as settings_router
 from backend.src.api.routes_signoff import router as signoff_router
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(
     title="Beacon Compliance OS API",
