@@ -211,20 +211,9 @@ jobs:
 
             if [ -n "${{ secrets.DUCKDNS_DOMAIN }}" ]; then
               echo "==> [SSL] Configuring Caddy reverse proxy for ${{ secrets.DUCKDNS_DOMAIN }}..."
-              cat > /tmp/Caddyfile <<'EOF'
-            ${{ secrets.DUCKDNS_DOMAIN }} {
-                reverse_proxy localhost:8000
-
-                header {
-                    Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
-                    X-Content-Type-Options "nosniff"
-                    X-Frame-Options "DENY"
-                    Referrer-Policy "strict-origin-when-cross-origin"
-                }
-            }
-            EOF
+              printf '%s {\n    reverse_proxy localhost:8000\n    header {\n        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"\n        X-Content-Type-Options "nosniff"\n        X-Frame-Options "DENY"\n        Referrer-Policy "strict-origin-when-cross-origin"\n    }\n}\n' "${{ secrets.DUCKDNS_DOMAIN }}" > /tmp/Caddyfile
               sudo -n mv /tmp/Caddyfile /etc/caddy/Caddyfile 2>/dev/null || true
-              sudo -n systemctl reload caddy 2>/dev/null || sudo -n systemctl restart caddy 2>/dev/null || true
+              sudo -n systemctl restart caddy --no-block 2>/dev/null || true
             fi
             echo "==> [SUCCESS] Deployment completed successfully!"
 
