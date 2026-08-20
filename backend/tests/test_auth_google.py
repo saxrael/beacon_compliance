@@ -170,6 +170,44 @@ def test_login_with_2fa_flow(tmp_path, monkeypatch):
     assert success_data["user"]["role"] == "Trustee"
 
 
+def test_google_oauth_callback_with_2fa_enforcement(tmp_path, monkeypatch):
+    db_path = str(tmp_path / "test_auth_google_2fa.db")
+    db = D1DatabaseClient(db_path=db_path)
+
+    totp_secret = pyotp.random_base32()
+    totp = pyotp.TOTP(totp_secret)
+
+    db.execute(
+        "INSERT INTO users (user_id, email, password_hash, name, role, first_login_complete, totp_secret, totp_enabled) "
+        "VALUES ('usr_chair_2fa', 'chair_2fa@pottershouse.org.uk', 'pwd_hash', 'Chairperson 2FA', 'Chair', 1, ?, 1)",
+        (totp_secret,),
+    )
+    db.close()
+
+    monkeypatch.setenv("D1_DB_PATH", db_path)
+    monkeypatch.setenv("MOCK_GOOGLE_OAUTH", "true")
+    monkeypatch.setenv("MOCK_GOOGLE_EMAIL", "chair_2fa@pottershouse.org.uk")
+    monkeypatch.setenv("MOCK_GOOGLE_NAME", "Chairperson 2FA")
+
+    # Step 1: Google OAuth callback should require 2FA when totp_enabled is 1
+    oauth_res = client.get("/api/auth/google/callback?code=mock_code&state=mock_state")
+    assert oauth_res.status_code == 200
+    oauth_data = oauth_res.json()
+    assert oauth_data["requires_2fa"] is True
+    assert "access_token" in oauth_data
+    temp_token = oauth_data["access_token"]
+
+    # Step 2: Complete 2FA verification with the TOTP code
+    totp_res = client.post(
+        "/api/auth/login/2fa",
+        json={"temp_token": temp_token, "totp_code": totp.now()},
+    )
+    assert totp_res.status_code == 200
+    totp_data = totp_res.json()
+    assert totp_data["user"]["email"] == "chair_2fa@pottershouse.org.uk"
+    assert totp_data["user"]["role"] == "Chair"
+
+
 def test_logout_endpoint():
     res = client.post("/api/auth/logout")
     assert res.status_code == 200

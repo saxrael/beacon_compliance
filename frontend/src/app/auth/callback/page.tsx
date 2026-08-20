@@ -3,18 +3,24 @@
 import React, { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import { ShieldCheck, AlertCircle, ArrowLeft, Loader2, Award, Sparkles } from "lucide-react";
+import { ShieldCheck, AlertCircle, ArrowLeft, Loader2, Sparkles, KeyRound, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { springs } from "@/lib/motion-tokens";
 
 function CallbackHandler() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { loginWithGoogle } = useAuth();
+  const { loginWithGoogle, loginWith2FA } = useAuth();
 
   const [statusText, setStatusText] = useState("Verifying Google Trustee credentials...");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [pending2FA, setPending2FA] = useState(false);
+  const [tempToken, setTempToken] = useState<string | null>(null);
+  const [trusteeEmail, setTrusteeEmail] = useState<string>("");
+  const [trusteeName, setTrusteeName] = useState<string>("");
+  const [totpCode, setTotpCode] = useState("");
+  const [verifying2FA, setVerifying2FA] = useState(false);
   const hasExecutedRef = React.useRef(false);
 
   useEffect(() => {
@@ -43,13 +49,20 @@ function CallbackHandler() {
     async function completeOAuth() {
       try {
         setStatusText("Exchanging authorization token and verifying SCIO trustee permissions...");
-        await loginWithGoogle(code!, state || undefined);
+        const result = await loginWithGoogle(code!, state || undefined);
         if (isMounted) {
-          setIsSuccess(true);
-          setStatusText("Authentication verified. Redirecting to Trustee Compliance Portal...");
-          setTimeout(() => {
-            router.push("/");
-          }, 800);
+          if (result.requires_2fa) {
+            setPending2FA(true);
+            setTempToken(result.tempToken || null);
+            setTrusteeEmail(result.user?.email || "");
+            setTrusteeName(result.user?.name || "Trustee");
+          } else {
+            setIsSuccess(true);
+            setStatusText("Authentication verified. Redirecting to Trustee Compliance Portal...");
+            setTimeout(() => {
+              router.push("/");
+            }, 800);
+          }
         }
       } catch (err: unknown) {
         if (isMounted) {
@@ -68,6 +81,29 @@ function CallbackHandler() {
       isMounted = false;
     };
   }, [searchParams, loginWithGoogle, router]);
+
+  const handle2FASubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!tempToken || !totpCode.trim() || verifying2FA) return;
+
+    setVerifying2FA(true);
+    setErrorMessage(null);
+
+    try {
+      await loginWith2FA(tempToken, totpCode.trim());
+      setIsSuccess(true);
+      setPending2FA(false);
+      setStatusText("Two-Factor Authentication verified. Redirecting to Trustee Compliance Portal...");
+      setTimeout(() => {
+        router.push("/");
+      }, 800);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Invalid 2FA code. Please try again.";
+      setErrorMessage(msg);
+    } finally {
+      setVerifying2FA(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#FBF9F5] dark:bg-[#070A11] relative overflow-hidden flex flex-col justify-center items-center p-4 sm:p-6 text-slate-900 dark:text-slate-100 transition-colors duration-300">
@@ -100,20 +136,72 @@ function CallbackHandler() {
           </h1>
           <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 text-amber-800 dark:text-amber-300 text-xs font-mono font-medium">
             <Sparkles className="h-3 w-3 text-amber-600 dark:text-amber-400" />
-            <span>SCIO SC054652 • OAuth Gateway</span>
+            <span>SCIO SC054652 • {pending2FA ? "Two-Factor Verification" : "OAuth Gateway"}</span>
           </div>
         </div>
 
-        {errorMessage ? (
-          <div className="space-y-4">
-            <div className="p-4 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-500/40 rounded-2xl text-xs text-red-700 dark:text-red-300 text-left flex items-start gap-3 shadow-xs">
-              <AlertCircle className="h-5 w-5 shrink-0 text-red-600 dark:text-red-400 mt-0.5" />
-              <div className="space-y-1">
-                <span className="font-semibold block">Authentication Unsuccessful</span>
-                <span className="leading-relaxed block">{errorMessage}</span>
+        {errorMessage && (
+          <div className="p-4 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-500/40 rounded-2xl text-xs text-red-700 dark:text-red-300 text-left flex items-start gap-3 shadow-xs">
+            <AlertCircle className="h-5 w-5 shrink-0 text-red-600 dark:text-red-400 mt-0.5" />
+            <div className="space-y-1">
+              <span className="font-semibold block">Authentication Required</span>
+              <span className="leading-relaxed block">{errorMessage}</span>
+            </div>
+          </div>
+        )}
+
+        {pending2FA ? (
+          <form onSubmit={handle2FASubmit} className="space-y-4 text-left">
+            <div className="p-3 bg-stone-50 dark:bg-[#121C30] border border-stone-200 dark:border-slate-800 rounded-2xl text-xs space-y-1">
+              <div className="flex items-center gap-2 text-slate-800 dark:text-slate-200 font-semibold">
+                <ShieldCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                <span>Google Account Verified</span>
               </div>
+              <p className="text-[11px] text-stone-600 dark:text-slate-400 truncate pl-6">
+                {trusteeName} ({trusteeEmail})
+              </p>
             </div>
 
+            <div className="space-y-2">
+              <label className="block text-stone-700 dark:text-slate-300 font-semibold text-xs flex items-center gap-1.5">
+                <KeyRound className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+                <span>6-Digit Authenticator App Code</span>
+              </label>
+              <input
+                type="text"
+                required
+                autoFocus
+                maxLength={6}
+                placeholder="000000"
+                value={totpCode}
+                onChange={(e) => setTotpCode(e.target.value)}
+                className="w-full px-4 py-3 bg-stone-50 dark:bg-slate-800/80 border border-amber-500/50 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:border-amber-600 focus:ring-2 focus:ring-amber-500/20 transition-all text-center text-xl tracking-[0.3em] font-mono shadow-xs"
+              />
+              <p className="text-[11px] text-stone-500 dark:text-slate-400 text-center pt-1">
+                Enter the code from your Authenticator app (e.g. Google or Microsoft Authenticator).
+              </p>
+            </div>
+
+            <button
+              type="submit"
+              disabled={verifying2FA || totpCode.trim().length !== 6}
+              className="w-full py-3 royal-btn-crimson font-bold rounded-xl shadow-md transition-all flex items-center justify-center gap-2 text-sm disabled:opacity-50 active:scale-[0.98]"
+            >
+              <span>{verifying2FA ? "Verifying 2FA..." : "Verify & Sign In"}</span>
+              <ArrowRight className="h-4 w-4" />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => router.push("/")}
+              className="w-full py-2.5 bg-stone-100 dark:bg-slate-800/60 hover:bg-stone-200 dark:hover:bg-slate-700/80 text-stone-700 dark:text-slate-300 font-medium rounded-xl text-xs flex items-center justify-center gap-1.5 transition-colors"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" />
+              <span>Cancel & Back to Sign In</span>
+            </button>
+          </form>
+        ) : errorMessage ? (
+          <div className="space-y-4">
             <button
               type="button"
               onClick={() => router.push("/")}

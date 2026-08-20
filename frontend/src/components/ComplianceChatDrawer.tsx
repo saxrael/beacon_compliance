@@ -81,7 +81,30 @@ export const ComplianceChatDrawer: React.FC = () => {
 
         if (res.ok) {
           const data = await res.json();
-          const fetched: ChatTurn[] = data.messages || [];
+          const fetched: ChatTurn[] = (data.messages || []).map((m: any) => ({
+            message_id: m.message_id,
+            role: m.role,
+            content: m.content,
+            thinking: m.thinking,
+            tool_calls: m.tool_calls || [],
+            sources: m.sources || [],
+            actions:
+              m.actions && m.actions.length > 0
+                ? m.actions
+                : m.tool_calls && m.tool_calls.length > 0
+                ? m.tool_calls.map((tc: any, i: number) => ({
+                    id: `act_${i}`,
+                    label:
+                      tc.function?.name ||
+                      tc.name ||
+                      tc.label ||
+                      'Statutory Action',
+                    status: 'completed',
+                  }))
+                : [],
+            duration_seconds: m.duration_seconds ?? null,
+            created_at: m.created_at,
+          }));
           setHasMore(data.has_more || false);
 
           if (offset === 0) {
@@ -524,7 +547,7 @@ export const ComplianceChatDrawer: React.FC = () => {
                           (m.isThinking ||
                             Boolean(m.thinking) ||
                             (m.actions && m.actions.length > 0) ||
-                            Boolean(m.duration_seconds)) && (
+                            (m.duration_seconds !== null && m.duration_seconds !== undefined)) && (
                             <ThinkingProcessBlock
                               isActive={Boolean(m.isThinking)}
                               thinking={m.thinking}

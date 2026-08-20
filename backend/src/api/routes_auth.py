@@ -171,6 +171,22 @@ async def google_oauth_callback(
     user_role = user["role"].title()
     first_complete = bool(user.get("first_login_complete", 0))
 
+    user_profile = UserProfileResponse(
+        user_id=user["user_id"],
+        email=user["email"],
+        name=user["name"] or google_name,
+        role=user_role,
+        first_login_complete=first_complete,
+        google_linked=True,
+        avatar=user.get("avatar"),
+    )
+
+    if user.get("totp_enabled"):
+        jwt_token = create_jwt_token(
+            user_id=user["user_id"], role="2FA_PENDING", email=user["email"]
+        )
+        return AuthResponse(access_token=jwt_token, user=user_profile, requires_2fa=True)
+
     jwt_token = create_jwt_token(user_id=user["user_id"], role=user_role, email=user["email"])
 
     response.set_cookie(
@@ -180,16 +196,6 @@ async def google_oauth_callback(
         secure=os.environ.get("APP_ENV") == "production",
         samesite="lax",
         max_age=86400,
-    )
-
-    user_profile = UserProfileResponse(
-        user_id=user["user_id"],
-        email=user["email"],
-        name=user["name"] or google_name,
-        role=user_role,
-        first_login_complete=first_complete,
-        google_linked=True,
-        avatar=user.get("avatar"),
     )
 
     return AuthResponse(access_token=jwt_token, user=user_profile)

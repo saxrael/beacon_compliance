@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { API_BASE_URL } from "@/config";
 
 export interface UserProfile {
@@ -27,7 +27,7 @@ interface AuthContextType {
   error: string | null;
   loginWithEmail: (email: string, password: string) => Promise<LoginResult>;
   loginWith2FA: (tempToken: string, code: string) => Promise<UserProfile>;
-  loginWithGoogle: (code: string, state?: string) => Promise<UserProfile>;
+  loginWithGoogle: (code: string, state?: string) => Promise<LoginResult>;
   getGoogleLoginUrl: () => Promise<string>;
   completeFirstLoginReset: (email: string, currentPassword: string, newPassword: string) => Promise<void>;
   updateUser: (updated: Partial<UserProfile>) => void;
@@ -46,39 +46,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const refreshUserProfile = useCallback(async () => {
+    const savedToken = typeof window !== "undefined" ? localStorage.getItem("beacon_auth_token") : null;
+    if (!savedToken) {
+      setLoading(false);
+      return;
+    }
 
-    const storedToken = localStorage.getItem("beacon_auth_token");
-    if (storedToken) {
-      setToken(storedToken);
-      fetchUserProfile(storedToken);
-    } else {
+    try {
+      const res = await fetch(`${API_BASE}/me`, {
+        headers: { Authorization: `Bearer ${savedToken}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setUser(data);
+        setToken(savedToken);
+      } else {
+        localStorage.removeItem("beacon_auth_token");
+        setUser(null);
+        setToken(null);
+      }
+    } catch {
+      localStorage.removeItem("beacon_auth_token");
+      setUser(null);
+      setToken(null);
+    } finally {
       setLoading(false);
     }
   }, []);
 
-  const fetchUserProfile = async (authToken: string) => {
-    try {
-      const res = await fetch(`${API_BASE}/me`, {
-        headers: {
-          Authorization: `Bearer ${authToken}`,
-        },
-      });
-
-      if (res.ok) {
-        const profile = await res.json();
-        setUser(profile);
-      } else {
-        localStorage.removeItem("beacon_auth_token");
-        setToken(null);
-        setUser(null);
-      }
-    } catch (err) {
-      console.error("Failed to fetch user profile:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  useEffect(() => {
+    refreshUserProfile();
+  }, [refreshUserProfile]);
 
   const loginWithEmail = async (email: string, password: string): Promise<LoginResult> => {
     setError(null);
@@ -137,7 +136,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return data.auth_url;
   };
 
-  const loginWithGoogle = async (code: string, state?: string): Promise<UserProfile> => {
+  const loginWithGoogle = async (code: string, state?: string): Promise<LoginResult> => {
     setError(null);
     const url = `${API_BASE}/google/callback?code=${encodeURIComponent(code)}${state ? `&state=${encodeURIComponent(state)}` : ""}`;
     const res = await fetch(url);
@@ -150,10 +149,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     const data = await res.json();
+    if (data.requires_2fa) {
+      return { requires_2fa: true, tempToken: data.access_token, user: data.user };
+    }
+
     setToken(data.access_token);
     setUser(data.user);
     localStorage.setItem("beacon_auth_token", data.access_token);
-    return data.user;
+    return { user: data.user };
   };
 
   const completeFirstLoginReset = async (email: string, currentPassword: string, newPassword: string) => {
@@ -177,13 +180,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const updateUser = (updated: Partial<UserProfile>) => {
     setUser((prev) => (prev ? { ...prev, ...updated } : null));
-  };
-
-  const refreshUserProfile = async () => {
-    const activeToken = token || (typeof window !== "undefined" ? localStorage.getItem("beacon_auth_token") : null);
-    if (activeToken) {
-      await fetchUserProfile(activeToken);
-    }
   };
 
   const clearError = () => {

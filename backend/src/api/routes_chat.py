@@ -10,6 +10,7 @@ Enforces:
 import asyncio
 import json
 import logging
+import time
 import uuid
 from collections.abc import AsyncGenerator
 from decimal import Decimal
@@ -23,7 +24,6 @@ from backend.src.agents.chat_agent import ComplianceChatAgent
 from backend.src.agents.cognitive_worker import CognitiveWorker
 from backend.src.api.auth import TrusteeUser, get_current_trustee
 from backend.src.api.dependencies import get_chat_agent, get_d1_db
-from backend.src.core.memory import MemoryFact, Tier1WorkingMemoryBuffer
 from backend.src.db.d1_client import D1DatabaseClient
 from backend.src.db.repository import ComplianceRepository
 
@@ -45,6 +45,8 @@ class ChatMessageResponse(BaseModel):
     thinking: str | None = None
     tool_calls: list[dict[str, Any]] = Field(default_factory=list)
     sources: list[str] = Field(default_factory=list)
+    duration_seconds: float | None = None
+    actions: list[dict[str, Any]] = Field(default_factory=list)
 
 
 def _build_state_from_db(
@@ -95,65 +97,37 @@ def _build_state_from_db(
 
 
 def _trigger_background_cognitive_processing(
-    repo: ComplianceRepository,
-    user_id: str,
-    run_id: str,
+    repo: ComplianceRepository, user_id: str, run_id: str
 ) -> None:
-    """Trigger asynchronous background cognitive memory worker to update Tier 2 and Tier 3 memory."""
+    """Synchronous worker invoking Tier 2 summary and Tier 3 fact cognitive workers in background."""
     try:
-        history_resp = repo.get_chat_history(user_id=user_id, run_id=run_id, limit=50)
-        all_turns = history_resp.get("messages", [])
-        if len(all_turns) <= 4:
-            return
-
-        buf = Tier1WorkingMemoryBuffer(window_size=50)
-        _, evicted = buf.process_turns(all_turns)
-        if not evicted:
-            evicted = all_turns[-6:]
-
-        existing_summary = repo.get_memory_summary(user_id, run_id)
-        raw_facts = repo.get_memory_facts(user_id)
-        existing_facts = [
-            MemoryFact(
-                fact_id=rf["fact_id"],
-                user_id=rf["user_id"],
-                fact_text=rf["fact_text"],
-                source_type=rf.get("source_type", "non_financial_convo"),
-                created_at=rf.get("created_at", ""),
-            )
-            for rf in raw_facts
-        ]
-
-        worker = CognitiveWorker(repository=repo)
-        worker.process_cognitive_turn(
-            user_id=user_id,
-            run_id=run_id,
-            evicted_messages=evicted,
-            existing_summary=existing_summary,
-            existing_facts=existing_facts,
+        worker = CognitiveWorker(repo=repo)
+        worker.process_turn_memory(user_id=user_id, run_id=run_id)
+    except Exception as exc:
+        logger.warning(
+            "Background cognitive worker execution failed for user %s: %s",
+            user_id,
+            exc,
         )
-    except Exception as err:
-        logger.warning(f"Background cognitive worker execution failed: {err}")
 
 
 @router.get("/history")
-async def get_chat_history(
-    *,
-    run_id: str | None = Query(default=None),
-    limit: int = Query(default=50, ge=1, le=100),
-    before_timestamp: str | None = Query(default=None),
-    offset: int = Query(default=0, ge=0),
+def get_chat_history(
+    run_id: str = Query("run_001"),
+    limit: int = Query(50, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    before_timestamp: str | None = Query(None),
     current_user: TrusteeUser = Depends(get_current_trustee),
     db: D1DatabaseClient = Depends(get_d1_db),
 ) -> dict[str, Any]:
-    """Retrieve 50-turn paginated chat history for current user and run."""
+    """Retrieve persistent conversation turns from Tier 1 D1 storage."""
     repo = ComplianceRepository(db_client=db)
     return repo.get_chat_history(
         user_id=current_user.user_id,
         run_id=run_id,
         limit=limit,
-        before_timestamp=before_timestamp,
         offset=offset,
+        before_timestamp=before_timestamp,
     )
 
 
@@ -164,7 +138,7 @@ async def chat_message(
     agent: ComplianceChatAgent = Depends(get_chat_agent),
     db: D1DatabaseClient = Depends(get_d1_db),
 ) -> ChatMessageResponse:
-    """Process a single turn with rich upfront context engineering and persist both turns in D1."""
+    """Non-streaming compliance advisory chat turn."""
     repo = ComplianceRepository(db_client=db)
     state = _build_state_from_db(db, req.run_id, req.context_state)
 
@@ -189,6 +163,7 @@ async def chat_message(
         content=req.message,
     )
 
+    start_time = time.time()
     res = await asyncio.to_thread(
         agent.process_message,
         req.message,
@@ -201,8 +176,22 @@ async def chat_message(
         tier2_summary,
         tier3_facts,
     )
+    duration_sec = round(time.time() - start_time, 2)
 
     asst_msg_id = f"msg_{uuid.uuid4().hex[:12]}"
+    action_items = [
+        {
+            "id": f"act_{idx}",
+            "label": (
+                tc.get("function", {}).get("name")
+                if isinstance(tc, dict) and "function" in tc
+                else tc.get("name") or tc.get("label") or "Statutory Action"
+            ),
+            "status": "completed",
+        }
+        for idx, tc in enumerate(res.tool_calls)
+    ]
+
     repo.save_chat_message(
         message_id=asst_msg_id,
         user_id=current_user.user_id,
@@ -212,6 +201,8 @@ async def chat_message(
         thinking=res.thinking,
         tool_calls=res.tool_calls,
         sources=res.sources,
+        duration_seconds=duration_sec,
+        actions=action_items,
     )
 
     bg_task = asyncio.create_task(
@@ -228,11 +219,13 @@ async def chat_message(
         thinking=res.thinking,
         tool_calls=res.tool_calls,
         sources=res.sources,
+        duration_seconds=duration_sec,
+        actions=action_items,
     )
 
 
 @router.post("/stream")
-async def chat_stream(
+async def chat_stream(  # noqa: PLR0915
     req: ChatMessageRequest,
     current_user: TrusteeUser = Depends(get_current_trustee),
     agent: ComplianceChatAgent = Depends(get_chat_agent),
@@ -264,10 +257,13 @@ async def chat_stream(
     )
 
     async def event_generator() -> AsyncGenerator[str, None]:
+        start_time = time.time()
         accumulated_thoughts = []
         accumulated_text = []
+        stream_actions: list[dict[str, Any]] = []
         final_tool_calls = []
         final_sources = []
+        thinking_duration_sec: float | None = None
 
         for event in agent.stream_message(
             req.message,
@@ -289,19 +285,29 @@ async def chat_stream(
             elif ev_type == "action":
                 label = event.get("label") or event.get("detail", "")
                 status = event.get("status", "running")
-                action_id = event.get("action_id", "act_0")
-                payload = json.dumps(
-                    {
-                        "action_id": action_id,
-                        "label": label,
-                        "status": status,
-                        "detail": label,
-                    }
+                action_id = event.get("action_id", f"act_{len(stream_actions)}")
+                act_item = {
+                    "id": action_id,
+                    "action_id": action_id,
+                    "label": label,
+                    "status": status,
+                    "detail": label,
+                }
+                existing_idx = next(
+                    (i for i, a in enumerate(stream_actions) if a.get("id") == action_id),
+                    None,
                 )
+                if existing_idx is not None:
+                    stream_actions[existing_idx] = act_item
+                else:
+                    stream_actions.append(act_item)
+                payload = json.dumps(act_item)
                 yield f"event: action\ndata: {payload}\n\n"
             elif ev_type == "token":
                 chunk = event.get("chunk", "")
                 accumulated_text.append(chunk)
+                if thinking_duration_sec is None:
+                    thinking_duration_sec = round(time.time() - start_time, 2)
                 payload = json.dumps({"chunk": chunk})
                 yield f"event: token\ndata: {payload}\n\n"
             elif ev_type == "done":
@@ -310,6 +316,11 @@ async def chat_stream(
                 asst_msg_id = f"msg_{uuid.uuid4().hex[:12]}"
                 full_content = "".join(accumulated_text) or event.get("full_message", "")
                 full_thinking = "".join(accumulated_thoughts)
+                final_duration = (
+                    thinking_duration_sec
+                    if thinking_duration_sec is not None
+                    else round(time.time() - start_time, 2)
+                )
 
                 repo.save_chat_message(
                     message_id=asst_msg_id,
@@ -320,6 +331,8 @@ async def chat_stream(
                     thinking=full_thinking,
                     tool_calls=final_tool_calls,
                     sources=final_sources,
+                    duration_seconds=final_duration,
+                    actions=stream_actions,
                 )
 
                 payload = json.dumps(
@@ -329,6 +342,8 @@ async def chat_stream(
                         "thinking": full_thinking,
                         "tool_calls": final_tool_calls,
                         "sources": final_sources,
+                        "duration_seconds": final_duration,
+                        "actions": stream_actions,
                     }
                 )
                 yield f"event: done\ndata: {payload}\n\n"

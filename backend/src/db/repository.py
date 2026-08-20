@@ -229,16 +229,19 @@ class ComplianceRepository:
         thinking: str | None = None,
         tool_calls: list[dict[str, Any]] | None = None,
         sources: list[str] | None = None,
+        duration_seconds: float | None = None,
+        actions: list[dict[str, Any]] | None = None,
         created_at: str | None = None,
     ) -> dict[str, Any]:
         """Persist a conversation turn to D1 chat_messages table."""
         ts = created_at or datetime.now(UTC).isoformat()
         tool_calls_json = json.dumps(tool_calls) if tool_calls else None
         sources_json = json.dumps(sources) if sources else None
+        actions_json = json.dumps(actions) if actions else None
 
         self.db.execute(
-            "INSERT INTO chat_messages (message_id, user_id, run_id, role, content, thinking, tool_calls_json, sources_json, created_at) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO chat_messages (message_id, user_id, run_id, role, content, thinking, tool_calls_json, sources_json, duration_seconds, actions_json, created_at) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
                 message_id,
                 user_id,
@@ -248,6 +251,8 @@ class ComplianceRepository:
                 thinking,
                 tool_calls_json,
                 sources_json,
+                duration_seconds,
+                actions_json,
                 ts,
             ),
         )
@@ -260,6 +265,8 @@ class ComplianceRepository:
             "thinking": thinking,
             "tool_calls": tool_calls or [],
             "sources": sources or [],
+            "duration_seconds": duration_seconds,
+            "actions": actions or [],
             "created_at": ts,
         }
 
@@ -293,13 +300,41 @@ class ComplianceRepository:
         )
         total_count = count_row["total"] if count_row else 0
 
-        query = f"SELECT message_id, user_id, run_id, role, content, thinking, tool_calls_json, sources_json, created_at FROM chat_messages {where_clause} ORDER BY created_at DESC LIMIT ? OFFSET ?"
+        query = f"SELECT message_id, user_id, run_id, role, content, thinking, tool_calls_json, sources_json, duration_seconds, actions_json, created_at FROM chat_messages {where_clause} ORDER BY created_at DESC LIMIT ? OFFSET ?"
         query_params = [*params, limit, offset]
 
         rows = self.db.fetchall(query, tuple(query_params))
 
         messages = []
         for r in rows:
+            tool_calls_data = (
+                json.loads(r["tool_calls_json"]) if r.get("tool_calls_json") else []
+            )
+            sources_data = (
+                json.loads(r["sources_json"]) if r.get("sources_json") else []
+            )
+            actions_data = None
+            if r.get("actions_json"):
+                try:
+                    actions_data = json.loads(r["actions_json"])
+                except Exception:
+                    actions_data = None
+
+            # If actions wasn't stored explicitly, map tool_calls into actions format
+            if not actions_data and tool_calls_data:
+                actions_data = [
+                    {
+                        "id": f"act_{idx}",
+                        "label": (
+                            tc.get("function", {}).get("name")
+                            if isinstance(tc, dict) and "function" in tc
+                            else tc.get("name") or tc.get("label") or "Statutory Action"
+                        ),
+                        "status": "completed",
+                    }
+                    for idx, tc in enumerate(tool_calls_data)
+                ]
+
             messages.append(
                 {
                     "message_id": r["message_id"],
@@ -308,10 +343,10 @@ class ComplianceRepository:
                     "role": r["role"],
                     "content": r["content"],
                     "thinking": r.get("thinking"),
-                    "tool_calls": json.loads(r["tool_calls_json"])
-                    if r.get("tool_calls_json")
-                    else [],
-                    "sources": json.loads(r["sources_json"]) if r.get("sources_json") else [],
+                    "tool_calls": tool_calls_data,
+                    "sources": sources_data,
+                    "duration_seconds": r.get("duration_seconds"),
+                    "actions": actions_data or [],
                     "created_at": r["created_at"],
                 }
             )

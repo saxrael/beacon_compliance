@@ -136,6 +136,11 @@ def test_chat_message_persistence_and_pagination():
             run_id="run_chat_test",
             role="user" if i % 2 == 0 else "assistant",
             content=f"Message turn number {i}",
+            thinking="Cognitive reasoning content" if i % 2 != 0 else None,
+            duration_seconds=2.4 if i % 2 != 0 else None,
+            actions=[{"id": "act_1", "label": "Checked R&P schedule", "status": "completed"}]
+            if i % 2 != 0
+            else [],
             created_at=f"2026-08-19T01:{i:02d}:00Z",
         )
 
@@ -145,6 +150,11 @@ def test_chat_message_persistence_and_pagination():
     assert res["has_more"] is True
     assert res["messages"][0]["message_id"] == "msg_010"
     assert res["messages"][-1]["message_id"] == "msg_059"
+    # Verify duration and thinking and actions are properly preserved
+    assert res["messages"][-1]["duration_seconds"] == 2.4
+    assert res["messages"][-1]["thinking"] == "Cognitive reasoning content"
+    assert len(res["messages"][-1]["actions"]) == 1
+    assert res["messages"][-1]["actions"][0]["label"] == "Checked R&P schedule"
 
     older_res = repo.get_chat_history(
         user_id="usr_001", run_id="run_chat_test", limit=50, offset=50

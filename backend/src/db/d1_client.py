@@ -154,6 +154,8 @@ CREATE TABLE IF NOT EXISTS chat_messages (
     thinking TEXT,
     tool_calls_json TEXT,
     sources_json TEXT,
+    duration_seconds REAL,
+    actions_json TEXT,
     created_at TEXT NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
@@ -227,6 +229,27 @@ class D1DatabaseClient:
                 self._conn.execute(
                     "CREATE UNIQUE INDEX IF NOT EXISTS idx_users_google_id ON users(google_id)"
                 )
+            except sqlite3.OperationalError:
+                pass
+
+            try:
+                cursor_cm = self._conn.execute("PRAGMA table_info(chat_messages)")
+                existing_cm_cols = {
+                    row[1] if isinstance(row, tuple) else row["name"]
+                    for row in cursor_cm.fetchall()
+                }
+                cm_migrations = [
+                    ("duration_seconds", "REAL"),
+                    ("actions_json", "TEXT"),
+                ]
+                for col_name, col_def in cm_migrations:
+                    if col_name not in existing_cm_cols:
+                        try:
+                            self._conn.execute(
+                                f"ALTER TABLE chat_messages ADD COLUMN {col_name} {col_def}"
+                            )
+                        except sqlite3.OperationalError:
+                            pass
             except sqlite3.OperationalError:
                 pass
 
