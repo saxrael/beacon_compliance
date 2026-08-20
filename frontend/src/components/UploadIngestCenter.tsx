@@ -93,11 +93,11 @@ export const UploadIngestCenter: React.FC<UploadIngestProps> = ({ onIngestSucces
   };
 
   return (
-    <div className="tour-upload-center royal-card rounded-3xl p-6 sm:p-7 border border-stone-200 dark:border-slate-800 space-y-6">
+    <div className="tour-upload-center royal-card rounded-3xl p-4 sm:p-7 border border-stone-200 dark:border-slate-800 space-y-5 sm:space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-stone-200/80 dark:border-slate-800/80 pb-4">
         <div>
-          <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100 font-serif flex items-center gap-2.5">
-            <div className="p-1.5 rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/30">
+          <h2 className="text-base sm:text-xl font-bold text-slate-900 dark:text-slate-100 font-serif flex items-center gap-2.5">
+            <div className="p-1.5 rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/30 shrink-0">
               <UploadCloud className="h-5 w-5" />
             </div>
             <span>Document & Transaction Upload Center</span>
@@ -107,7 +107,7 @@ export const UploadIngestCenter: React.FC<UploadIngestProps> = ({ onIngestSucces
           </p>
         </div>
 
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30 text-[11px] font-mono font-semibold self-start sm:self-auto">
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30 text-[10.5px] sm:text-[11px] font-mono font-semibold self-start sm:self-auto shrink-0">
           <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
           <span>Donor Privacy & Data Protection Active</span>
         </div>
@@ -137,7 +137,7 @@ export const UploadIngestCenter: React.FC<UploadIngestProps> = ({ onIngestSucces
             }}
             onDragLeave={() => setIsDragOver(false)}
             onDrop={handleDrop}
-            className={`border-2 border-dashed rounded-2xl p-6 sm:p-8 text-center flex flex-col items-center justify-center cursor-pointer transition-all duration-200 ${
+            className={`border-2 border-dashed rounded-2xl p-5 sm:p-8 text-center flex flex-col items-center justify-center cursor-pointer transition-all duration-200 ${
               isDragOver
                 ? "border-amber-500 bg-amber-50/50 dark:bg-amber-950/20 scale-[1.01]"
                 : selectedFile
@@ -154,8 +154,8 @@ export const UploadIngestCenter: React.FC<UploadIngestProps> = ({ onIngestSucces
               onChange={handleFileChange}
             />
 
-            <div className="h-12 w-12 rounded-2xl bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 flex items-center justify-center mb-3">
-              <UploadCloud className="h-6 w-6" />
+            <div className="h-11 w-11 sm:h-12 sm:w-12 rounded-2xl bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 flex items-center justify-center mb-3">
+              <UploadCloud className="h-5 w-5 sm:h-6 sm:w-6" />
             </div>
 
             {selectedFile ? (
@@ -172,10 +172,10 @@ export const UploadIngestCenter: React.FC<UploadIngestProps> = ({ onIngestSucces
               </div>
             ) : (
               <div className="space-y-1">
-                <p className="text-sm font-semibold text-slate-900 dark:text-slate-200">
+                <p className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-slate-200">
                   Drop bank statements, receipts or logs here
                 </p>
-                <p className="text-xs text-stone-500 dark:text-slate-400">
+                <p className="text-[11px] sm:text-xs text-stone-500 dark:text-slate-400">
                   Supports PDF bank statements, Excel spreadsheets, CSVs, or Scanned receipts
                 </p>
                 <span className="inline-block mt-2 text-xs font-semibold text-red-600 dark:text-amber-400">
@@ -187,7 +187,7 @@ export const UploadIngestCenter: React.FC<UploadIngestProps> = ({ onIngestSucces
         </div>
 
         {/* Right Column: Transaction Log / Description Capture */}
-        <div className="lg:col-span-6 flex flex-col justify-between space-y-4 bg-stone-50/60 dark:bg-[#0B111E]/80 p-5 rounded-2xl border border-stone-200 dark:border-slate-800/80">
+        <div className="lg:col-span-6 flex flex-col justify-between space-y-4 bg-stone-50/60 dark:bg-[#0B111E]/80 p-4 sm:p-5 rounded-2xl border border-stone-200 dark:border-slate-800/80">
           <div className="space-y-3">
             <div className="space-y-1.5">
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">
@@ -202,7 +202,7 @@ export const UploadIngestCenter: React.FC<UploadIngestProps> = ({ onIngestSucces
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <label className="block text-xs font-semibold text-slate-700 dark:text-slate-200">
                   Amount (£)
@@ -233,30 +233,32 @@ export const UploadIngestCenter: React.FC<UploadIngestProps> = ({ onIngestSucces
               </div>
             </div>
 
-            <div className="flex items-center gap-3 pt-1">
-              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Flow Type:</label>
-              <button
-                type="button"
-                onClick={() => setIsReceipt(true)}
-                className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors ${
-                  isReceipt
-                    ? "bg-emerald-600 text-white shadow-xs"
-                    : "bg-stone-200 dark:bg-slate-800 text-stone-600 dark:text-slate-400"
-                }`}
-              >
-                Receipt (Money In)
-              </button>
-              <button
-                type="button"
-                onClick={() => setIsReceipt(false)}
-                className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors ${
-                  !isReceipt
-                    ? "bg-rose-600 text-white shadow-xs"
-                    : "bg-stone-200 dark:bg-slate-800 text-stone-600 dark:text-slate-400"
-                }`}
-              >
-                Payment (Money Out)
-              </button>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 pt-1">
+              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 shrink-0">Flow Type:</label>
+              <div className="grid grid-cols-2 gap-2 w-full sm:w-auto">
+                <button
+                  type="button"
+                  onClick={() => setIsReceipt(true)}
+                  className={`px-3 py-2 sm:py-1 rounded-lg text-xs font-bold transition-colors text-center ${
+                    isReceipt
+                      ? "bg-emerald-600 text-white shadow-xs"
+                      : "bg-stone-200 dark:bg-slate-800 text-stone-600 dark:text-slate-400"
+                  }`}
+                >
+                  Receipt (Money In)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsReceipt(false)}
+                  className={`px-3 py-2 sm:py-1 rounded-lg text-xs font-bold transition-colors text-center ${
+                    !isReceipt
+                      ? "bg-rose-600 text-white shadow-xs"
+                      : "bg-stone-200 dark:bg-slate-800 text-stone-600 dark:text-slate-400"
+                  }`}
+                >
+                  Payment (Money Out)
+                </button>
+              </div>
             </div>
           </div>
 
@@ -264,7 +266,7 @@ export const UploadIngestCenter: React.FC<UploadIngestProps> = ({ onIngestSucces
             <button
               type="submit"
               disabled={loading || (!selectedFile && !description.trim())}
-              className="w-full royal-btn-gold font-bold py-2.5 px-4 rounded-xl text-xs flex items-center justify-center gap-2 disabled:opacity-50 transition-all active:scale-[0.99]"
+              className="w-full royal-btn-gold font-bold py-2.5 sm:py-3 px-4 rounded-xl text-xs flex items-center justify-center gap-2 disabled:opacity-50 transition-all active:scale-[0.99]"
             >
               <span>{loading ? "Processing & Protecting Personal Data..." : "Record into Charity Accounts"}</span>
               <ArrowRight className="h-4 w-4" />

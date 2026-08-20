@@ -307,12 +307,8 @@ class ComplianceRepository:
 
         messages = []
         for r in rows:
-            tool_calls_data = (
-                json.loads(r["tool_calls_json"]) if r.get("tool_calls_json") else []
-            )
-            sources_data = (
-                json.loads(r["sources_json"]) if r.get("sources_json") else []
-            )
+            tool_calls_data = json.loads(r["tool_calls_json"]) if r.get("tool_calls_json") else []
+            sources_data = json.loads(r["sources_json"]) if r.get("sources_json") else []
             actions_data = None
             if r.get("actions_json"):
                 try:

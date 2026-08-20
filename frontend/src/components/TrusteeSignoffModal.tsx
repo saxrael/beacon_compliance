@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { KeyRound, ShieldCheck, X, AlertCircle, Award, Lock, FileCheck } from "lucide-react";
 import { API_BASE_URL } from "@/config";
@@ -26,6 +26,16 @@ export const TrusteeSignoffModal: React.FC<SignoffModalProps> = ({
   const [secret, setSecret] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -73,7 +83,7 @@ export const TrusteeSignoffModal: React.FC<SignoffModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-slate-950/65 backdrop-blur-sm flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 bg-slate-950/65 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
       role="dialog"
       aria-modal="true"
       aria-labelledby="modal-title"
@@ -83,7 +93,7 @@ export const TrusteeSignoffModal: React.FC<SignoffModalProps> = ({
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 10 }}
         transition={springs.gentle}
-        className="royal-card bg-white dark:bg-[#0E1524] max-w-md w-full rounded-3xl p-6 sm:p-8 border border-stone-200 dark:border-slate-800 space-y-5 shadow-2xl relative"
+        className="royal-card bg-white dark:bg-[#0E1524] max-w-md w-full max-h-[90vh] overflow-y-auto rounded-3xl p-5 sm:p-8 border border-stone-200 dark:border-slate-800 space-y-5 shadow-2xl relative my-auto"
       >
         <div className="flex items-center justify-between border-b border-stone-200/80 dark:border-slate-800 pb-4">
           <div className="flex items-center gap-3">

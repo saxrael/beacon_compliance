@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { UserPlus, Key, CheckCircle, AlertCircle, Copy, Check, X, Shield, Landmark } from "lucide-react";
 import { API_BASE_URL } from "@/config";
 import { motion, AnimatePresence } from "framer-motion";
@@ -21,6 +21,16 @@ export const AdminProvisioningModal: React.FC<AdminProvisioningModalProps> = ({ 
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<{ email: string; temp_password: string; role: string } | null>(null);
   const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = prev;
+      };
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -69,7 +79,7 @@ export const AdminProvisioningModal: React.FC<AdminProvisioningModalProps> = ({ 
   return (
     <ClientPortal>
       <div 
-        className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4"
+        className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-3 sm:p-4 overflow-y-auto"
         role="dialog"
         aria-modal="true"
         aria-labelledby="admin-provision-title"
@@ -79,7 +89,7 @@ export const AdminProvisioningModal: React.FC<AdminProvisioningModalProps> = ({ 
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 12 }}
           transition={springs.gentle}
-          className="royal-card bg-white dark:bg-[#0E1626] border border-stone-200 dark:border-slate-800/80 rounded-3xl shadow-2xl max-w-md w-full p-6 sm:p-7 space-y-5 relative overflow-hidden"
+          className="royal-card bg-white dark:bg-[#0E1626] border border-stone-200 dark:border-slate-800/80 rounded-3xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto p-5 sm:p-7 space-y-5 relative my-auto"
         >
           {/* Header Accent Ribbon */}
           <div className="absolute top-0 left-0 right-0 h-1 gold-ribbon" />

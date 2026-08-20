@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { User, Settings, ShieldCheck, LogOut, X, HelpCircle, ShieldAlert, Landmark, FileText, UploadCloud, CheckCircle2 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
@@ -24,6 +24,16 @@ export const SidebarMenu: React.FC<SidebarMenuProps> = ({
 }) => {
   const { user, logout } = useAuth();
   const userRole = user?.role ? (user.role.charAt(0).toUpperCase() + user.role.slice(1).toLowerCase()) : "Trustee";
+
+  useEffect(() => {
+    if (isOpen) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+  }, [isOpen]);
 
   return (
     <ClientPortal>

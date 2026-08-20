@@ -186,9 +186,7 @@ class CognitiveWorker:
             if not messages:
                 return None, []
 
-            existing_summary = self.repository.get_memory_summary(
-                user_id=user_id, run_id=run_id
-            )
+            existing_summary = self.repository.get_memory_summary(user_id=user_id, run_id=run_id)
             raw_facts = self.repository.get_memory_facts(user_id=user_id)
             existing_facts = [
                 MemoryFact(

@@ -32,6 +32,14 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ onCl
   const [savingProfile, setSavingProfile] = useState(false);
 
   useEffect(() => {
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prevOverflow;
+    };
+  }, []);
+
+  useEffect(() => {
     if (user) {
       setProfileName(user.name || "");
       setProfileEmail(user.email || "");
@@ -233,7 +241,7 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ onCl
   return (
     <ClientPortal>
       <div 
-        className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/65 backdrop-blur-sm p-4 overflow-y-auto"
+        className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/65 backdrop-blur-sm p-3 sm:p-4 overflow-y-auto"
         role="dialog"
         aria-modal="true"
         aria-labelledby="settings-modal-title"
@@ -249,23 +257,23 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ onCl
           <div className="h-1 gold-ribbon w-full" />
           
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-stone-200/80 dark:border-slate-800 bg-stone-50/60 dark:bg-slate-900/40">
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-amber-500/10 border border-amber-500/30 rounded-2xl text-amber-700 dark:text-amber-400 shadow-xs">
-                <Settings className="h-5 w-5" />
+          <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4 border-b border-stone-200/80 dark:border-slate-800 bg-stone-50/60 dark:bg-slate-900/40">
+            <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+              <div className="p-2 sm:p-2.5 bg-amber-500/10 border border-amber-500/30 rounded-2xl text-amber-700 dark:text-amber-400 shadow-xs shrink-0">
+                <Settings className="h-4 w-4 sm:h-5 sm:w-5" />
               </div>
-              <div>
-                <h2 id="settings-modal-title" className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-50 font-serif">
+              <div className="min-w-0">
+                <h2 id="settings-modal-title" className="text-sm sm:text-lg font-bold text-slate-900 dark:text-slate-50 font-serif truncate">
                   Trustee Account & Security
                 </h2>
-                <p className="text-xs text-stone-600 dark:text-slate-400">
+                <p className="text-[11px] sm:text-xs text-stone-600 dark:text-slate-400 truncate">
                   Potter&apos;s House Christian Mission UK (SC054652)
                 </p>
               </div>
             </div>
             <button 
               onClick={onClose} 
-              className="p-1.5 text-stone-400 hover:text-stone-700 dark:hover:text-slate-200 hover:bg-stone-200/60 dark:hover:bg-slate-800 rounded-xl transition-colors"
+              className="p-1.5 text-stone-400 hover:text-stone-700 dark:hover:text-slate-200 hover:bg-stone-200/60 dark:hover:bg-slate-800 rounded-xl transition-colors shrink-0"
               aria-label="Close Settings"
             >
               <X className="h-5 w-5" />
@@ -273,10 +281,10 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({ onCl
           </div>
 
           {/* Tab Switcher */}
-          <div className="flex border-b border-stone-200/80 dark:border-slate-800 px-6 bg-stone-50/30 dark:bg-slate-900/20">
+          <div className="flex border-b border-stone-200/80 dark:border-slate-800 px-4 sm:px-6 bg-stone-50/30 dark:bg-slate-900/20">
             <button 
               onClick={() => { setActiveTab("profile"); setErrorMsg(null); setSuccessMsg(null); }}
-              className={`px-4 py-3 text-xs sm:text-sm font-bold border-b-2 transition-all font-serif ${
+              className={`px-3.5 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm font-bold border-b-2 transition-all font-serif ${
                 activeTab === "profile" 
                   ? "border-red-600 text-red-700 dark:text-amber-400" 
                   : "border-transparent text-stone-500 hover:text-stone-800 dark:hover:text-slate-300"

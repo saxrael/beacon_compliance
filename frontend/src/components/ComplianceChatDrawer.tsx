@@ -130,6 +130,16 @@ export const ComplianceChatDrawer: React.FC = () => {
   );
 
   useEffect(() => {
+    if (isOpen) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
     if (isOpen && messages.length === 0) {
       fetchChatHistory();
     }
@@ -409,15 +419,15 @@ export const ComplianceChatDrawer: React.FC = () => {
           whileTap={{ scale: 0.95 }}
           aria-label="Open Beacon Statutory Intelligence Agent"
           title="Autonomous OSCR Compliance Sentinel"
-          className="tour-chat-advisor fixed bottom-6 right-6 royal-btn-crimson p-2.5 sm:px-4 sm:py-3 rounded-2xl shadow-2xl z-40 flex items-center gap-3 border border-amber-500/40 group transition-all"
+          className="tour-chat-advisor fixed bottom-4 right-4 sm:bottom-6 sm:right-6 royal-btn-crimson p-2 sm:px-4 sm:py-3 rounded-2xl shadow-2xl z-40 flex items-center gap-2.5 sm:gap-3 border border-amber-500/40 group transition-all max-w-[calc(100vw-2rem)] pb-[max(0.5rem,env(safe-area-inset-bottom))]"
         >
-          <div className="relative h-10 w-10 flex items-center justify-center shrink-0">
+          <div className="relative h-9 w-9 sm:h-10 sm:w-10 flex items-center justify-center shrink-0">
             <img
               src="/assets/logo_mark.png"
               alt="Beacon Sentinel"
               className="h-full w-full object-contain filter drop-shadow-md"
             />
-            <span className="absolute -top-0.5 -right-0.5 h-3 w-3 rounded-full bg-amber-400 border-2 border-red-900 animate-pulse shadow-xs" />
+            <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full bg-amber-400 border-2 border-red-900 animate-pulse shadow-xs" />
           </div>
           <div className="text-left hidden sm:block">
             <span className="text-xs font-bold font-serif block leading-tight text-white">
@@ -438,42 +448,42 @@ export const ComplianceChatDrawer: React.FC = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-slate-950/40 backdrop-blur-xs z-50 lg:hidden"
+              className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 lg:hidden"
               onClick={() => setIsOpen(false)}
             />
 
             {/* Slide-out Drawer */}
             <motion.div
-              initial={{ x: '100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '100%' }}
+              initial={{ opacity: 0, x: '100%' }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: '100%' }}
               transition={springs.gentle}
-              className="fixed inset-y-0 right-0 w-full max-w-md bg-white dark:bg-[#080C14] border-l border-stone-200 dark:border-slate-800/80 shadow-2xl z-50 flex flex-col justify-between overflow-hidden"
+              className="fixed inset-0 sm:inset-y-0 sm:left-auto sm:right-0 w-full sm:max-w-md max-w-full bg-white dark:bg-[#080C14] sm:border-l border-stone-200 dark:border-slate-800/80 shadow-2xl z-50 flex flex-col justify-between overflow-hidden"
             >
               {/* Header */}
-              <div className="p-4 sm:p-5 border-b border-stone-200 dark:border-slate-800/80 flex items-center justify-between bg-stone-50/90 dark:bg-[#0E1626]/95 backdrop-blur-md">
-                <div className="flex items-center gap-3">
-                  <div className="h-11 w-11 flex items-center justify-center shrink-0 relative">
+              <div className="p-3.5 sm:p-5 pt-[max(0.875rem,env(safe-area-inset-top))] border-b border-stone-200 dark:border-slate-800/80 flex items-center justify-between bg-stone-50/90 dark:bg-[#0E1626]/95 backdrop-blur-md">
+                <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                  <div className="h-9 w-9 sm:h-11 sm:w-11 flex items-center justify-center shrink-0 relative">
                     <img
                       src="/assets/logo_mark.png"
                       alt="Potter's House Emblem"
                       className="h-full w-full object-contain drop-shadow-md"
                     />
-                    <span className="absolute -top-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-500 border-2 border-white dark:border-[#080C14] shadow-xs" />
+                    <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full bg-emerald-500 border-2 border-white dark:border-[#080C14] shadow-xs" />
                   </div>
-                  <div>
-                    <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 font-serif flex items-center gap-1.5">
+                  <div className="min-w-0">
+                    <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 font-serif truncate flex items-center gap-1.5">
                       <span>Beacon Statutory Intelligence</span>
                     </h3>
-                    <span className="text-[10px] text-amber-700 dark:text-amber-400 font-mono font-semibold flex items-center gap-1">
-                      <ShieldCheck className="h-3 w-3" />
+                    <span className="text-[9.5px] sm:text-[10px] text-amber-700 dark:text-amber-400 font-mono font-semibold flex items-center gap-1 truncate">
+                      <ShieldCheck className="h-3 w-3 shrink-0" />
                       Scottish Charity Sentinel (SC054652)
                     </span>
                   </div>
                 </div>
                 <button
                   onClick={() => setIsOpen(false)}
-                  className="p-1.5 rounded-xl text-stone-400 hover:text-stone-700 dark:hover:text-slate-200 hover:bg-stone-200/60 dark:hover:bg-slate-800 transition-colors"
+                  className="p-1.5 sm:p-2 rounded-xl text-stone-400 hover:text-stone-700 dark:hover:text-slate-200 hover:bg-stone-200/60 dark:hover:bg-slate-800 transition-colors shrink-0"
                   aria-label="Close Advisor"
                 >
                   <X className="h-5 w-5" />
@@ -484,7 +494,7 @@ export const ComplianceChatDrawer: React.FC = () => {
               <div
                 ref={chatContainerRef}
                 onScroll={handleScroll}
-                className="flex-1 p-4 overflow-y-auto space-y-3.5 bg-stone-50/40 dark:bg-[#080C14]"
+                className="flex-1 p-3.5 sm:p-4 overflow-y-auto space-y-3.5 bg-stone-50/40 dark:bg-[#080C14] -webkit-overflow-scrolling-touch"
               >
                 {loadingMore && (
                   <div className="text-center py-2">
@@ -527,7 +537,7 @@ export const ComplianceChatDrawer: React.FC = () => {
                       } w-full`}
                     >
                       {m.role === 'assistant' && (
-                        <div className="h-7 w-7 shrink-0 mt-0.5 flex items-center justify-center">
+                        <div className="h-6 w-6 sm:h-7 sm:w-7 shrink-0 mt-0.5 flex items-center justify-center">
                           <img
                             src="/assets/logo_mark.png"
                             alt="Advisor"
@@ -536,7 +546,7 @@ export const ComplianceChatDrawer: React.FC = () => {
                         </div>
                       )}
                       <div
-                        className={`max-w-[86%] rounded-2xl p-3.5 text-xs leading-relaxed shadow-xs ${
+                        className={`max-w-[88%] sm:max-w-[85%] rounded-2xl p-3 sm:p-3.5 text-xs leading-relaxed shadow-xs break-words ${
                           m.role === 'user'
                             ? 'royal-btn-crimson text-white font-medium rounded-tr-xs'
                             : 'bg-white dark:bg-[#0E1626] text-slate-800 dark:text-slate-200 border border-stone-200/80 dark:border-slate-800/80 rounded-tl-xs'
@@ -572,10 +582,10 @@ export const ComplianceChatDrawer: React.FC = () => {
               </div>
 
               {/* Quick Questions & Input Area */}
-              <div className="p-3.5 border-t border-stone-200 dark:border-slate-800/80 bg-white dark:bg-[#0E1626] space-y-3">
+              <div className="p-3 sm:p-3.5 pb-[max(0.875rem,env(safe-area-inset-bottom))] border-t border-stone-200 dark:border-slate-800/80 bg-white dark:bg-[#0E1626] space-y-2.5 sm:space-y-3">
                 {messages.length <= 1 && (
                   <div className="space-y-1.5">
-                    <p className="text-[10px] uppercase font-bold text-stone-400 dark:text-slate-400 tracking-wider">
+                    <p className="text-[9.5px] sm:text-[10px] uppercase font-bold text-stone-400 dark:text-slate-400 tracking-wider">
                       Suggested Inquiries:
                     </p>
                     <div className="flex flex-col gap-1">
@@ -584,7 +594,7 @@ export const ComplianceChatDrawer: React.FC = () => {
                           key={i}
                           type="button"
                           onClick={() => setInput(q)}
-                          className="text-left text-[11px] p-2 rounded-xl bg-stone-100 dark:bg-[#111A2E] hover:bg-amber-500/10 hover:text-amber-700 dark:hover:text-amber-300 border border-stone-200 dark:border-slate-700/80 transition-colors text-slate-700 dark:text-slate-200"
+                          className="text-left text-[10.5px] sm:text-[11px] p-2 rounded-xl bg-stone-100 dark:bg-[#111A2E] hover:bg-amber-500/10 hover:text-amber-700 dark:hover:text-amber-300 border border-stone-200 dark:border-slate-700/80 transition-colors text-slate-700 dark:text-slate-200 truncate"
                         >
                           {q}
                         </button>
@@ -598,13 +608,14 @@ export const ComplianceChatDrawer: React.FC = () => {
                     type="text"
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
-                    placeholder="Ask about filing deadlines, annual accounts, trustee reports..."
-                    className="flex-1 bg-stone-50 dark:bg-[#111A2E] border border-stone-300 dark:border-slate-700/80 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 dark:text-slate-100 placeholder:text-stone-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 shadow-xs"
+                    placeholder="Ask about filing deadlines, accounts, reports..."
+                    className="flex-1 min-w-0 bg-stone-50 dark:bg-[#111A2E] border border-stone-300 dark:border-slate-700/80 rounded-xl px-3 sm:px-3.5 py-2.5 text-xs text-slate-900 dark:text-slate-100 placeholder:text-stone-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 shadow-xs"
                   />
                   <button
                     type="submit"
                     disabled={loading || !input.trim()}
-                    className="royal-btn-crimson px-4 py-2.5 rounded-xl font-bold shadow-xs transition-opacity flex items-center justify-center disabled:opacity-50 active:scale-95"
+                    aria-label="Send Message"
+                    className="royal-btn-crimson px-3.5 sm:px-4 py-2.5 rounded-xl font-bold shadow-xs transition-opacity flex items-center justify-center disabled:opacity-50 active:scale-95 shrink-0"
                   >
                     <Send className="h-4 w-4" />
                   </button>

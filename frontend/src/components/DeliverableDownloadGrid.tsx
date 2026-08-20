@@ -144,16 +144,16 @@ export const DeliverableDownloadGrid: React.FC<DeliverableGridProps> = ({
               initial="initial"
               whileHover="hover"
               whileTap="tap"
-              className="royal-card rounded-3xl p-6 sm:p-7 flex flex-col justify-between space-y-5"
+              className="royal-card rounded-3xl p-4 sm:p-7 flex flex-col justify-between space-y-4 sm:space-y-5"
             >
-              <div className="space-y-3.5">
+              <div className="space-y-3 sm:space-y-3.5">
                 {/* Header row: Badge and Sign-off Status */}
-                <div className="flex items-center justify-between gap-2">
-                  <span className="bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-amber-300 border border-red-200 dark:border-red-500/30 text-[11px] font-mono px-3 py-0.5 rounded-full font-bold tracking-wide">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <span className="bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-amber-300 border border-red-200 dark:border-red-500/30 text-[10.5px] sm:text-[11px] font-mono px-2.5 sm:px-3 py-0.5 rounded-full font-bold tracking-wide">
                     {meta.badgeLabel}
                   </span>
                   <span
-                    className={`text-xs font-semibold px-3 py-0.5 rounded-full flex items-center gap-1.5 ${
+                    className={`text-[11px] sm:text-xs font-semibold px-2.5 sm:px-3 py-0.5 rounded-full flex items-center gap-1.5 ${
                       signed
                         ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30"
                         : "bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30"
@@ -161,12 +161,12 @@ export const DeliverableDownloadGrid: React.FC<DeliverableGridProps> = ({
                   >
                     {signed ? (
                       <>
-                        <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                        <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
                         <span>Trustee Approved</span>
                       </>
                     ) : (
                       <>
-                        <Clock className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+                        <Clock className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
                         <span>Awaiting Signature</span>
                       </>
                     )}
@@ -175,11 +175,11 @@ export const DeliverableDownloadGrid: React.FC<DeliverableGridProps> = ({
 
                 {/* Document Title & Subtitle */}
                 <div>
-                  <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2 font-serif">
+                  <h3 className="text-sm sm:text-lg font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2 font-serif">
                     <FileText className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0" />
                     <span>{meta.fullTitle}</span>
                   </h3>
-                  <p className="text-xs font-semibold text-amber-800 dark:text-amber-400 mt-0.5">
+                  <p className="text-[11px] sm:text-xs font-semibold text-amber-800 dark:text-amber-400 mt-0.5">
                     {meta.subtitle}
                   </p>
                   <p className="text-xs text-stone-600 dark:text-slate-400 mt-2 leading-relaxed">
@@ -188,23 +188,23 @@ export const DeliverableDownloadGrid: React.FC<DeliverableGridProps> = ({
                 </div>
 
                 {/* Statutory Role Note */}
-                <div className="p-2.5 rounded-xl bg-stone-50 dark:bg-[#0B111E]/90 border border-stone-200/80 dark:border-slate-800/80 text-[11px] text-stone-500 dark:text-slate-300 flex items-start gap-2">
+                <div className="p-2.5 rounded-xl bg-stone-50 dark:bg-[#0B111E]/90 border border-stone-200/80 dark:border-slate-800/80 text-[10.5px] sm:text-[11px] text-stone-500 dark:text-slate-300 flex items-start gap-2">
                   <HelpCircle className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
                   <span>{meta.statutoryRole}</span>
                 </div>
 
                 {/* Verification Seal Fingerprint */}
                 <div className="flex items-center justify-between bg-stone-100/60 dark:bg-[#080D18] p-2.5 rounded-2xl border border-stone-200 dark:border-amber-500/20 text-xs font-mono">
-                  <div className="flex items-center gap-2 overflow-hidden">
-                    <span className="text-[10px] uppercase font-bold text-stone-500 dark:text-amber-400/80 shrink-0">Document Seal:</span>
-                    <span className="truncate text-stone-700 dark:text-amber-300 text-[11px] font-semibold">
-                      {hash ? `${hash.substring(0, 24)}...` : "Calculating..."}
+                  <div className="flex items-center gap-1.5 sm:gap-2 overflow-hidden min-w-0">
+                    <span className="text-[9.5px] sm:text-[10px] uppercase font-bold text-stone-500 dark:text-amber-400/80 shrink-0">Seal:</span>
+                    <span className="truncate text-stone-700 dark:text-amber-300 text-[10.5px] sm:text-[11px] font-semibold">
+                      {hash ? `${hash.substring(0, 12)}...${hash.substring(hash.length - 6)}` : "Calculating..."}
                     </span>
                   </div>
                   <button
                     onClick={() => copyHash(hash)}
                     title="Copy document security verification seal"
-                    className="p-1 rounded-md text-stone-500 hover:text-stone-900 dark:hover:text-amber-300 hover:bg-stone-200 dark:hover:bg-slate-800/80 transition-colors"
+                    className="p-1 rounded-md text-stone-500 hover:text-stone-900 dark:hover:text-amber-300 hover:bg-stone-200 dark:hover:bg-slate-800/80 transition-colors shrink-0"
                   >
                     {copiedId === hash ? (
                       <Check className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
@@ -222,7 +222,7 @@ export const DeliverableDownloadGrid: React.FC<DeliverableGridProps> = ({
                     onClick={() => onOpenSignoff(hash)}
                     className="w-full royal-btn-gold text-xs font-bold py-3 px-4 rounded-xl transition-all shadow-xs flex items-center justify-center gap-2 active:scale-[0.99]"
                   >
-                    <ShieldCheck className="h-4 w-4" />
+                    <ShieldCheck className="h-4 w-4 shrink-0" />
                     <span>Review & Apply Trustee Signature</span>
                   </button>
                 ) : (
@@ -232,7 +232,7 @@ export const DeliverableDownloadGrid: React.FC<DeliverableGridProps> = ({
                     rel="noreferrer"
                     className="w-full royal-btn-crimson text-xs font-bold py-3 px-4 rounded-xl transition-all shadow-sm flex items-center justify-center gap-2"
                   >
-                    <Download className="h-4 w-4" />
+                    <Download className="h-4 w-4 shrink-0" />
                     <span>Download Official Package (Print / PDF)</span>
                   </a>
                 )}

@@ -50,30 +50,30 @@ function DashboardContent() {
   const trusteeRole = user.role ? (user.role.charAt(0).toUpperCase() + user.role.slice(1).toLowerCase()) : "Trustee";
 
   return (
-    <div className="min-h-screen bg-[#FBF9F5] dark:bg-[#080C14] text-slate-900 dark:text-slate-100 flex flex-col transition-colors duration-300">
+    <div className="min-h-screen bg-[#FBF9F5] dark:bg-[#080C14] text-slate-900 dark:text-slate-100 flex flex-col transition-colors duration-300 w-full max-w-[100vw] overflow-x-hidden">
       <Header onOpenAdminModal={() => setAdminModalOpen(true)} />
 
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8">
+      <main className="flex-1 max-w-7xl w-full mx-auto p-3.5 sm:p-6 lg:p-8 space-y-5 sm:space-y-8 overflow-x-hidden">
         <motion.div
           variants={containerStaggerVariants}
           initial="hidden"
           animate="visible"
-          className="space-y-6 sm:space-y-8"
+          className="space-y-5 sm:space-y-8 max-w-full"
         >
           {/* 1. Executive Filing Hero Banner */}
           <motion.div 
             variants={itemFadeUpVariants}
-            className="tour-pipeline-runner flex flex-col md:flex-row md:items-center justify-between gap-5 bg-white dark:bg-[#0E1626] p-6 sm:p-7 rounded-3xl border border-stone-200/90 dark:border-slate-800/80 shadow-xs royal-card"
+            className="tour-pipeline-runner flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-5 bg-white dark:bg-[#0E1626] p-5 sm:p-7 rounded-3xl border border-stone-200/90 dark:border-slate-800/80 shadow-xs royal-card"
           >
-            <div className="space-y-1.5">
-              <div className="flex items-center gap-2.5 flex-wrap">
-                <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-50 font-serif">
+            <div className="space-y-1.5 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-slate-900 dark:text-slate-50 font-serif">
                   Annual Statutory Compliance & Filing
                 </h2>
-                <span className="inline-flex items-center gap-1 bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-500/30 text-[11px] font-mono px-3 py-0.5 rounded-full font-bold">
+                <span className="inline-flex items-center gap-1 bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-500/30 text-[10.5px] sm:text-[11px] font-mono px-2.5 sm:px-3 py-0.5 rounded-full font-bold shrink-0">
                   Financial Year 2026
                 </span>
-                <span className="inline-flex items-center gap-1 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30 text-[11px] font-mono px-2.5 py-0.5 rounded-full font-semibold">
+                <span className="inline-flex items-center gap-1 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30 text-[10.5px] sm:text-[11px] font-mono px-2 sm:px-2.5 py-0.5 rounded-full font-semibold shrink-0">
                   <ShieldCheck className="h-3 w-3" />
                   SC054652
                 </span>
@@ -83,11 +83,11 @@ function DashboardContent() {
               </p>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 w-full md:w-auto">
               <button
                 onClick={runCompliancePipeline}
                 disabled={loading}
-                className="royal-btn-crimson font-bold px-6 py-3.5 rounded-2xl shadow-md transition-all flex items-center justify-center gap-2.5 text-xs sm:text-sm disabled:opacity-50 active:scale-[0.98]"
+                className="w-full md:w-auto royal-btn-crimson font-bold px-5 py-3 sm:px-6 sm:py-3.5 rounded-2xl shadow-md transition-all flex items-center justify-center gap-2.5 text-xs sm:text-sm disabled:opacity-50 active:scale-[0.98]"
               >
                 <Play className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
                 <span>{loading ? "Preparing Accounts & Filing Packages..." : "Generate Annual Return & Accounts"}</span>

@@ -19,7 +19,9 @@ from backend.src.core.retry import llm_retry
 logger = logging.getLogger(__name__)
 
 OPENROUTER_EMBEDDINGS_URL = "https://openrouter.ai/api/v1/embeddings"
-DEFAULT_EMBEDDING_MODEL = os.environ.get("EMBEDDING_MODEL", "nvidia/llama-nemotron-embed-vl-1b-v2:free")
+DEFAULT_EMBEDDING_MODEL = os.environ.get(
+    "EMBEDDING_MODEL", "nvidia/llama-nemotron-embed-vl-1b-v2:free"
+)
 NVIDIA_NEMOTRON_DIMENSIONS = 2048
 
 
