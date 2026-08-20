@@ -6,28 +6,17 @@ import {
   X,
   Sparkles,
   ShieldCheck,
-  ChevronDown,
-  ChevronUp,
   RotateCcw,
-  Bot,
-  Activity,
-  Lightbulb,
-  Brain,
-  CheckCircle2,
-  Loader2,
 } from 'lucide-react';
 import { MarkdownRenderer } from './MarkdownRenderer';
+import { ThinkingProcessBlock, ActionItem } from './ThinkingProcessBlock';
 import { API_BASE_URL } from '@/config';
 import { useAuth } from '@/context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { springs } from '@/lib/motion-tokens';
 import { ClientPortal } from './ClientPortal';
 
-export interface ActionItem {
-  id: string;
-  label: string;
-  status: 'running' | 'completed' | 'failed';
-}
+export type { ActionItem };
 
 interface ChatTurn {
   message_id?: string;
@@ -38,6 +27,7 @@ interface ChatTurn {
   sources?: string[];
   created_at?: string;
   actions?: (string | ActionItem)[];
+  duration_seconds?: number | null;
 }
 
 const DEFAULT_WELCOME_MESSAGE: ChatTurn = {
@@ -57,7 +47,7 @@ export const ComplianceChatDrawer: React.FC = () => {
   const [loadingMore, setLoadingMore] = useState(false);
   const [currentThinking, setCurrentThinking] = useState<string>('');
   const [currentActions, setCurrentActions] = useState<ActionItem[]>([]);
-  const [showThinking, setShowThinking] = useState<Record<number, boolean>>({});
+  const [streamStartTime, setStreamStartTime] = useState<number | null>(null);
 
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const isAutoScrollEnabled = useRef<boolean>(true);
@@ -132,7 +122,7 @@ export const ComplianceChatDrawer: React.FC = () => {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages, currentThinking, currentActions]);
+  }, [messages, currentThinking, currentActions, loading]);
 
   const handleScroll = () => {
     if (!chatContainerRef.current) return;
@@ -173,6 +163,8 @@ export const ComplianceChatDrawer: React.FC = () => {
     setLoading(true);
     setCurrentThinking('');
     setCurrentActions([]);
+    const startTime = Date.now();
+    setStreamStartTime(startTime);
     isAutoScrollEnabled.current = true;
 
     try {
@@ -266,6 +258,7 @@ export const ComplianceChatDrawer: React.FC = () => {
                 setCurrentActions(streamActions);
               } else if (eventType === 'token') {
                 streamContent += parsed.chunk || '';
+                const currentDuration = (Date.now() - startTime) / 1000;
                 setMessages((prev) => {
                   const updated = [...prev];
                   const lastIdx = updated.length - 1;
@@ -279,6 +272,7 @@ export const ComplianceChatDrawer: React.FC = () => {
                       content: streamContent,
                       thinking: streamThinking,
                       actions: streamActions,
+                      duration_seconds: currentDuration,
                     };
                     return updated;
                   } else {
@@ -289,6 +283,7 @@ export const ComplianceChatDrawer: React.FC = () => {
                         content: streamContent,
                         thinking: streamThinking,
                         actions: streamActions,
+                        duration_seconds: currentDuration,
                         created_at: new Date().toISOString(),
                       },
                     ];
@@ -297,7 +292,7 @@ export const ComplianceChatDrawer: React.FC = () => {
               } else if (eventType === 'done') {
                 setCurrentThinking('');
                 setCurrentActions([]);
-                setShowThinking((prev) => ({ ...prev, [partialIndex]: false }));
+                const finalDuration = (Date.now() - startTime) / 1000;
                 setMessages((prev) => {
                   const updated = [...prev];
                   const lastIdx = updated.length - 1;
@@ -310,6 +305,7 @@ export const ComplianceChatDrawer: React.FC = () => {
                       tool_calls: parsed.tool_calls || [],
                       sources: parsed.sources || [],
                       actions: streamActions,
+                      duration_seconds: finalDuration,
                     };
                     return updated;
                   }
@@ -337,6 +333,7 @@ export const ComplianceChatDrawer: React.FC = () => {
       setLoading(false);
       setCurrentThinking('');
       setCurrentActions([]);
+      setStreamStartTime(null);
     }
   };
 
@@ -345,13 +342,6 @@ export const ComplianceChatDrawer: React.FC = () => {
     'Explain Receipts & Payments reserve policy under Scottish law',
     'What are the requirements for Independent Examination sign-off?',
   ];
-
-  const toggleThinking = (idx: number) => {
-    setShowThinking((prev) => ({
-      ...prev,
-      [idx]: !prev[idx],
-    }));
-  };
 
   return (
     <ClientPortal>
@@ -498,58 +488,19 @@ export const ComplianceChatDrawer: React.FC = () => {
                             : 'bg-white dark:bg-[#0E1626] text-slate-800 dark:text-slate-200 border border-stone-200/80 dark:border-slate-800/80 rounded-tl-xs'
                         }`}
                       >
-                        {/* Expandable Thinking Process Block */}
-                        {m.thinking && (
-                          <div className="mb-2.5 border border-stone-200/80 dark:border-slate-800 rounded-xl overflow-hidden bg-stone-50/60 dark:bg-slate-900/60">
-                            <button
-                              type="button"
-                              onClick={() => toggleThinking(idx)}
-                              className="w-full px-3 py-1.5 text-[11px] font-mono text-stone-500 hover:text-stone-700 dark:text-slate-400 dark:hover:text-slate-200 font-medium flex items-center justify-between hover:bg-stone-100/60 dark:hover:bg-slate-800/60 transition-colors"
-                            >
-                              <span className="flex items-center gap-1.5">
-                                <Brain className="h-3.5 w-3.5 text-stone-400 dark:text-slate-400" />
-                                <span>Thought process</span>
-                              </span>
-                              {showThinking[idx] ? (
-                                <ChevronUp className="h-3.5 w-3.5" />
-                              ) : (
-                                <ChevronDown className="h-3.5 w-3.5" />
-                              )}
-                            </button>
-                            {showThinking[idx] && (
-                              <div className="p-2.5 text-[11px] font-mono text-stone-600 dark:text-slate-400 bg-stone-100/40 dark:bg-[#0A101D] border-t border-stone-200/60 dark:border-slate-800 leading-relaxed whitespace-pre-wrap">
-                                {m.thinking}
-                              </div>
-                            )}
-                          </div>
-                        )}
-
-                        {/* Actions Executed */}
-                        {m.actions && m.actions.length > 0 && (
-                          <div className="mb-2 space-y-1">
-                            {m.actions.map((act, aIdx) => {
-                              const label =
-                                typeof act === 'string' ? act : act.label;
-                              const status =
-                                typeof act === 'string'
-                                  ? 'completed'
-                                  : act.status;
-                              return (
-                                <div
-                                  key={aIdx}
-                                  className="flex items-center gap-1.5 text-[10px] font-mono text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-lg w-fit"
-                                >
-                                  {status === 'running' ? (
-                                    <Loader2 className="h-3 w-3 animate-spin shrink-0 text-emerald-600" />
-                                  ) : (
-                                    <CheckCircle2 className="h-3 w-3 shrink-0 text-emerald-600 dark:text-emerald-400" />
-                                  )}
-                                  <span>{label}</span>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        )}
+                        {/* Expandable Thinking Process & Statutory Actions Block */}
+                        {m.role === 'assistant' &&
+                          (Boolean(m.thinking) ||
+                            (m.actions && m.actions.length > 0) ||
+                            Boolean(m.duration_seconds)) && (
+                            <ThinkingProcessBlock
+                              isActive={false}
+                              thinking={m.thinking}
+                              actions={m.actions}
+                              durationSeconds={m.duration_seconds}
+                              defaultExpanded={false}
+                            />
+                          )}
 
                         {m.role === 'assistant' ? (
                           <MarkdownRenderer content={m.content} />
@@ -561,40 +512,31 @@ export const ComplianceChatDrawer: React.FC = () => {
                   </motion.div>
                 ))}
 
-                {/* Live Real-Time Thought and Action Stream during generation */}
+                {/* Live Real-Time Cognitive Deliberation & Action Stream during generation */}
                 {loading && (
-                  <div className="space-y-2 p-2">
-                    {currentThinking && (
-                      <div className="p-3 bg-stone-50/80 dark:bg-slate-900/80 border border-stone-200 dark:border-slate-800 rounded-2xl text-[11px] font-mono text-stone-700 dark:text-slate-300 flex items-start gap-2">
-                        <Brain className="h-4 w-4 shrink-0 mt-0.5 text-stone-400 dark:text-slate-400 animate-pulse" />
-                        <div className="space-y-1 w-full">
-                          <span className="font-semibold text-[10px] text-stone-400 dark:text-slate-400 uppercase tracking-wider block">
-                            Thinking...
-                          </span>
-                          <span className="text-stone-600 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">
-                            {currentThinking}
-                          </span>
-                        </div>
-                      </div>
-                    )}
-                    {currentActions.length > 0 && (
-                      <div className="space-y-1">
-                        {currentActions.map((act, i) => (
-                          <div
-                            key={i}
-                            className="flex items-center gap-1.5 text-[10px] font-mono text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-xl w-fit"
-                          >
-                            {act.status === 'running' ? (
-                              <Loader2 className="h-3 w-3 animate-spin shrink-0 text-emerald-600" />
-                            ) : (
-                              <CheckCircle2 className="h-3 w-3 shrink-0 text-emerald-600" />
-                            )}
-                            <span>{act.label}</span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                  <motion.div
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={springs.gentle}
+                    className="flex gap-2.5 justify-start w-full"
+                  >
+                    <div className="h-7 w-7 shrink-0 mt-0.5 flex items-center justify-center">
+                      <img
+                        src="/assets/logo_mark.png"
+                        alt="Advisor"
+                        className="h-full w-full object-contain drop-shadow-xs"
+                      />
+                    </div>
+                    <div className="max-w-[86%] w-full rounded-2xl p-3.5 bg-white dark:bg-[#0E1626] text-slate-800 dark:text-slate-200 border border-stone-200/80 dark:border-slate-800/80 rounded-tl-xs shadow-xs space-y-2">
+                      <ThinkingProcessBlock
+                        isActive={true}
+                        thinking={currentThinking}
+                        actions={currentActions}
+                        startTime={streamStartTime}
+                        defaultExpanded={true}
+                      />
+                    </div>
+                  </motion.div>
                 )}
               </div>
 
