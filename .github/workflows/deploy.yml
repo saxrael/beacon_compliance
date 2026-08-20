@@ -184,6 +184,12 @@ jobs:
                   - APP_ENV=production
                   - PORT=8000
                   - D1_DB_PATH=/app/data/beacon_compliance.db
+                  - PYTHONUNBUFFERED=1
+                  - MALLOC_ARENA_MAX=2
+                deploy:
+                  resources:
+                    limits:
+                      memory: 650M
                 volumes:
                   - ./data:/app/data
                 healthcheck:
@@ -194,7 +200,8 @@ jobs:
                   start_period: 10s
             EOF
 
-            echo "==> [2/5] Preparing data volume permissions..."
+            echo "==> [2/5] Preparing system tuning and data volume permissions..."
+            sudo -n sysctl -w vm.swappiness=10 2>/dev/null || true
             cd ~/beacon_compliance
             mkdir -p ~/beacon_compliance/data
             sudo -n chmod -R 777 ~/beacon_compliance/data 2>/dev/null || chmod -R 777 ~/beacon_compliance/data 2>/dev/null || true
