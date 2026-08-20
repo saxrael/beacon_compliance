@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
 OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
 
-GEMMA_MODEL = os.environ.get("GEMMA_MODEL", "google/gemma-4-26b-a4b")
+GEMMA_MODEL = os.environ.get("GEMMA_MODEL", "google/gemma-4-26b-a4b-it")
 GPT_OSS_MODEL = "openai/gpt-oss-20b"
 LLAMA_CONTINGENCY_MODEL = "meta-llama/llama-3.1-8b-instant"
 
