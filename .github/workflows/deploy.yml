@@ -214,7 +214,21 @@ jobs:
             docker pull ghcr.io/${{ github.repository_owner }}/beacon-compliance-backend:latest
 
             echo "==> [5/5] Recreating and launching container in background..."
-            docker compose up -d --force-recreate
+            docker stop beacon-compliance-backend 2>/dev/null || true
+            docker rm -f beacon-compliance-backend 2>/dev/null || true
+            docker run -d \
+              --name beacon-compliance-backend \
+              --restart always \
+              -p 8000:8000 \
+              --env-file ~/beacon_compliance/.env \
+              -e APP_ENV=production \
+              -e PORT=8000 \
+              -e D1_DB_PATH=/app/data/beacon_compliance.db \
+              -e PYTHONUNBUFFERED=1 \
+              -e MALLOC_ARENA_MAX=2 \
+              --memory 650m \
+              -v ~/beacon_compliance/data:/app/data \
+              ghcr.io/${{ github.repository_owner }}/beacon-compliance-backend:latest
 
             if [ -n "${{ secrets.DUCKDNS_DOMAIN }}" ]; then
               echo "==> [SSL] Configuring Caddy reverse proxy for ${{ secrets.DUCKDNS_DOMAIN }}..."
