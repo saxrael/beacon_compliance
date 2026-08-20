@@ -200,8 +200,24 @@ jobs:
                   start_period: 10s
             EOF
 
-            echo "==> [2/5] Preparing system tuning and data volume permissions..."
+            echo "==> [2/5] Preparing system tuning and Docker storage driver..."
             sudo -n sysctl -w vm.swappiness=10 2>/dev/null || true
+            sudo -n mkdir -p /etc/docker
+            sudo -n tee /etc/docker/daemon.json >/dev/null <<'EOF_DAEMON'
+{
+  "features": {
+    "containerd-snapshotter": false
+  },
+  "max-concurrent-downloads": 3,
+  "max-concurrent-uploads": 1,
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "20m",
+    "max-file": "3"
+  }
+}
+EOF_DAEMON
+            sudo -n systemctl restart docker 2>/dev/null || true
             cd ~/beacon_compliance
             mkdir -p ~/beacon_compliance/data
             sudo -n chmod -R 777 ~/beacon_compliance/data 2>/dev/null || chmod -R 777 ~/beacon_compliance/data 2>/dev/null || true
