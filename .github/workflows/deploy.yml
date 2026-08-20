@@ -204,10 +204,10 @@ jobs:
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin || true
 
             echo "==> [4/5] Pulling latest production container..."
-            docker compose pull
+            docker pull ghcr.io/${{ github.repository_owner }}/beacon-compliance-backend:latest
 
             echo "==> [5/5] Recreating and launching container in background..."
-            docker compose up -d
+            docker compose up -d --force-recreate
 
             if [ -n "${{ secrets.DUCKDNS_DOMAIN }}" ]; then
               echo "==> [SSL] Configuring Caddy reverse proxy for ${{ secrets.DUCKDNS_DOMAIN }}..."
