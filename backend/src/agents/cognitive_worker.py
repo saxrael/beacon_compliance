@@ -23,10 +23,11 @@ class CognitiveWorker:
         llm_client: Any | None = None,
         memory_manager: CognitiveMemoryManager | None = None,
         repository: Any | None = None,
+        repo: Any | None = None,
     ) -> None:
         self.llm = llm_client or LLMClient()
         self.memory = memory_manager or CognitiveMemoryManager()
-        self.repository = repository
+        self.repository = repository or repo
 
     def _format_messages_block(self, messages: list[dict[str, Any]]) -> str:
         """Format evicted dialogue turns into a clean text block."""
@@ -69,7 +70,7 @@ class CognitiveWorker:
                 )
             return filtered_sum
         except Exception as err:
-            logger.warning(f"Tier 2 cognitive summary extraction failed: {err}")
+            logger.warning("Tier 2 cognitive summary extraction failed: %s", err)
             return None
 
     def _process_single_fact(
@@ -114,6 +115,7 @@ class CognitiveWorker:
                 fact_text=fact_text,
                 source_type="non_financial_convo",
                 created_at=now_ts,
+                embedding_vec=embedding_vec,
             )
         return mutation
 
@@ -142,7 +144,7 @@ class CognitiveWorker:
                         if mutation:
                             fact_mutations.append(mutation)
         except Exception as err:
-            logger.warning(f"Tier 3 semantic fact extraction failed: {err}")
+            logger.warning("Tier 3 semantic fact extraction failed: %s", err)
 
         return fact_mutations
 
@@ -167,3 +169,49 @@ class CognitiveWorker:
         fact_mutations = self._process_tier3_facts(user_id, dialogue_block, existing_facts, now_ts)
 
         return updated_summary, fact_mutations
+
+    def process_turn_memory(
+        self, user_id: str, run_id: str
+    ) -> tuple[MemorySummary | None, list[dict[str, Any]]]:
+        """Convenience entry point to fetch dialogue turns from repository and process cognitive memory."""
+        if not self.repository:
+            logger.warning("No repository attached to CognitiveWorker; cannot process turn memory.")
+            return None, []
+
+        try:
+            history_data = self.repository.get_chat_history(
+                user_id=user_id, run_id=run_id, limit=20
+            )
+            messages = history_data.get("messages", [])
+            if not messages:
+                return None, []
+
+            existing_summary = self.repository.get_memory_summary(
+                user_id=user_id, run_id=run_id
+            )
+            raw_facts = self.repository.get_memory_facts(user_id=user_id)
+            existing_facts = [
+                MemoryFact(
+                    fact_id=rf["fact_id"],
+                    user_id=rf["user_id"],
+                    fact_text=rf["fact_text"],
+                    created_at=rf.get("created_at", ""),
+                )
+                for rf in raw_facts
+            ]
+
+            return self.process_cognitive_turn(
+                user_id=user_id,
+                run_id=run_id,
+                evicted_messages=messages,
+                existing_summary=existing_summary,
+                existing_facts=existing_facts,
+            )
+        except Exception as exc:
+            logger.warning(
+                "CognitiveWorker.process_turn_memory failed for user %s, run %s: %s",
+                user_id,
+                run_id,
+                exc,
+            )
+            return None, []

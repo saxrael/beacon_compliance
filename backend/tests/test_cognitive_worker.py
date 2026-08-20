@@ -125,3 +125,53 @@ def test_cognitive_worker_financial_facts_strictly_rejected():
     )
 
     assert len(fact_mutations) == 0
+
+
+def test_cognitive_worker_repo_alias_and_process_turn_memory():
+    mock_llm = MagicMock()
+    mock_llm.call_cognitive_summary.return_value = "Trustee asked about annual accounts."
+    mock_llm.call_cognitive_fact_extractor.return_value = [
+        {
+            "think": "Trustee serves as treasurer.",
+            "plan": "Record role.",
+            "action": "CREATE",
+            "target_existing_fact_id": None,
+            "final_fact_text": "Trustee serves as charity treasurer.",
+        }
+    ]
+
+    mock_repo = MagicMock()
+    mock_repo.get_chat_history.return_value = {
+        "messages": [
+            {"role": "user", "content": "I am the new treasurer."},
+            {"role": "assistant", "content": "Welcome Treasurer."},
+        ]
+    }
+    mock_repo.get_memory_summary.return_value = "Initial summary."
+    mock_repo.get_memory_facts.return_value = []
+
+    # Verify instantiation with repo= keyword argument
+    worker = CognitiveWorker(llm_client=mock_llm, repo=mock_repo)
+    assert worker.repository == mock_repo
+
+    summary, fact_mutations = worker.process_turn_memory(user_id="usr_001", run_id="run_001")
+
+    assert summary is not None
+    assert "annual accounts" in summary.summary_text
+    assert len(fact_mutations) == 1
+    assert mock_repo.save_memory_summary.called
+    assert mock_repo.save_memory_fact.called
+
+
+def test_cognitive_worker_process_turn_memory_empty_history_or_no_repo():
+    worker_no_repo = CognitiveWorker(repo=None)
+    res_summary, res_facts = worker_no_repo.process_turn_memory(user_id="u1", run_id="r1")
+    assert res_summary is None
+    assert res_facts == []
+
+    mock_repo = MagicMock()
+    mock_repo.get_chat_history.return_value = {"messages": []}
+    worker_empty = CognitiveWorker(repository=mock_repo)
+    res_sum, res_f = worker_empty.process_turn_memory(user_id="u1", run_id="r1")
+    assert res_sum is None
+    assert res_f == []
