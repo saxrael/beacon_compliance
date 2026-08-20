@@ -133,7 +133,7 @@ jobs:
           username: ${{ secrets.OCI_USERNAME }}
           key: ${{ secrets.OCI_SSH_KEY }}
           port: ${{ secrets.OCI_SSH_PORT || '22' }}
-          command_timeout: "15m"
+          command_timeout: "30m"
           script_stop: true
           script: |
             set -e
