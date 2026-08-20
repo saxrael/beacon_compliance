@@ -36,7 +36,6 @@ def test_hybrid_rrf_retriever_dense_and_sparse():
     results = retriever.hybrid_rrf_search(query="R&P", query_vec=[1.0, 0.0], corpus=corpus, top_n=2)
     assert len(results) == 2
     assert results[0].chunk_id == "c1"
-    # RRF score with rank 1 dense + rank 1 sparse = 1/(60+1) + 1/(60+1) = 2/61 ≈ 0.03278
     assert pytest.approx(results[0].rrf_score, rel=1e-3) == (1 / 61 + 1 / 61)
 
 
@@ -88,10 +87,8 @@ def test_multi_query_concurrent_hybrid_search_and_deduplication():
     )
 
     assert len(results) > 0
-    # Deduplication check: every chunk_id in results must be unique
     chunk_ids = [r.chunk_id for r in results]
     assert len(chunk_ids) == len(set(chunk_ids))
 
-    # All returned chunks must satisfy min_rrf_threshold
     for r in results:
         assert r.rrf_score >= 0.015

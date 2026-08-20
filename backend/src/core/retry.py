@@ -41,7 +41,6 @@ def is_retryable_db_error(exc: BaseException) -> bool:
     return False
 
 
-# LLM Gateway Retry Policy: Random exponential backoff with full jitter, up to 3 attempts
 llm_retry = retry(
     retry=retry_if_exception(is_retryable_http_error),
     wait=wait_random_exponential(multiplier=0.3, max=4.0),
@@ -50,7 +49,6 @@ llm_retry = retry(
     reraise=True,
 )
 
-# Database/Tool Retry Policy: Exponential backoff, up to 3 attempts
 db_retry = retry(
     retry=retry_if_exception(is_retryable_db_error),
     wait=wait_exponential(multiplier=0.1, max=1.0),

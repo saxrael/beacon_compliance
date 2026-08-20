@@ -168,7 +168,6 @@ async def chat_message(
     repo = ComplianceRepository(db_client=db)
     state = _build_state_from_db(db, req.run_id, req.context_state)
 
-    # 1. Fetch Upfront Context Envelope Data
     user_prof = repo.get_user_profile(current_user.user_id) or {
         "name": current_user.name,
         "role": current_user.role,
@@ -181,7 +180,6 @@ async def chat_message(
     raw_facts = repo.get_memory_facts(current_user.user_id)
     tier3_facts = [rf["fact_text"] for rf in raw_facts if rf.get("fact_text")]
 
-    # 2. Persist User Message
     user_msg_id = f"msg_{uuid.uuid4().hex[:12]}"
     repo.save_chat_message(
         message_id=user_msg_id,
@@ -191,7 +189,6 @@ async def chat_message(
         content=req.message,
     )
 
-    # 3. Execute Chat Agent Turn
     res = await asyncio.to_thread(
         agent.process_message,
         req.message,
@@ -205,7 +202,6 @@ async def chat_message(
         tier3_facts,
     )
 
-    # 4. Persist Assistant Message
     asst_msg_id = f"msg_{uuid.uuid4().hex[:12]}"
     repo.save_chat_message(
         message_id=asst_msg_id,
@@ -218,7 +214,6 @@ async def chat_message(
         sources=res.sources,
     )
 
-    # 5. Trigger Background Cognitive Memory Stager
     bg_task = asyncio.create_task(
         asyncio.to_thread(
             _trigger_background_cognitive_processing, repo, current_user.user_id, req.run_id
@@ -247,7 +242,6 @@ async def chat_stream(
     repo = ComplianceRepository(db_client=db)
     state = _build_state_from_db(db, req.run_id, req.context_state)
 
-    # 1. Fetch Upfront Context Envelope Data
     user_prof = repo.get_user_profile(current_user.user_id) or {
         "name": current_user.name,
         "role": current_user.role,
@@ -260,7 +254,6 @@ async def chat_stream(
     raw_facts = repo.get_memory_facts(current_user.user_id)
     tier3_facts = [rf["fact_text"] for rf in raw_facts if rf.get("fact_text")]
 
-    # 2. Persist User Message
     user_msg_id = f"msg_{uuid.uuid4().hex[:12]}"
     repo.save_chat_message(
         message_id=user_msg_id,
@@ -340,7 +333,6 @@ async def chat_stream(
                 )
                 yield f"event: done\ndata: {payload}\n\n"
 
-                # Trigger background cognitive worker
                 bg_stream_task = asyncio.create_task(
                     asyncio.to_thread(
                         _trigger_background_cognitive_processing,

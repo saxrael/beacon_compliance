@@ -101,7 +101,6 @@ class BeaconLangfuseTracer:
         self.langfuse_client: Any | None = None
 
         if self.enabled and self.public_key and self.secret_key:
-            # Sync environment variables so Langfuse get_client() and CallbackHandler discover credentials uniformly
             os.environ["LANGFUSE_PUBLIC_KEY"] = self.public_key
             os.environ["LANGFUSE_SECRET_KEY"] = self.secret_key
             os.environ["LANGFUSE_HOST"] = self.host
@@ -140,11 +139,9 @@ class BeaconLangfuseTracer:
             )
             return None
         try:
-            # Modern Langfuse CallbackHandler accepts public_key / reads config from env
             return CallbackHandler(public_key=self.public_key)
         except TypeError:
             try:
-                # Fallback for legacy Langfuse v2 CallbackHandler
                 return CallbackHandler(
                     public_key=self.public_key,
                     secret_key=self.secret_key,

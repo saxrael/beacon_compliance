@@ -94,11 +94,10 @@ def test_cognitive_worker_fact_fallback_on_invalid_uuid():
         run_id="run_001",
         evicted_messages=[{"role": "user", "content": "Henderson & Co did the exam."}],
         existing_summary=None,
-        existing_facts=[],  # Empty facts list -> target UUID does not exist
+        existing_facts=[],
     )
 
     assert len(fact_mutations) == 1
-    # Fallback from UPDATE to CREATE
     assert fact_mutations[0]["action"] == "CREATE"
     assert "Henderson & Co" in fact_mutations[0]["fact_text"]
 

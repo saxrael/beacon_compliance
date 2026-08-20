@@ -54,7 +54,6 @@ def test_call_gemma_narrative_no_openrouter_returns_none(monkeypatch):
     monkeypatch.setenv("GROQ_API_KEY", "mock_groq_key")
 
     client = LLMClient()
-    # Gemma is strictly OpenRouter-only, so without OpenRouter key it returns None
     res = client.call_gemma_narrative("system prompt", {"test": "data"})
     assert res is None
 

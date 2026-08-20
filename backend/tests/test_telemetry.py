@@ -79,7 +79,6 @@ def test_beacon_langfuse_tracer_mock_enabled(monkeypatch):
     callback = tracer.get_langchain_callback()
     assert callback is not None
 
-    # Test trace generation with PII redaction
     tracer.trace_llm_generation(
         name="test_gen",
         system_prompt="System instructions",

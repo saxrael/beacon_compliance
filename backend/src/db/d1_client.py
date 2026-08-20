@@ -230,7 +230,6 @@ class D1DatabaseClient:
             except sqlite3.OperationalError:
                 pass
 
-            # Migrate memory_facts table
             try:
                 cursor_mf = self._conn.execute("PRAGMA table_info(memory_facts)")
                 existing_mf_cols = {
@@ -242,7 +241,6 @@ class D1DatabaseClient:
             except sqlite3.OperationalError:
                 pass
 
-            # Ensure vector embedding indexes
             try:
                 self._conn.execute(
                     "CREATE INDEX IF NOT EXISTS idx_embeddings_source ON embeddings(source_type, source_id)"

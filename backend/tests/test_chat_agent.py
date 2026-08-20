@@ -147,7 +147,6 @@ def test_chat_agent_upfront_context_engineering_zero_starvation():
 
     assert "Pastor David Robertson" in res.message
     assert "Chair" in res.message
-    # Verified call received injected system prompt with metadata
     call_args = mock_llm.call_gemma_chat.call_args
     system_prompt_arg = call_args[1].get("system_prompt") or call_args[0][0]
     assert "Pastor David Robertson" in system_prompt_arg
@@ -186,7 +185,6 @@ def test_chat_agent_multi_turn_history_retention():
 def test_chat_agent_cyclical_reviewer_and_circuit_breaker():
     agent = ComplianceChatAgent()
 
-    # Reviewer detects error in tool output
     is_valid, critique = agent._review_agent_output(
         response_text="Error occurred during processing.",
         tool_context="Note: Live Receipts & Payments query failed: database locked",
@@ -195,7 +193,6 @@ def test_chat_agent_cyclical_reviewer_and_circuit_breaker():
     assert is_valid is False
     assert "error" in critique.lower()
 
-    # Reviewer approves valid output
     is_valid_ok, critique_ok = agent._review_agent_output(
         response_text="According to our verified accounts, gross receipts are £15,000.00.",
         tool_context="Verified gross receipts: £15,000.00",
@@ -249,7 +246,6 @@ def test_chat_agent_with_langfuse_telemetry_enabled(monkeypatch):
         "run_id": "run_test_01",
     }
 
-    # Synchronous turn
     res = agent.process_message(
         "What are our gross receipts?",
         state=state,
@@ -259,7 +255,6 @@ def test_chat_agent_with_langfuse_telemetry_enabled(monkeypatch):
     assert "£10000.00" in res.message
     assert len(res.tool_calls) == 1
 
-    # Streaming turn
     events = list(
         agent.stream_message(
             "What are our total financial receipts?",

@@ -251,10 +251,8 @@ def test_repository_embeddings_and_vector_facts_crud():
     d1 = D1DatabaseClient(db_path=":memory:")
     repo = ComplianceRepository(db_client=d1)
 
-    # 2048-dim vector test (NVIDIA Nemotron standard)
     test_vec = [0.05 * (i % 20) for i in range(2048)]
 
-    # 1. Test save_embedding and get_embeddings
     repo.save_embedding(
         chunk_id="chunk_statutory_01",
         source_type="kb",
@@ -270,7 +268,6 @@ def test_repository_embeddings_and_vector_facts_crud():
     assert len(kb_embeddings[0]["embedding_vec"]) == 2048
     assert abs(kb_embeddings[0]["embedding_vec"][1] - 0.05) < 1e-5
 
-    # 2. Test save_memory_fact with vector embedding
     repo.save_memory_fact(
         fact_id="fact_vec_01",
         user_id="usr_chair",
@@ -285,6 +282,5 @@ def test_repository_embeddings_and_vector_facts_crud():
     assert facts[0]["fact_id"] == "fact_vec_01"
     assert len(facts[0]["embedding_vec"]) == 2048
 
-    # 3. Test delete_embeddings
     repo.delete_embeddings(source_type="kb", source_id="oscr_scio_act_2005")
     assert len(repo.get_embeddings(source_type="kb")) == 0

@@ -19,25 +19,21 @@ def test_is_retryable_http_error_predicates():
     """Verify HTTP status codes correctly identify retryable transient errors."""
     req = httpx.Request("POST", "https://api.groq.com")
 
-    # 429 Rate Limit, 500, 502, 503, 504 are retryable
     for status_code in (429, 500, 502, 503, 504):
         err = httpx.HTTPStatusError(
             f"Error {status_code}", request=req, response=httpx.Response(status_code, request=req)
         )
         assert is_retryable_http_error(err) is True
 
-    # 400 Bad Request, 401 Unauthorized, 403 Forbidden, 404 Not Found are NOT retryable
     for status_code in (400, 401, 403, 404):
         err = httpx.HTTPStatusError(
             f"Error {status_code}", request=req, response=httpx.Response(status_code, request=req)
         )
         assert is_retryable_http_error(err) is False
 
-    # Network timeouts / connection errors are retryable
     assert is_retryable_http_error(httpx.TimeoutException("Timeout")) is True
     assert is_retryable_http_error(httpx.ConnectError("Connection refused")) is True
 
-    # Standard exceptions are not
     assert is_retryable_http_error(ValueError("Invalid argument")) is False
 
 
@@ -86,7 +82,6 @@ def test_tier25_classifier_tenacity_failover_to_openrouter(monkeypatch):
     client = LLMClient()
     req = httpx.Request("POST", "https://api.groq.com")
 
-    # Groq returns 503 error, OpenRouter succeeds with contingency model
     def mock_post(url, *args, **kwargs):
         if "groq.com" in url:
             resp = httpx.Response(503, request=req)
@@ -124,7 +119,6 @@ def test_chat_stream_handles_tool_failure_gracefully():
     """Verify chat stream captures tool failure, emits status='failed', and continues streaming."""
     agent = ComplianceChatAgent()
 
-    # Mock tool to fail with unrecoverable error
     with patch.object(
         agent, "get_financial_summary_tool", side_effect=RuntimeError("D1 connection timed out")
     ):
@@ -133,13 +127,11 @@ def test_chat_stream_handles_tool_failure_gracefully():
     event_types = [e["type"] for e in events]
     assert "action" in event_types
 
-    # Find the failed action event
     action_events = [e for e in events if e["type"] == "action"]
     failed_actions = [a for a in action_events if a.get("status") == "failed"]
     assert len(failed_actions) == 1
     assert "Receipts & Payments" in failed_actions[0].get("label", "")
 
-    # Ensure stream finished cleanly with done event
     done_event = next(e for e in events if e["type"] == "done")
     assert done_event is not None
     assert (
