@@ -28,6 +28,8 @@ interface ChatTurn {
   created_at?: string;
   actions?: (string | ActionItem)[];
   duration_seconds?: number | null;
+  isThinking?: boolean;
+  thinkingStartTime?: number | null;
 }
 
 const DEFAULT_WELCOME_MESSAGE: ChatTurn = {
@@ -45,9 +47,6 @@ export const ComplianceChatDrawer: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [currentThinking, setCurrentThinking] = useState<string>('');
-  const [currentActions, setCurrentActions] = useState<ActionItem[]>([]);
-  const [streamStartTime, setStreamStartTime] = useState<number | null>(null);
 
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const isAutoScrollEnabled = useRef<boolean>(true);
@@ -122,7 +121,7 @@ export const ComplianceChatDrawer: React.FC = () => {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages, currentThinking, currentActions, loading]);
+  }, [messages, loading]);
 
   const handleScroll = () => {
     if (!chatContainerRef.current) return;
@@ -154,17 +153,27 @@ export const ComplianceChatDrawer: React.FC = () => {
 
     const userText = input.trim();
     setInput('');
+    const startTime = Date.now();
+
     const userTurn: ChatTurn = {
       role: 'user',
       content: userText,
       created_at: new Date().toISOString(),
     };
-    setMessages((prev) => [...prev, userTurn]);
+
+    const initialAssistantTurn: ChatTurn = {
+      role: 'assistant',
+      content: '',
+      thinking: '',
+      actions: [],
+      isThinking: true,
+      thinkingStartTime: startTime,
+      duration_seconds: null,
+      created_at: new Date().toISOString(),
+    };
+
+    setMessages((prev) => [...prev, userTurn, initialAssistantTurn]);
     setLoading(true);
-    setCurrentThinking('');
-    setCurrentActions([]);
-    const startTime = Date.now();
-    setStreamStartTime(startTime);
     isAutoScrollEnabled.current = true;
 
     try {
@@ -196,8 +205,7 @@ export const ComplianceChatDrawer: React.FC = () => {
       let streamThinking = '';
       let streamActions: ActionItem[] = [];
       let streamContent = '';
-
-      const partialIndex = messages.length + 1;
+      let thinkingDurationLocked: number | null = null;
 
       while (true) {
         const { value, done } = await reader.read();
@@ -226,7 +234,18 @@ export const ComplianceChatDrawer: React.FC = () => {
               const parsed = JSON.parse(dataStr);
               if (eventType === 'thought') {
                 streamThinking += parsed.chunk || '';
-                setCurrentThinking(streamThinking);
+                setMessages((prev) => {
+                  const updated = [...prev];
+                  const lastIdx = updated.length - 1;
+                  if (lastIdx >= 0 && updated[lastIdx]?.role === 'assistant') {
+                    updated[lastIdx] = {
+                      ...updated[lastIdx],
+                      thinking: streamThinking,
+                      isThinking: thinkingDurationLocked === null,
+                    };
+                  }
+                  return updated;
+                });
               } else if (eventType === 'action') {
                 const actId =
                   parsed.action_id ||
@@ -255,44 +274,42 @@ export const ComplianceChatDrawer: React.FC = () => {
                     { id: actId, label: actLabel, status: actStatus },
                   ];
                 }
-                setCurrentActions(streamActions);
-              } else if (eventType === 'token') {
-                streamContent += parsed.chunk || '';
-                const currentDuration = (Date.now() - startTime) / 1000;
                 setMessages((prev) => {
                   const updated = [...prev];
                   const lastIdx = updated.length - 1;
-                  if (
-                    lastIdx >= 0 &&
-                    updated[lastIdx]?.role === 'assistant' &&
-                    lastIdx === partialIndex
-                  ) {
+                  if (lastIdx >= 0 && updated[lastIdx]?.role === 'assistant') {
+                    updated[lastIdx] = {
+                      ...updated[lastIdx],
+                      actions: streamActions,
+                      isThinking: thinkingDurationLocked === null,
+                    };
+                  }
+                  return updated;
+                });
+              } else if (eventType === 'token') {
+                streamContent += parsed.chunk || '';
+                if (thinkingDurationLocked === null) {
+                  // Freeze thinking duration the exact moment the first token arrives!
+                  thinkingDurationLocked = (Date.now() - startTime) / 1000;
+                }
+                setMessages((prev) => {
+                  const updated = [...prev];
+                  const lastIdx = updated.length - 1;
+                  if (lastIdx >= 0 && updated[lastIdx]?.role === 'assistant') {
                     updated[lastIdx] = {
                       ...updated[lastIdx],
                       content: streamContent,
                       thinking: streamThinking,
                       actions: streamActions,
-                      duration_seconds: currentDuration,
+                      duration_seconds: thinkingDurationLocked,
+                      isThinking: false, // THINKING STOPS IMMEDIATELY ON FIRST TOKEN
                     };
-                    return updated;
-                  } else {
-                    return [
-                      ...prev,
-                      {
-                        role: 'assistant',
-                        content: streamContent,
-                        thinking: streamThinking,
-                        actions: streamActions,
-                        duration_seconds: currentDuration,
-                        created_at: new Date().toISOString(),
-                      },
-                    ];
                   }
+                  return updated;
                 });
               } else if (eventType === 'done') {
-                setCurrentThinking('');
-                setCurrentActions([]);
-                const finalDuration = (Date.now() - startTime) / 1000;
+                const finalDuration =
+                  thinkingDurationLocked ?? ((Date.now() - startTime) / 1000);
                 setMessages((prev) => {
                   const updated = [...prev];
                   const lastIdx = updated.length - 1;
@@ -306,10 +323,10 @@ export const ComplianceChatDrawer: React.FC = () => {
                       sources: parsed.sources || [],
                       actions: streamActions,
                       duration_seconds: finalDuration,
+                      isThinking: false,
                     };
-                    return updated;
                   }
-                  return prev;
+                  return updated;
                 });
               }
             } catch (err) {
@@ -320,20 +337,34 @@ export const ComplianceChatDrawer: React.FC = () => {
       }
     } catch (err) {
       console.error('Streaming failed, fallback message appended:', err);
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: 'assistant',
-          content:
-            'Apologies, unable to complete streaming response at this time. Please check your connection and try again.',
-          created_at: new Date().toISOString(),
-        },
-      ]);
+      setMessages((prev) => {
+        const updated = [...prev];
+        const lastIdx = updated.length - 1;
+        if (
+          lastIdx >= 0 &&
+          updated[lastIdx]?.role === 'assistant' &&
+          updated[lastIdx]?.isThinking
+        ) {
+          updated[lastIdx] = {
+            ...updated[lastIdx],
+            isThinking: false,
+            content:
+              'Apologies, unable to complete streaming response at this time. Please check your connection and try again.',
+          };
+          return updated;
+        }
+        return [
+          ...prev,
+          {
+            role: 'assistant',
+            content:
+              'Apologies, unable to complete streaming response at this time. Please check your connection and try again.',
+            created_at: new Date().toISOString(),
+          },
+        ];
+      });
     } finally {
       setLoading(false);
-      setCurrentThinking('');
-      setCurrentActions([]);
-      setStreamStartTime(null);
     }
   };
 
@@ -488,22 +519,26 @@ export const ComplianceChatDrawer: React.FC = () => {
                             : 'bg-white dark:bg-[#0E1626] text-slate-800 dark:text-slate-200 border border-stone-200/80 dark:border-slate-800/80 rounded-tl-xs'
                         }`}
                       >
-                        {/* Expandable Thinking Process & Statutory Actions Block */}
+                        {/* Single Unified Thinking Process & Statutory Actions Block */}
                         {m.role === 'assistant' &&
-                          (Boolean(m.thinking) ||
+                          (m.isThinking ||
+                            Boolean(m.thinking) ||
                             (m.actions && m.actions.length > 0) ||
                             Boolean(m.duration_seconds)) && (
                             <ThinkingProcessBlock
-                              isActive={false}
+                              isActive={Boolean(m.isThinking)}
                               thinking={m.thinking}
                               actions={m.actions}
+                              startTime={m.thinkingStartTime}
                               durationSeconds={m.duration_seconds}
                               defaultExpanded={false}
                             />
                           )}
 
                         {m.role === 'assistant' ? (
-                          <MarkdownRenderer content={m.content} />
+                          m.content ? (
+                            <MarkdownRenderer content={m.content} />
+                          ) : null
                         ) : (
                           m.content
                         )}
@@ -511,33 +546,6 @@ export const ComplianceChatDrawer: React.FC = () => {
                     </div>
                   </motion.div>
                 ))}
-
-                {/* Live Real-Time Cognitive Deliberation & Action Stream during generation */}
-                {loading && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={springs.gentle}
-                    className="flex gap-2.5 justify-start w-full"
-                  >
-                    <div className="h-7 w-7 shrink-0 mt-0.5 flex items-center justify-center">
-                      <img
-                        src="/assets/logo_mark.png"
-                        alt="Advisor"
-                        className="h-full w-full object-contain drop-shadow-xs"
-                      />
-                    </div>
-                    <div className="max-w-[86%] w-full rounded-2xl p-3.5 bg-white dark:bg-[#0E1626] text-slate-800 dark:text-slate-200 border border-stone-200/80 dark:border-slate-800/80 rounded-tl-xs shadow-xs space-y-2">
-                      <ThinkingProcessBlock
-                        isActive={true}
-                        thinking={currentThinking}
-                        actions={currentActions}
-                        startTime={streamStartTime}
-                        defaultExpanded={true}
-                      />
-                    </div>
-                  </motion.div>
-                )}
               </div>
 
               {/* Quick Questions & Input Area */}
@@ -586,3 +594,4 @@ export const ComplianceChatDrawer: React.FC = () => {
     </ClientPortal>
   );
 };
+

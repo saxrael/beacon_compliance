@@ -69,18 +69,20 @@ export const ThinkingProcessBlock: React.FC<ThinkingProcessBlockProps> = ({
     return () => clearInterval(verbInterval);
   }, [isActive]);
 
-  // Auto-expand when active if there are thoughts or actions
+  // Auto-expand when active, and auto-collapse when active state completes
   useEffect(() => {
     if (isActive) {
       setIsExpanded(true);
+    } else {
+      setIsExpanded(defaultExpanded);
     }
-  }, [isActive]);
+  }, [isActive, defaultExpanded]);
 
   const hasContent = Boolean(
     (thinking && thinking.trim().length > 0) || (actions && actions.length > 0)
   );
 
-  const formattedTime = elapsed < 1 ? "1s" : `${elapsed.toFixed(1)}s`;
+  const formattedTime = elapsed <= 0 ? "1s" : elapsed < 1 ? `${elapsed.toFixed(1)}s` : `${elapsed.toFixed(1)}s`;
 
   // Standardized Action item formatter
   const formattedActions: ActionItem[] = actions.map((act, idx) => {
